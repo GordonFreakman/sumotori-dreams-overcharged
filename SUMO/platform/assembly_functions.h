@@ -1,0 +1,304 @@
+#ifndef SUMO_ASSEMBLY_FUNCTIONS_H
+#define SUMO_ASSEMBLY_FUNCTIONS_H
+
+#ifdef 0
+
+// FUNCTION: SUMO 0x00401391
+// FUNCTION: EDITOR 0x00401391
+// ??ZBigInteger@@QAEXAAV0@@Z
+
+// FUNCTION: SUMO 0x00401482
+// FUNCTION: EDITOR 0x00401482
+// ??YBigInteger@@QAEXAAV0@@Z
+
+// FUNCTION: SUMO 0x0040155e
+// FUNCTION: EDITOR 0x0040155e
+// ??DBigInteger@@QAE?AV0@AAV0@@Z
+
+// FUNCTION: SUMO 0x00401680
+// FUNCTION: EDITOR 0x00401680
+// ??6BigInteger@@QAE?AV0@H@Z
+
+// FUNCTION: SUMO 0x0040180e
+// FUNCTION: EDITOR 0x0040180e
+// ??0BigInteger@@QAE@PADHPBDH@Z
+
+// FUNCTION: SUMO 0x00401bb9
+// FUNCTION: EDITOR 0x00401bb9
+// ?Log@BigInteger@@QAEHAAV1@@Z
+
+// FUNCTION: SUMO 0x00401cff
+// FUNCTION: EDITOR 0x00401cff
+// ?Power@BigInteger@@QAE?AV1@H@Z
+
+// FUNCTION: SUMO 0x00401fb4
+// FUNCTION: EDITOR 0x00401fb4
+// ?WriteString@BigInteger@@QAEXPADHPBDHH@Z
+
+// FUNCTION: SUMO 0x004022c1
+// FUNCTION: EDITOR 0x004022c1
+// ?Normalize@Vector3@@QAEMXZ
+
+// FUNCTION: SUMO 0x00402302
+// FUNCTION: EDITOR 0x00402302
+// ?Normalized@Vector3@@QAE?AU1@XZ
+
+// FUNCTION: SUMO 0x00402f1b
+// FUNCTION: EDITOR 0x00402f1b
+// ?UpdateGameCamera@@YAXXZ
+
+// FUNCTION: SUMO 0x0040386a
+// FUNCTION: EDITOR 0x0040386a
+// ?ApplyGameProjection@@YAHXZ
+
+// FUNCTION: SUMO 0x00403a86
+// FUNCTION: EDITOR 0x00403a86
+// _EnumerateGameDisplayModes
+
+// FUNCTION: SUMO 0x00403c36
+// FUNCTION: EDITOR 0x00403c36
+// ?InitializeGameD3DDevice@@YAHXZ
+
+// FUNCTION: SUMO 0x00403e16
+// FUNCTION: EDITOR 0x00403e16
+// ?BlendTextIntoTexture@@YAHPAEPBDHHHHHHHH1@Z
+
+// FUNCTION: SUMO 0x00404008
+// FUNCTION: EDITOR 0x00404008
+// ?TransformEncodedGameSettings@@YA?AVBigInteger@@V1@H0@Z
+
+// FUNCTION: SUMO 0x00404d6d
+// FUNCTION: EDITOR 0x00404d8f
+// ?ParserBuiltinTurnTo@@YAXPAUParserBuiltinCall@@@Z
+
+// FUNCTION: SUMO 0x004055e9
+// FUNCTION: EDITOR 0x0040560b
+// ?ReadIdentifier@ExpressionParser@@QAEPADPAD0@Z
+
+// FUNCTION: SUMO 0x00405888
+// FUNCTION: EDITOR 0x004058aa
+// ?Evaluate@ExpressionParser@@QAE?AUVector3@@XZ
+
+// FUNCTION: SUMO 0x004058ce
+// FUNCTION: EDITOR 0x004058f0
+// ?DumpAssembly@ExpressionParser@@QAEXPAD@Z
+
+// FUNCTION: SUMO 0x00405d33
+// FUNCTION: EDITOR 0x00405d55
+// ?PrepareEvaluation@ExpressionParser@@QAEXXZ
+
+// FUNCTION: SUMO 0x00405f93
+// FUNCTION: EDITOR 0x00405fb5
+// ?CompileExpression@ExpressionParser@@QAE?AUParserExpression@@H@Z
+
+// FUNCTION: SUMO 0x004062e4
+// FUNCTION: EDITOR 0x00406306
+// ?CompileStatement@ExpressionParser@@QAEPADPAD@Z
+
+// FUNCTION: SUMO 0x00406565
+// FUNCTION: EDITOR 0x00406587
+// ?CompileValue@ExpressionParser@@QAE?AUParserExpression@@H@Z
+
+// FUNCTION: SUMO 0x00406e98
+// FUNCTION: EDITOR 0x00406eba
+// ?InitializeGameRuntimeState@@YAHXZ
+
+// FUNCTION: SUMO 0x004077f6
+// FUNCTION: EDITOR 0x00407818
+// ?UpdateHiddenGameScreen@@YAHXZ
+
+// FUNCTION: SUMO 0x00407e99
+// FUNCTION: EDITOR 0x00407ebb
+// ?Inverted@Matrix3@@QAE?AU1@XZ
+
+// FUNCTION: SUMO 0x00408114
+// FUNCTION: EDITOR 0x00408136
+// ?AddTriangle@MassAccumulator@@QAEXAAUVector3@@00M@Z
+
+// FUNCTION: SUMO 0x00408684
+// FUNCTION: EDITOR 0x004086a6
+// ?ApplyPairedAngularImpulse@@YAXPAPAUGameBox@@AAUVector3@@@Z
+
+// FUNCTION: SUMO 0x004089bc
+// FUNCTION: EDITOR 0x004089de
+// ?BuildEdges@GameBox@@QAEXXZ
+
+// FUNCTION: SUMO 0x00408c14
+// FUNCTION: EDITOR 0x00408c36
+// ?ResetGameContactLists@@YAXXZ
+
+// FUNCTION: SUMO 0x00408f5b
+// FUNCTION: EDITOR 0x00408f7d
+// ?Push@GameCollisionCandidateHeap@@QAEXMUVector3@@@Z
+
+// FUNCTION: SUMO 0x00408fe2
+// FUNCTION: EDITOR 0x00409004
+// ?Pop@GameCollisionCandidateHeap@@QAE?AUVector3@@XZ
+
+// FUNCTION: SUMO 0x004090a9
+// FUNCTION: EDITOR 0x004090cb
+// ?Orthonormalize@Matrix3@@QAEXXZ
+
+// FUNCTION: SUMO 0x004092d6
+// FUNCTION: EDITOR 0x004092f8
+// ?ClipGeometry@GameBox@@QAEXAAU1@AAUVector3@@M@Z
+
+// FUNCTION: SUMO 0x004096b0
+// FUNCTION: EDITOR 0x004096d2
+// ?ApplyWaterInteraction@GameBox@@QAEXXZ
+
+// FUNCTION: SUMO 0x00409b13
+// FUNCTION: EDITOR 0x00409b35
+// ?FractureGameBoxAtPoint@@YAEAAUVector3@@PAUGameBox@@@Z
+
+// FUNCTION: SUMO 0x00409fac
+// FUNCTION: EDITOR 0x00409fce
+// ?GenerateGameBoxCollisionContacts@@YAHPAUGameBox@@0@Z
+
+// FUNCTION: SUMO 0x0040a455
+// FUNCTION: EDITOR 0x0040a477
+// ?ResolveGameCollisions@@YAXXZ
+
+// FUNCTION: SUMO 0x0040b588
+// FUNCTION: EDITOR 0x0040b5aa
+// ?ApplyWaterInteractionToMovingBoxes@@YAXXZ
+
+// FUNCTION: SUMO 0x0040b776
+// FUNCTION: EDITOR 0x0040b798
+// ?Next@GameRandomGenerator@@QAEMXZ
+
+// FUNCTION: SUMO 0x0040b86a
+// FUNCTION: EDITOR 0x0040b88c
+// ?TransformWavyTextPoint@@YA?AUVector3@@AAU1@@Z
+
+// FUNCTION: SUMO 0x0040c157
+// FUNCTION: EDITOR 0x0040c179
+// ?RenderWaterSurface@@YAXXZ
+
+// FUNCTION: SUMO 0x0040c5a5
+// FUNCTION: EDITOR 0x0040c5c7
+// ?Render@GameBox@@QAEXXZ
+
+// FUNCTION: SUMO 0x0040d7ad
+// FUNCTION: EDITOR 0x0040d7cf
+// ?UpdateGameReplay@@YAHXZ
+
+// FUNCTION: SUMO 0x0040e690
+// FUNCTION: EDITOR 0x0040e6b2
+// ?AlignGameBoxJointTransform@@YAXPAUGameBoxJoint@@H@Z
+
+// FUNCTION: SUMO 0x0040e718
+// FUNCTION: EDITOR 0x0040e73a
+// ?InitializeJointTransforms@GameManPose@@QAEXPAUGameMan@@@Z
+
+// FUNCTION: SUMO 0x0040e874
+// FUNCTION: EDITOR 0x0040e896
+// ?CalculateKineticEnergy@GameMan@@QAEMXZ
+
+// FUNCTION: SUMO 0x0040e96a
+// FUNCTION: EDITOR 0x0040e98c
+// ?CalculateAngularMomentum@GameMan@@QAE?AUVector3@@AAU2@0@Z
+
+// FUNCTION: SUMO 0x0040ea30
+// FUNCTION: EDITOR 0x0040ea52
+// ?Render@GameMan@@QAEXPAX@Z
+
+// FUNCTION: SUMO 0x0040ebeb
+// FUNCTION: EDITOR 0x0040ec0d
+// ?Initialize@GameMan@@QAEXAAUVector3@@MHH@Z
+
+// FUNCTION: SUMO 0x0040fdae
+// FUNCTION: EDITOR 0x0040fdd0
+// ?RenderGameCrossMarker@@YAXPAUVector3@@PAX@Z
+
+// FUNCTION: SUMO 0x0040ff2a
+// FUNCTION: EDITOR 0x0040ff4c
+// ?ChooseAiInput@GameMan@@QAEIPAU1@@Z
+
+// FUNCTION: SUMO 0x00410505
+// FUNCTION: EDITOR 0x00410527
+// ?BuildDefaultGameArena@@YAXH@Z
+
+// FUNCTION: SUMO 0x00410b3e
+// FUNCTION: EDITOR 0x00410b60
+// ?Update@GameMan@@QAEXH@Z
+
+// FUNCTION: SUMO 0x00414f09
+// FUNCTION: EDITOR 0x00414f2b
+// ?WriteGameScreenshot@@YAHXZ
+
+// FUNCTION: SUMO 0x004151f4
+// FUNCTION: EDITOR 0x00415216
+// ?PlaySound@GameSoundSlot@@QAEPAXMMH@Z
+
+// FUNCTION: SUMO 0x00415369
+// FUNCTION: EDITOR 0x0041538b
+// ?PlayGameSound@@YAPAXHMMH@Z
+
+// FUNCTION: SUMO 0x004153d2
+// FUNCTION: EDITOR 0x004153f4
+// ?DecodeGameSoundAssets@@YAEXZ
+
+// FUNCTION: SUMO 0x004156a6
+// FUNCTION: EDITOR 0x004156c8
+// ?CreateGameRampTexture@@YAHXZ
+
+// FUNCTION: SUMO 0x0041579b
+// FUNCTION: EDITOR 0x004157bd
+// ?CreateGameAttenuationTexture@@YAHXZ
+
+// FUNCTION: SUMO 0x004158a8
+// FUNCTION: EDITOR 0x004158ca
+// ?InitializeGameTextures@@YAHXZ
+
+// FUNCTION: SUMO 0x00415abf
+// FUNCTION: EDITOR 0x00415ae1
+// ?CreateGameNormalMapTexture@@YAHPAEHHH@Z
+
+// FUNCTION: SUMO 0x004165b9
+// FUNCTION: EDITOR 0x004165db
+// ?UpdateWaterField@@YAXXZ
+
+// FUNCTION: SUMO 0x004169a1
+// FUNCTION: EDITOR 0x004169c3
+// ?GameWindowProc@@YGJPAUHWND__@@IIJ@Z
+
+// FUNCTION: SUMO 0x00417357
+// FUNCTION: EDITOR 0x00417379
+// ?MixGameAudioChannels@@YAXPAXHH@Z
+
+// FUNCTION: SUMO 0x004179f9
+// FUNCTION: EDITOR 0x00417a1b
+// ?UpdateTrackerVibrato@@YAXPAUTrackerChannelState@@@Z
+
+// FUNCTION: SUMO 0x00417b8a
+// FUNCTION: EDITOR 0x00417bac
+// ?UpdateTrackerEnvelope@@YAXPAUTrackerChannelState@@PAH1EHPAUTrackerEnvelopePoint@@EEE11PAE1E@Z
+
+// FUNCTION: SUMO 0x00417c7d
+// FUNCTION: EDITOR 0x00417c9f
+// _ApplyTrackerVolumeColumn
+
+// FUNCTION: SUMO 0x00417f89
+// FUNCTION: EDITOR 0x00417fab
+// ?ResetTrackerChannelState@@YAXPAUTrackerChannelState@@PAUGameAudioParsedSample@@@Z
+
+// FUNCTION: SUMO 0x00419a30
+// FUNCTION: EDITOR 0x00419a50
+// ?ExecuteTextureProgram@@YAXPAXPAI@Z
+
+// FUNCTION: SUMO 0x0041afd0
+// FUNCTION: EDITOR 0x0041aff0
+// ?DistortTextureByLayers@@YAHHHDHHDH@Z
+
+// FUNCTION: SUMO 0x0041b12a
+// FUNCTION: EDITOR 0x0041b14a
+// ?FinishTextureLayerDistortion@@YAXXZ
+
+// FUNCTION: SUMO 0x0041bd10
+// FUNCTION: EDITOR 0x0041bd30
+// ?ConvertTextureHsvToRgb@@YAIMMM@Z
+
+#endif
+
+#endif
