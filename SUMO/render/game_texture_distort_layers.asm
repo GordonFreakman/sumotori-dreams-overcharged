@@ -123,6 +123,8 @@ distortLayersPixel:
 distortLayersBodyEnd LABEL BYTE
 ?DistortTextureByLayers@@YAHHHDHHDH@Z ENDP
 
+; FUNCTION: SUMO 0x0041b129
+; FUNCTION: EDITOR 0x0041b149
 PUBLIC ?PopTextureLayerDistortionRegister@@YAXXZ
 ?PopTextureLayerDistortionRegister@@YAXXZ PROC
     pop ebx

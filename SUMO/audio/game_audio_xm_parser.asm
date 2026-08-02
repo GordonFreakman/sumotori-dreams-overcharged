@@ -17,6 +17,7 @@ EXTERN _g_gameAudioXmSignature:BYTE
 .code
 
 ; FUNCTION: SUMO 0x0041895c
+; FUNCTION: EDITOR 0x0041897e
 PUBLIC _ParseGameAudioModule
 _ParseGameAudioModule PROC
     DB 055h, 08dh, 0ach, 024h, 048h, 0ffh, 0ffh, 0ffh, 081h, 0ech, 034h, 001h, 000h, 000h, 0a1h

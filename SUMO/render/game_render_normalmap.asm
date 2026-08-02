@@ -10,6 +10,8 @@ EXTERN ?CreateGameTextureFromPixels@@YAHPAXHHH@Z:PROC
 
 .code
 
+; FUNCTION: SUMO 0x00415abf
+; FUNCTION: EDITOR 0x00415ae1
 PUBLIC ?CreateGameNormalMapTexture@@YAHPAEHHH@Z
 ?CreateGameNormalMapTexture@@YAHPAEHHH@Z PROC
     push ebp

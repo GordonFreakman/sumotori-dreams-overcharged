@@ -80,9 +80,7 @@ void StartGameLevelEditor(char *source) {
 
 // FUNCTION: SUMO 0x00406cb0
 // FUNCTION: EDITOR 0x00406cd2
-// ?GameLevelEditorWindowProc@@YGJPAUHWND__@@IIJ@Z
-LRESULT CALLBACK GameLevelEditorWindowProc(HWND window, UINT message,
-                                           WPARAM wParam, LPARAM lParam) {
+LRESULT CALLBACK GameLevelEditorWindowProc(HWND window, UINT message, WPARAM wParam, LPARAM lParam) {
   switch (message) {
   case WM_SIZE:
     MoveWindow(g_gameLevelEditorEditControl, 0, 0, LOWORD(lParam) - 30,

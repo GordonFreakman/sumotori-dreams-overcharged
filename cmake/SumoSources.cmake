@@ -17,7 +17,7 @@ set(SUMO_SOURCES
   SUMO/core/big_integer_power.asm
   SUMO/core/big_integer_shift.asm
   SUMO/core/big_integer_shift.cpp
-  SUMO/core/big_integer_string.asm
+  SUMO/core/big_integer_string.cpp
   SUMO/core/big_integer_write_string.asm
   SUMO/core/retail_literals.asm
   SUMO/core/containers.h
@@ -28,7 +28,7 @@ set(SUMO_SOURCES
   SUMO/platform/main.cpp
   SUMO/core/decomp.h
   SUMO/parser/expression_parser.cpp
-  SUMO/parser/expression_parser_turn_to.asm
+  SUMO/parser/expression_parser_turn_to.cpp
   SUMO/parser/expression_parser_identifier.asm
   SUMO/parser/expression_parser_find_cursor.cpp
   SUMO/parser/expression_parser_prepare.asm
@@ -40,7 +40,7 @@ set(SUMO_SOURCES
   SUMO/parser/expression_parser_compile_function.cpp
   SUMO/parser/expression_parser_compile_block.cpp
   SUMO/parser/expression_parser_eval.asm
-  SUMO/parser/expression_parser_dump.asm
+  SUMO/parser/expression_parser_dump.cpp
   SUMO/parser/expression_parser.h
   "${SUMO_AUDIO_DATA_ASM}"
   "${SUMO_AUDIO_XM_PARSER}"
@@ -50,17 +50,18 @@ set(SUMO_SOURCES
   SUMO/render/game_texture_distort_layers.asm
   SUMO/audio/game_audio_channel_reset.cpp
   SUMO/audio/game_audio_channel_reset.asm
-  SUMO/audio/game_audio_volume_column.asm
+  SUMO/audio/game_audio_volume_column.cpp
   SUMO/audio/game_audio_assets.cpp
   SUMO/audio/game_audio_decode_assets.asm
-  SUMO/audio/game_audio_playback.asm
+  SUMO/audio/game_sound_slot.h
+  SUMO/audio/game_audio_play_sound.cpp
   SUMO/audio/game_audio_mixer.asm
   SUMO/render/game_texture_assets.cpp
   SUMO/render/game_texture_hsv_rgb.asm
   SUMO/render/game_texture_program.asm
   SUMO/render/game_render_normalmap.asm
-  SUMO/render/game_render_ramps.asm
-  SUMO/render/game_render_text.asm
+  SUMO/render/game_render_ramps.cpp
+  SUMO/render/game_render_text.cpp
   SUMO/render/game_texture_handles.asm
   SUMO/render/game_render_texture_init.asm
   SUMO/render/game_render_projection.asm
@@ -68,13 +69,12 @@ set(SUMO_SOURCES
   SUMO/render/game_render_scratch.cpp
   SUMO/render/game_render_water.asm
   SUMO/physics/game_box_render_storage.asm
-  SUMO/physics/game_box_contacts.asm
   SUMO/physics/game_box_contacts_wrapper.cpp
   SUMO/render/game_render_display_modes.asm
-  SUMO/render/game_render_device_init.asm
+  SUMO/render/game_render_device_init.cpp
   SUMO/render/game_render_screenshot.asm
   SUMO/render/game_texture_hsv.cpp
-  SUMO/physics/game_box_edges.asm
+  SUMO/physics/game_box_edges.cpp
   SUMO/physics/game_box_face.cpp
   SUMO/physics/game_box_geometry.cpp
   SUMO/physics/game_box_initialize.cpp
@@ -90,7 +90,7 @@ set(SUMO_SOURCES
   SUMO/physics/game_box_render_state.cpp
   SUMO/physics/game_box_render.asm
   SUMO/physics/game_box_lifecycle.cpp
-  SUMO/physics/game_box_paired_impulse.asm
+  SUMO/physics/game_box_paired_impulse.cpp
   SUMO/physics/game_box_water_state.cpp
   SUMO/physics/game_box_water.asm
   SUMO/physics/game_box_water_loop.asm
@@ -102,7 +102,7 @@ set(SUMO_SOURCES
   SUMO/physics/game_water_update.asm
   SUMO/render/game_wavy_text_transform.cpp
   SUMO/render/game_wavy_text_transform.asm
-  SUMO/game/game_man_pose.asm
+  SUMO/game/game_man_pose.cpp
   SUMO/game/game_man_bss.asm
   SUMO/game/game_man_initialize.asm
   SUMO/game/game_man_cross_marker.cpp
@@ -134,7 +134,7 @@ set(SUMO_SOURCES
   SUMO/game/game_runtime.asm
   SUMO/game/game_default_arena.asm
   SUMO/game/game_hidden_screen.asm
-  SUMO/physics/game_random_next.asm
+  SUMO/physics/game_random_next.cpp
   SUMO/game/game_main_loop.cpp
   SUMO/game/game_main_loop_exact.asm
   SUMO/game/game_level_editor.cpp
@@ -145,7 +145,6 @@ set(SUMO_SOURCES
   SUMO/render/game_render.cpp
   SUMO/render/game_render_bss.asm
   SUMO/game/game_scene.cpp
-  SUMO/game/game_free_camera.asm
   SUMO/render/game_camera.asm
   SUMO/game/game_settings.cpp
   SUMO/game/game_settings_transform.asm
@@ -160,6 +159,5 @@ set(SUMO_SOURCES
   SUMO/core/types.h
   SUMO/core/u32vector_ops.cpp
   SUMO/core/vector3.cpp
-  SUMO/core/vector3_normalize.asm
   SUMO/core/vector3_rotation.cpp
 )

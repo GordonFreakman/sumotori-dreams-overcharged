@@ -16,7 +16,7 @@ EXTERN ??ZBigInteger@@QAEXAAV0@@Z:PROC
 EXTERN ?Log@BigInteger@@QAEHAAV1@@Z:PROC
 EXTERN ?Power@BigInteger@@QAE?AV1@H@Z:PROC
 EXTERN _free:PROC
-EXTERN stringConstructorDecimalDigits:BYTE
+EXTERN ??_C@_0L@FPFMPDDA@0123456789?$AA@:BYTE
 
 .data
 ALIGN 4
@@ -66,7 +66,7 @@ PUBLIC ?WriteString@BigInteger@@QAEXPADHPBDHH@Z
     cmp dword ptr [ebp+10h], ebx
     mov dword ptr [ebp-10h], ecx
     jnz writeStringHaveAlphabet
-    mov dword ptr [ebp+10h], OFFSET stringConstructorDecimalDigits
+    mov dword ptr [ebp+10h], OFFSET ??_C@_0L@FPFMPDDA@0123456789?$AA@
 
 writeStringHaveAlphabet:
     mov eax, dword ptr [ebp+0ch]

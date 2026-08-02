@@ -874,28 +874,13 @@ SumoS32 SaveGameScreenshot(char *p_prefix, SumoS32 p_index) {
 
 // FUNCTION: SUMO 0x004151b7
 // FUNCTION: EDITOR 0x004151d9
-__declspec(naked) SumoU32 ReleaseNextQueuedRenderResource() {
-  __asm {
-    mov eax, dword ptr [g_deferredReleaseIndex]
-    lea eax, dword ptr [g_deferredReleaseSlots + eax * 4]
-    mov ecx, dword ptr [eax]
-    cmp dword ptr [ecx], 0
-    je releaseComplete
-    mov eax, ecx
-    mov eax, dword ptr [eax]
-    mov ecx, dword ptr [eax]
-    push eax
-    call dword ptr [ecx + 8]
-releaseComplete:
-    mov eax, dword ptr [g_deferredReleaseIndex]
-    mov eax, dword ptr [g_deferredReleaseSlots + eax * 4]
-    and dword ptr [eax], 0
-    mov eax, dword ptr [g_deferredReleaseIndex]
-    inc eax
-    and eax, 03ffh
-    mov dword ptr [g_deferredReleaseIndex], eax
-    ret
+SumoU32 ReleaseNextQueuedRenderResource() {
+  if (*g_deferredReleaseSlots[g_deferredReleaseIndex] != NULL) {
+    (*g_deferredReleaseSlots[g_deferredReleaseIndex])->Release();
   }
+
+  *g_deferredReleaseSlots[g_deferredReleaseIndex] = NULL;
+  return g_deferredReleaseIndex = (g_deferredReleaseIndex + 1) & 0x3ff;
 }
 
 // GLOBAL: SUMO 0x004571ec
@@ -957,79 +942,36 @@ void __stdcall IgnoreGameTextureProgress(SumoF32) {}
 
 // FUNCTION: SUMO 0x00415a3a
 // FUNCTION: EDITOR 0x00415a5c
-__declspec(naked) SumoS32 CreateGameTextureFromPixels(void *pixels,
-                                                      SumoS32 width,
-                                                      SumoS32 height,
-                                                      SumoS32 singleLevel)
-{
+SumoS32 CreateGameTextureFromPixels(void *p_pixels, SumoS32 p_width, SumoS32 p_height, SumoS32 p_singleLevel) {
+  struct TextureUploadState {
+    D3DLOCKED_RECT locked;
+    SumoS32 remaining;
+    SumoS32 rowBytes;
+  } upload;
 
-  __asm {
-    push ebp
-    mov ebp, esp
-    sub esp, 10h
-    push ebx
-    mov eax, dword ptr [g_gameD3DDevice]
-    push esi
-    mov ecx, dword ptr [eax]
-    push edi
-    xor ebx, ebx
-    push ebx
-    lea edx, dword ptr [ebp + 14h]
-    push edx
-    mov edx, dword ptr [ebp + 14h]
-    push 1
-    push 15h
-    xor edx, 1
-    shl edx, 0ah
-    push edx
-    push dword ptr [ebp + 14h]
-    push dword ptr [ebp + 10h]
-    push dword ptr [ebp + 0ch]
-    push eax
-    call dword ptr [ecx + 5ch]
-    mov eax, dword ptr [ebp + 14h]
-    mov ecx, dword ptr [eax]
-    push ebx
-    push ebx
-    lea edx, dword ptr [ebp - 10h]
-    push edx
-    push ebx
-    push eax
-    call dword ptr [ecx + 4ch]
-    mov eax, dword ptr [ebp + 10h]
-    cmp eax, ebx
-    mov esi, dword ptr [ebp - 0ch]
-    mov edi, dword ptr [ebp + 8]
-    jle uploadComplete
-    mov ecx, dword ptr [ebp + 0ch]
-    shl ecx, 2
-    mov dword ptr [ebp - 4], ecx
-    mov dword ptr [ebp - 8], eax
-uploadRow:
-    push dword ptr [ebp - 4]
-    push edi
-    push esi
-    call memcpy
-    add esi, dword ptr [ebp - 10h]
-    add edi, dword ptr [ebp - 4]
-    add esp, 0ch
-    dec dword ptr [ebp - 8]
-    jne uploadRow
-uploadComplete:
-    mov eax, dword ptr [ebp + 14h]
-    mov ecx, dword ptr [eax]
-    push ebx
-    push eax
-    call dword ptr [ecx + 50h]
-    mov eax, dword ptr [ebp + 14h]
-    pop edi
-    pop esi
-    pop ebx
-    leave
-    ret
+  IDirect3DTexture9 *texture;
+  g_gameD3DDevice->CreateTexture(p_width, p_height, p_singleLevel,
+                                 (p_singleLevel ^ 1) * D3DUSAGE_AUTOGENMIPMAP,
+                                 D3DFMT_A8R8G8B8, D3DPOOL_MANAGED, &texture,
+                                 NULL);
+
+  texture->LockRect(0, &upload.locked, NULL, 0);
+
+  SumoU8 *destination = (SumoU8 *)upload.locked.pBits;
+  SumoU8 *source = (SumoU8 *)p_pixels;
+  if (p_height > 0) {
+    upload.rowBytes = p_width << 2;
+    upload.remaining = p_height;
+    do {
+      memcpy(destination, source, upload.rowBytes);
+      destination += upload.locked.Pitch;
+      source += upload.rowBytes;
+    } while (--upload.remaining != 0);
   }
-}
 
+  texture->UnlockRect(0);
+  return (SumoS32)texture;
+}
 
 // FUNCTION: SUMO 0x00415bf5
 // FUNCTION: EDITOR 0x00415c17

@@ -3,6 +3,7 @@
 #include "game_runtime.h"
 
 #include <math.h>
+#include <new>
 #include <stdio.h>
 
 extern Matrix3 g_gameInverseViewMatrix;
@@ -224,4 +225,141 @@ void ResetAndSetSceneTransform(Vector3 &position, SumoF32 angle) {
   ResetSceneTransform();
   g_scenePosition = position;
   g_sceneAngle = angle;
+}
+
+static __forceinline Vector3 &ReuseVector3Storage(Vector3 &p_object,
+                                                  Vector3 &p_value) {
+  p_object.~Vector3();
+  return p_value;
+}
+
+// FUNCTION: SUMO 0x00402846
+// FUNCTION: EDITOR 0x00402846
+void UpdateFreeGameCamera(SumoS32 p_tickCount) {
+  SumoS32 zero = 0;
+  if (g_freeCameraFileInitialized == zero) {
+    FILE *stream = fopen(
+        // STRING: SUMO 0x0042b290
+        // STRING: EDITOR 0x0042b290
+        "camera.dat", "w");
+    fclose(stream);
+    g_freeCameraFileInitialized = 1;
+  }
+
+  volatile SumoF32 ticks = (SumoF32)p_tickCount;
+  struct CameraDamping {
+    SumoF32 m_rotation;
+    SumoF32 m_translation;
+  } damping;
+  damping.m_rotation = (SumoF32)exp(log(g_freeCameraRotationDamping) * ticks);
+  damping.m_translation =
+      (SumoF32)exp(log(g_freeCameraTranslationDamping) * ticks);
+  SumoF32 rotationStep = ticks * g_freeCameraRotationAcceleration;
+  SumoF32 translationStep = ticks * g_freeCameraTranslationAcceleration;
+
+  SumoU8 pressed[32];
+  for (SumoU32 index = 0; index < 19; ++index) {
+    pressed[index] = g_gameKeyDown[g_freeCameraScanCodes[index]] != zero;
+  }
+  if (pressed[18] != zero)
+    translationStep = translationStep * g_parserMinimumBreakability;
+
+  if (pressed[0] != zero)
+    g_freeCameraPitchVelocity += rotationStep;
+  if (pressed[1] != zero)
+    g_freeCameraPitchVelocity -= rotationStep;
+  if (pressed[4] != zero)
+    g_freeCameraRollVelocity -= rotationStep;
+  if (pressed[5] != zero)
+    g_freeCameraRollVelocity += rotationStep;
+  if (pressed[3] != zero)
+    g_freeCameraYawVelocity -= rotationStep;
+  if (pressed[2] != zero)
+    g_freeCameraYawVelocity += rotationStep;
+
+  Vector3 relativeTarget = g_freeCameraTarget;
+  new (&relativeTarget) Vector3(g_sceneOrientation.Transform(
+      ReuseVector3Storage(relativeTarget, relativeTarget - g_scenePosition)));
+  g_freeCameraRollVelocity *= damping.m_rotation;
+  g_freeCameraPitchVelocity =
+      ((relativeTarget.y / relativeTarget.z * g_freeCameraAimScale -
+        g_freeCameraPitchVelocity) *
+           g_inertiaRadiusScale +
+       g_freeCameraPitchVelocity) *
+      damping.m_rotation;
+  g_freeCameraYawVelocity =
+      ((relativeTarget.x / relativeTarget.z * g_freeCameraAimScale -
+        g_freeCameraYawVelocity) *
+           g_inertiaRadiusScale +
+       g_freeCameraYawVelocity) *
+      damping.m_rotation;
+
+  g_scenePhaseA -= ticks * g_freeCameraRollVelocity;
+  g_scenePhaseB += ticks * g_freeCameraPitchVelocity;
+  g_sceneAngle -= ticks * g_freeCameraYawVelocity;
+  g_sceneOrientation.SetIdentity();
+  g_sceneOrientation.RotateRows02(g_sceneAngle);
+  g_sceneOrientation.RotateRows12(g_scenePhaseB);
+  g_sceneOrientation.RotateRows01(g_scenePhaseA);
+
+  if (pressed[6] != zero) {
+    g_freeCameraVelocity.x -= g_sceneOrientation.m00 * translationStep;
+    g_freeCameraVelocity.y -= g_sceneOrientation.m01 * translationStep;
+    g_freeCameraVelocity.z -= g_sceneOrientation.m02 * translationStep;
+  }
+  if (pressed[7] != zero) {
+    g_freeCameraVelocity.x += g_sceneOrientation.m00 * translationStep;
+    g_freeCameraVelocity.y += g_sceneOrientation.m01 * translationStep;
+    g_freeCameraVelocity.z += g_sceneOrientation.m02 * translationStep;
+  }
+  if (pressed[8] != zero) {
+    g_freeCameraVelocity.x += g_sceneOrientation.m20 * translationStep;
+    g_freeCameraVelocity.y += g_sceneOrientation.m21 * translationStep;
+    g_freeCameraVelocity.z += g_sceneOrientation.m22 * translationStep;
+  }
+  if (pressed[9] != zero) {
+    g_freeCameraVelocity.x -= g_sceneOrientation.m20 * translationStep;
+    g_freeCameraVelocity.y -= g_sceneOrientation.m21 * translationStep;
+    g_freeCameraVelocity.z -= g_sceneOrientation.m22 * translationStep;
+  }
+  if (pressed[11] != zero) {
+    g_freeCameraVelocity.x -= g_sceneOrientation.m10 * translationStep;
+    g_freeCameraVelocity.y -= g_sceneOrientation.m11 * translationStep;
+    g_freeCameraVelocity.z -= g_sceneOrientation.m12 * translationStep;
+  }
+  if (pressed[10] != zero) {
+    g_freeCameraVelocity.x += g_sceneOrientation.m10 * translationStep;
+    g_freeCameraVelocity.y += g_sceneOrientation.m11 * translationStep;
+    g_freeCameraVelocity.z += g_sceneOrientation.m12 * translationStep;
+  }
+
+  ++g_freeCameraRecordTicks;
+  g_freeCameraVelocity.x *= damping.m_translation;
+  g_freeCameraVelocity.y *= damping.m_translation;
+  g_freeCameraVelocity.z *= damping.m_translation;
+  g_gameInverseViewMatrix = g_sceneOrientation;
+  g_scenePosition.x += ticks * g_freeCameraVelocity.x;
+  g_scenePosition.y += ticks * g_freeCameraVelocity.y;
+  g_scenePosition.z += ticks * g_freeCameraVelocity.z;
+  g_gameCameraWorldPosition = g_scenePosition;
+
+  if (g_gameKeyDown[c_gameFreeCameraRecordInput] == zero &&
+      g_freeCameraRecordTicks % 50 != zero)
+    return;
+
+  g_gameKeyDown[c_gameFreeCameraRecordInput] = (SumoU8)zero;
+  FILE *stream = fopen("camera.dat", "a");
+  fprintf(stream,
+          // STRING: SUMO 0x0042b25c
+          // STRING: EDITOR 0x0042b25c
+          "{%d,%d,%d,%d,%d,%d,%d},\n",
+          (SumoS32)(g_scenePhaseA * g_freeCameraAngleRecordScale),
+          (SumoS32)(g_scenePhaseB * g_freeCameraAngleRecordScale),
+          (SumoS32)(g_sceneAngle * g_freeCameraAngleRecordScale),
+          (SumoS32)(g_scenePosition.x * g_freeCameraPositionRecordScale),
+          (SumoS32)(g_scenePosition.y * g_freeCameraPositionRecordScale),
+          (SumoS32)(g_scenePosition.z * g_freeCameraPositionRecordScale),
+          g_freeCameraRecordTicks);
+  fclose(stream);
+  g_freeCameraRecordTicks = zero;
 }

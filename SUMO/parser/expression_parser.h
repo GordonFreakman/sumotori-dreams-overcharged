@@ -97,7 +97,7 @@ public:
   void InitializeStandardLibrary();
   ParserValue Evaluate();
   void PrepareEvaluation();
-  void DumpAssembly(char *filename);
+  void DumpAssembly(char *p_filename);
   char *CompileStatement(char *cursor);
   char *CompileBlockStatements(char *cursor);
   char *CompileStatements(char *cursor);

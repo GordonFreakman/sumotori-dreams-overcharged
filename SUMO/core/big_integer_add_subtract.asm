@@ -11,6 +11,8 @@ EXTERN ?SumoAssert@@YAX_N@Z:PROC
 
 .code
 
+; FUNCTION: SUMO 0x00401391
+; FUNCTION: EDITOR 0x00401391
 PUBLIC ??ZBigInteger@@QAEXAAV0@@Z
 ??ZBigInteger@@QAEXAAV0@@Z PROC
     push ebp
@@ -114,6 +116,8 @@ subtractReturn:
     ret 4
 ??ZBigInteger@@QAEXAAV0@@Z ENDP
 
+; FUNCTION: SUMO 0x00401482
+; FUNCTION: EDITOR 0x00401482
 PUBLIC ??YBigInteger@@QAEXAAV0@@Z
 ??YBigInteger@@QAEXAAV0@@Z PROC
     push ebp

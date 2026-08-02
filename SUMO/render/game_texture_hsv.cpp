@@ -19,10 +19,7 @@ SumoU32 ConvertTextureHsvToRgb(
 
 // FUNCTION: SUMO 0x0041bef0
 // FUNCTION: EDITOR 0x0041bf10
-__declspec(naked) void ConvertTextureRgbToHsv(
-    SumoF32 red, SumoF32 green, SumoF32 blue,
-    SumoF32* hue, SumoF32* saturation, SumoF32* value)
-{
+__declspec(naked) void ConvertTextureRgbToHsv(SumoF32 red, SumoF32 green, SumoF32 blue, SumoF32 *hue, SumoF32 *saturation, SumoF32 *value) {
   __asm {
     fld dword ptr [esp + 4]
     fcomp dword ptr [esp + 8]
@@ -184,9 +181,7 @@ rgbHsvDone:
 
 // FUNCTION: SUMO 0x0041c080
 // FUNCTION: EDITOR 0x0041c0a0
-__declspec(naked) void AdjustTextureHsv(
-    SumoS32 layerIndex, SumoS32 hueOffset, SumoS32 saturationReduction)
-{
+__declspec(naked) void AdjustTextureHsv(SumoS32 layerIndex, SumoS32 hueOffset, SumoS32 saturationReduction) {
   __asm {
     sub esp, 0ch
     fild dword ptr [esp + 14h]

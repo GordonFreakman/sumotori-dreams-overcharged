@@ -8,6 +8,8 @@ EXTERN ?g_parserIdentifierTooLong@@3QBDB:BYTE
 
 .code
 
+; FUNCTION: SUMO 0x004055e9
+; FUNCTION: EDITOR 0x0040560b
 PUBLIC ?ReadIdentifier@ExpressionParser@@QAEPADPAD0@Z
 ?ReadIdentifier@ExpressionParser@@QAEPADPAD0@Z PROC
     db 055h, 08bh, 0ech, 051h, 053h, 056h, 08bh, 075h, 00ch, 085h, 0f6h, 057h

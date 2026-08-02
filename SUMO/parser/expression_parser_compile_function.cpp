@@ -5,9 +5,7 @@
 
 // FUNCTION: SUMO 0x004059d7
 // FUNCTION: EDITOR 0x004059f9
-char *ExpressionParser::CompileFunctionDefinition(char *name,
-                                                  char *parameterCursor,
-                                                  char *bodyCursor) {
+char *ExpressionParser::CompileFunctionDefinition(char *name, char *parameterCursor, char *bodyCursor) {
   char *parameterHome = parameterCursor;
   BuiltinFunctionVector *builtinList = &m_builtins;
   for (SumoS32 builtinIndex = 0;

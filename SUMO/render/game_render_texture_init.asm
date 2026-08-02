@@ -23,6 +23,8 @@ EXTERN ?g_gameFontAtlasTexture@@3HA:DWORD
 
 .code
 
+; FUNCTION: SUMO 0x004158a8
+; FUNCTION: EDITOR 0x004158ca
 PUBLIC ?InitializeGameTextures@@YAHXZ
 ?InitializeGameTextures@@YAHXZ PROC
     sub esp, 0ch

@@ -13,6 +13,8 @@ EXTERN ?g_bigIntegerMultiplyFlag@@3HA:DWORD
 
 .code
 
+; FUNCTION: SUMO 0x0040155e
+; FUNCTION: EDITOR 0x0040155e
 PUBLIC ??DBigInteger@@QAE?AV0@AAV0@@Z
 ??DBigInteger@@QAE?AV0@AAV0@@Z PROC
     push ebp

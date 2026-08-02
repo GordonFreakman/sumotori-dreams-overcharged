@@ -15,6 +15,8 @@ EXTERN ?g_gameAudioFixedPointScale@@3MB:DWORD
 
 .code
 
+; FUNCTION: SUMO 0x00417357
+; FUNCTION: EDITOR 0x00417379
 PUBLIC ?MixGameAudioChannels@@YAXPAXHH@Z
 ?MixGameAudioChannels@@YAXPAXHH@Z PROC
     db 055h, 08bh, 0ech, 08bh, 045h, 00ch, 085h, 0c0h, 053h, 056h, 057h, 00fh

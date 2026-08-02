@@ -11,6 +11,8 @@ EXTERN ?g_textureOne@@3NB:QWORD
 
 .code
 
+; FUNCTION: SUMO 0x0041bd10
+; FUNCTION: EDITOR 0x0041bd30
 PUBLIC ?ConvertTextureHsvToRgb@@YAIMMM@Z
 ?ConvertTextureHsvToRgb@@YAIMMM@Z PROC
     fld dword ptr [esp + 8]

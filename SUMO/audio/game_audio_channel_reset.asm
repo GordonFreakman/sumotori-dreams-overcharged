@@ -2,82 +2,8 @@
 .model flat
 option casemap:none
 
-EXTERN _sin:PROC
-EXTERN _fabs:PROC
-EXTERN __ftol2:PROC
-EXTERN ?g_trackerVibratoPhaseScale@@3NB:QWORD
-EXTERN ?g_textureSize@@3NB:QWORD
 
 .code
-
-; FUNCTION: SUMO 0x004179f9
-; FUNCTION: EDITOR 0x00417a1b
-PUBLIC ?UpdateTrackerVibrato@@YAXPAUTrackerChannelState@@@Z
-?UpdateTrackerVibrato@@YAXPAUTrackerChannelState@@@Z PROC
-    push ebp
-    mov ebp, esp
-    push esi
-    mov esi, [ebp+8]
-    xor eax, eax
-    mov al, [esi+0A2h]
-    and eax, 3
-    jz short sine_wave
-    cmp eax, 1
-    jz short ramp_wave
-    jle short waveform_ready_fallback
-    cmp eax, 3
-    jg short waveform_ready_fallback
-    mov eax, 0FFh
-    jmp short waveform_ready
-
-ramp_wave:
-    mov cl, [esi+085h]
-    mov al, cl
-    shl al, 3
-    test cl, cl
-    jge short ramp_positive
-    or cl, 0FFh
-    sub cl, al
-    mov al, cl
-ramp_positive:
-    movzx eax, al
-    jmp short waveform_ready
-
-sine_wave:
-    movsx eax, BYTE PTR [esi+085h]
-    mov [ebp+8], eax
-    push ecx
-    push ecx
-    fild DWORD PTR [ebp+8]
-    db 0DCh, 0C0h
-    fmul QWORD PTR [?g_trackerVibratoPhaseScale@@3NB]
-    fstp QWORD PTR [esp]
-    call _sin
-    fmul QWORD PTR [?g_textureSize@@3NB]
-    fstp QWORD PTR [esp]
-    call _fabs
-    pop ecx
-    pop ecx
-    call __ftol2
-    jmp short waveform_ready
-
-waveform_ready_fallback:
-    mov eax, [ebp+8]
-waveform_ready:
-    movzx ecx, BYTE PTR [esi+087h]
-    imul ecx, eax
-    sar ecx, 5
-    and ecx, 0FFFFFFFCh
-    cmp BYTE PTR [esi+085h], 0
-    jl short signed_offset_ready
-    neg ecx
-signed_offset_ready:
-    or BYTE PTR [esi+2], 1
-    mov [esi+01Ch], ecx
-    pop esi
-    pop ebp
-    ret
-?UpdateTrackerVibrato@@YAXPAUTrackerChannelState@@@Z ENDP
 
 ; FUNCTION: SUMO 0x00417b8a
 ; FUNCTION: EDITOR 0x00417bac
@@ -189,49 +115,5 @@ envelope_done:
     leave
     ret
 ?UpdateTrackerEnvelope@@YAXPAUTrackerChannelState@@PAH1EHPAUTrackerEnvelopePoint@@EEE11PAE1E@Z ENDP
-
-; FUNCTION: SUMO 0x00417f89
-; FUNCTION: EDITOR 0x00417fab
-PUBLIC ?ResetTrackerChannelState@@YAXPAUTrackerChannelState@@PAUGameAudioParsedSample@@@Z
-?ResetTrackerChannelState@@YAXPAUTrackerChannelState@@PAUGameAudioParsedSample@@@Z PROC
-    mov eax, [esp+4]
-    mov ecx, [esp+8]
-    movzx edx, BYTE PTR [ecx+010h]
-    mov [eax+010h], edx
-    mov ecx, [ecx+018h]
-    mov dl, [eax+0A2h]
-    push ebx
-    mov bl, dl
-    and bl, 0Fh
-    mov [eax+014h], ecx
-    xor ecx, ecx
-    cmp bl, 4
-    mov DWORD PTR [eax+034h], 040h
-    mov [eax+02Ch], ecx
-    mov [eax+028h], ecx
-    mov [eax+038h], ecx
-    mov DWORD PTR [eax+04Ch], 020h
-    mov [eax+044h], ecx
-    mov [eax+040h], ecx
-    mov [eax+050h], ecx
-    mov [eax+065h], cl
-    mov DWORD PTR [eax+058h], 10000h
-    mov [eax+03Ch], cl
-    mov [eax+054h], cl
-    mov [eax+060h], ecx
-    mov [eax+05Ch], ecx
-    pop ebx
-    jnb short low_memory_kept
-    mov [eax+085h], cl
-low_memory_kept:
-    and dl, 0F0h
-    cmp dl, 040h
-    jnb short high_memory_kept
-    mov [eax+089h], cl
-high_memory_kept:
-    or BYTE PTR [eax+2], 6
-    mov [eax+092h], cl
-    ret
-?ResetTrackerChannelState@@YAXPAUTrackerChannelState@@PAUGameAudioParsedSample@@@Z ENDP
 
 END

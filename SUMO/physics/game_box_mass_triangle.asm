@@ -10,6 +10,8 @@ EXTERN ??YVector3@@QAEXAAU0@@Z:PROC
 
 .code
 
+; FUNCTION: SUMO 0x00408114
+; FUNCTION: EDITOR 0x00408136
 PUBLIC ?AddTriangle@MassAccumulator@@QAEXAAUVector3@@00M@Z
 ?AddTriangle@MassAccumulator@@QAEXAAUVector3@@00M@Z PROC
     db 055h, 08dh, 06ch, 024h, 098h, 081h, 0ech, 0a8h, 000h, 000h, 000h, 053h

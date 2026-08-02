@@ -70,6 +70,35 @@ Vector3 MakeVector3(SumoF32 x, SumoF32 y, SumoF32 z) {
 // FUNCTION: EDITOR 0x004022a2
 SumoF32 Vector3::LengthSquared() { return x * x + y * y + z * z; }
 
+// FUNCTION: SUMO 0x004022c1
+// FUNCTION: EDITOR 0x004022c1
+SumoF32 Vector3::Normalize() {
+  SumoF32 scale = (SumoF32)sqrt(LengthSquared());
+  if (scale != g_vectorZero) {
+    scale = 1.0f / scale;
+  }
+
+  x = scale * x;
+  y = scale * y;
+  z = scale * z;
+  return scale;
+}
+
+// FUNCTION: SUMO 0x00402302
+// FUNCTION: EDITOR 0x00402302
+Vector3 Vector3::Normalized() {
+  SumoF32 scale = (SumoF32)sqrt(LengthSquared());
+  if (scale != g_vectorZero) {
+    scale = 1.0f / scale;
+  }
+
+  Vector3 result = *this;
+  result.x *= scale;
+  result.y *= scale;
+  result.z *= scale;
+  return result;
+}
+
 // FUNCTION: SUMO 0x00402363
 // FUNCTION: EDITOR 0x00402363
 Vector3 Matrix3::Transform(Vector3 &vector) {

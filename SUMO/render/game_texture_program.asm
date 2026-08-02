@@ -49,6 +49,8 @@ EXTERN ?g_textureExportFilename@@3PADA:BYTE
 
 .code
 
+; FUNCTION: SUMO 0x00419a30
+; FUNCTION: EDITOR 0x00419a50
 PUBLIC ?ExecuteTextureProgram@@YAXPAXPAI@Z
 ?ExecuteTextureProgram@@YAXPAXPAI@Z PROC
 loc_419a30:

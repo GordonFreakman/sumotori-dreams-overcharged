@@ -41,3 +41,4 @@ __pycache__/
 *.suo
 *.user
 *.kate-swp
+/.cmake-win/

@@ -7,7 +7,7 @@
 
 void SetGameFpuControlWord();
 void UpdateGameCamera();
-void UpdateFreeGameCamera(SumoS32 controlMode);
+void UpdateFreeGameCamera(SumoS32 p_tickCount);
 void ResetRenderVertexScratch();
 void AdvanceGameSimulation();
 SumoS32 UpdateHiddenGameScreen();

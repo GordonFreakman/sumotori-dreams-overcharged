@@ -4,8 +4,8 @@ option casemap:none
 
 .code
 
-; FUNCTION: SUMO 0x004058ce
-; FUNCTION: EDITOR 0x004058f0
+; FUNCTION: SUMO 0x00405888
+; FUNCTION: EDITOR 0x004058aa
 PUBLIC ?Evaluate@ExpressionParser@@QAE?AUVector3@@XZ
 ?Evaluate@ExpressionParser@@QAE?AUVector3@@XZ PROC
     push esi

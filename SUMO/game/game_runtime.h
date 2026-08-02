@@ -258,7 +258,7 @@ struct GameManJointPose {
 struct GameManPose {
   GameManJointPose joints[14];
 
-  void InitializeJointTransforms(GameMan *man);
+  void InitializeJointTransforms(GameMan *p_man);
 };
 
 

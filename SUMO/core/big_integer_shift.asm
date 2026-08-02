@@ -11,6 +11,8 @@ EXTERN _free:PROC
 
 .code
 
+; FUNCTION: SUMO 0x00401680
+; FUNCTION: EDITOR 0x00401680
 PUBLIC ??6BigInteger@@QAE?AV0@H@Z
 ??6BigInteger@@QAE?AV0@H@Z PROC
     push ebp

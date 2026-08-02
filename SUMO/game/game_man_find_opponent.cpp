@@ -6,8 +6,7 @@ extern const SumoF32 g_gameCameraMinimumDistanceScale;
 
 // FUNCTION: SUMO 0x004103fb
 // FUNCTION: EDITOR 0x0041041d
-GameMan *GameMan::FindNearestOpponent(Vector3 &facingAxis,
-                                      Vector3 &lateralAxis) {
+GameMan *GameMan::FindNearestOpponent(Vector3 &facingAxis, Vector3 &lateralAxis) {
   GameMan *nearest = NULL;
   SumoF32 bestScore = 9.9999996e35f;
   for (GameMan *candidate = g_gameMen; candidate < g_nextGameMan; ++candidate) {

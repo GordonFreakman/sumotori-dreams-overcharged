@@ -19,10 +19,6 @@
 // FUNCTION: EDITOR 0x00401680
 // ??6BigInteger@@QAE?AV0@H@Z
 
-// FUNCTION: SUMO 0x0040180e
-// FUNCTION: EDITOR 0x0040180e
-// ??0BigInteger@@QAE@PADHPBDH@Z
-
 // FUNCTION: SUMO 0x00401bb9
 // FUNCTION: EDITOR 0x00401bb9
 // ?Log@BigInteger@@QAEHAAV1@@Z
@@ -34,14 +30,6 @@
 // FUNCTION: SUMO 0x00401fb4
 // FUNCTION: EDITOR 0x00401fb4
 // ?WriteString@BigInteger@@QAEXPADHPBDHH@Z
-
-// FUNCTION: SUMO 0x004022c1
-// FUNCTION: EDITOR 0x004022c1
-// ?Normalize@Vector3@@QAEMXZ
-
-// FUNCTION: SUMO 0x00402302
-// FUNCTION: EDITOR 0x00402302
-// ?Normalized@Vector3@@QAE?AU1@XZ
 
 // FUNCTION: SUMO 0x00402f1b
 // FUNCTION: EDITOR 0x00402f1b
@@ -55,21 +43,9 @@
 // FUNCTION: EDITOR 0x00403a86
 // _EnumerateGameDisplayModes
 
-// FUNCTION: SUMO 0x00403c36
-// FUNCTION: EDITOR 0x00403c36
-// ?InitializeGameD3DDevice@@YAHXZ
-
-// FUNCTION: SUMO 0x00403e16
-// FUNCTION: EDITOR 0x00403e16
-// ?BlendTextIntoTexture@@YAHPAEPBDHHHHHHHH1@Z
-
 // FUNCTION: SUMO 0x00404008
 // FUNCTION: EDITOR 0x00404008
 // ?TransformEncodedGameSettings@@YA?AVBigInteger@@V1@H0@Z
-
-// FUNCTION: SUMO 0x00404d6d
-// FUNCTION: EDITOR 0x00404d8f
-// ?ParserBuiltinTurnTo@@YAXPAUParserBuiltinCall@@@Z
 
 // FUNCTION: SUMO 0x004055e9
 // FUNCTION: EDITOR 0x0040560b
@@ -78,10 +54,6 @@
 // FUNCTION: SUMO 0x00405888
 // FUNCTION: EDITOR 0x004058aa
 // ?Evaluate@ExpressionParser@@QAE?AUVector3@@XZ
-
-// FUNCTION: SUMO 0x004058ce
-// FUNCTION: EDITOR 0x004058f0
-// ?DumpAssembly@ExpressionParser@@QAEXPAD@Z
 
 // FUNCTION: SUMO 0x00405d33
 // FUNCTION: EDITOR 0x00405d55
@@ -114,18 +86,6 @@
 // FUNCTION: SUMO 0x00408114
 // FUNCTION: EDITOR 0x00408136
 // ?AddTriangle@MassAccumulator@@QAEXAAUVector3@@00M@Z
-
-// FUNCTION: SUMO 0x00408684
-// FUNCTION: EDITOR 0x004086a6
-// ?ApplyPairedAngularImpulse@@YAXPAPAUGameBox@@AAUVector3@@@Z
-
-// FUNCTION: SUMO 0x004089bc
-// FUNCTION: EDITOR 0x004089de
-// ?BuildEdges@GameBox@@QAEXXZ
-
-// FUNCTION: SUMO 0x00408c14
-// FUNCTION: EDITOR 0x00408c36
-// ?ResetGameContactLists@@YAXXZ
 
 // FUNCTION: SUMO 0x00408f5b
 // FUNCTION: EDITOR 0x00408f7d
@@ -163,10 +123,6 @@
 // FUNCTION: EDITOR 0x0040b5aa
 // ?ApplyWaterInteractionToMovingBoxes@@YAXXZ
 
-// FUNCTION: SUMO 0x0040b776
-// FUNCTION: EDITOR 0x0040b798
-// ?Next@GameRandomGenerator@@QAEMXZ
-
 // FUNCTION: SUMO 0x0040b86a
 // FUNCTION: EDITOR 0x0040b88c
 // ?TransformWavyTextPoint@@YA?AUVector3@@AAU1@@Z
@@ -183,13 +139,13 @@
 // FUNCTION: EDITOR 0x0040d7cf
 // ?UpdateGameReplay@@YAHXZ
 
+// FUNCTION: SUMO 0x0040e1b0
+// FUNCTION: EDITOR 0x0040e1d2
+// ?RunGameFrame@@YAXE@Z
+
 // FUNCTION: SUMO 0x0040e690
 // FUNCTION: EDITOR 0x0040e6b2
 // ?AlignGameBoxJointTransform@@YAXPAUGameBoxJoint@@H@Z
-
-// FUNCTION: SUMO 0x0040e718
-// FUNCTION: EDITOR 0x0040e73a
-// ?InitializeJointTransforms@GameManPose@@QAEXPAUGameMan@@@Z
 
 // FUNCTION: SUMO 0x0040e874
 // FUNCTION: EDITOR 0x0040e896
@@ -227,25 +183,9 @@
 // FUNCTION: EDITOR 0x00414f2b
 // ?WriteGameScreenshot@@YAHXZ
 
-// FUNCTION: SUMO 0x004151f4
-// FUNCTION: EDITOR 0x00415216
-// ?PlaySound@GameSoundSlot@@QAEPAXMMH@Z
-
-// FUNCTION: SUMO 0x00415369
-// FUNCTION: EDITOR 0x0041538b
-// ?PlayGameSound@@YAPAXHMMH@Z
-
 // FUNCTION: SUMO 0x004153d2
 // FUNCTION: EDITOR 0x004153f4
 // ?DecodeGameSoundAssets@@YAEXZ
-
-// FUNCTION: SUMO 0x004156a6
-// FUNCTION: EDITOR 0x004156c8
-// ?CreateGameRampTexture@@YAHXZ
-
-// FUNCTION: SUMO 0x0041579b
-// FUNCTION: EDITOR 0x004157bd
-// ?CreateGameAttenuationTexture@@YAHXZ
 
 // FUNCTION: SUMO 0x004158a8
 // FUNCTION: EDITOR 0x004158ca
@@ -267,21 +207,13 @@
 // FUNCTION: EDITOR 0x00417379
 // ?MixGameAudioChannels@@YAXPAXHH@Z
 
-// FUNCTION: SUMO 0x004179f9
-// FUNCTION: EDITOR 0x00417a1b
-// ?UpdateTrackerVibrato@@YAXPAUTrackerChannelState@@@Z
-
 // FUNCTION: SUMO 0x00417b8a
 // FUNCTION: EDITOR 0x00417bac
 // ?UpdateTrackerEnvelope@@YAXPAUTrackerChannelState@@PAH1EHPAUTrackerEnvelopePoint@@EEE11PAE1E@Z
 
-// FUNCTION: SUMO 0x00417c7d
-// FUNCTION: EDITOR 0x00417c9f
-// _ApplyTrackerVolumeColumn
-
-// FUNCTION: SUMO 0x00417f89
-// FUNCTION: EDITOR 0x00417fab
-// ?ResetTrackerChannelState@@YAXPAUTrackerChannelState@@PAUGameAudioParsedSample@@@Z
+// FUNCTION: SUMO 0x0041895c
+// FUNCTION: EDITOR 0x0041897e
+// _ParseGameAudioModule
 
 // FUNCTION: SUMO 0x00419a30
 // FUNCTION: EDITOR 0x00419a50
@@ -290,6 +222,12 @@
 // FUNCTION: SUMO 0x0041afd0
 // FUNCTION: EDITOR 0x0041aff0
 // ?DistortTextureByLayers@@YAHHHDHHDH@Z
+
+// A bare `pop ebx` that falls through into FinishTextureLayerDistortion below;
+// address derived from DistortTextureByLayers (0x0041afd0) + its size (0x159).
+// FUNCTION: SUMO 0x0041b129
+// FUNCTION: EDITOR 0x0041b149
+// ?PopTextureLayerDistortionRegister@@YAXXZ
 
 // FUNCTION: SUMO 0x0041b12a
 // FUNCTION: EDITOR 0x0041b14a

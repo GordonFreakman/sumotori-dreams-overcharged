@@ -1,5 +1,6 @@
 #include "game_audio_tracker.h"
 #include "game_audio_xm_adapter.h"
+#include "game_sound_slot.h"
 #include "types.h"
 
 #include <dsound.h>
@@ -67,6 +68,8 @@ void FillGameAudioBuffer();
 void ConvertGameAudioPcm(void *destination, void *source, SumoS32 length);
 void MixGameAudioChannels(void *buffer, SumoS32 frameCount, SumoS32 flags);
 DWORD GameAudioThreadMain(void *parameter);
+void ReplayRecordCommand(SumoS32 p_first, SumoS32 p_second, SumoS32 p_third,
+                         SumoS32 p_fourth);
 
 // GLOBAL: SUMO 0x0042cdb0
 // GLOBAL: EDITOR 0x0042cdb0
@@ -146,11 +149,7 @@ char g_textureExportFilename[] = "tex00000.tga";
 // GLOBAL: EDITOR 0x00453d04
 SumoU8 g_textureTgaHeader[13] = {0, 0, 2};
 
-extern "C" __declspec(naked) SumoS32 __ftol() {
-  __asm {
-    jmp _ftol
-  }
-}
+extern "C" SumoS32 __ftol() { return _ftol(); }
 
 extern "C" __declspec(naked) double _floor(double) {
   __asm {
@@ -239,7 +238,6 @@ SumoS32 g_gameAudioPlaybackMode;
 
 // FUNCTION: SUMO 0x00407cfb
 // FUNCTION: EDITOR 0x00407d1d
-// InitializeGameMusicCommon
 static void InitializeGameMusicCommon() {
   if (!g_gameAudioEnabled) {
     return;
@@ -281,6 +279,25 @@ void RestartGameMusic(SumoS32 playbackMode) {
 MMRESULT GameAudioShutdown() {
   GameAudioShutdownBackend(g_gameAudioModule);
   return GameAudioCloseOutput();
+}
+
+typedef void(__cdecl *ReplayRecordSoundCall)(SumoS32, SumoF32, SumoF32,
+                                             SumoS32);
+
+// FUNCTION: SUMO 0x00415369
+// FUNCTION: EDITOR 0x0041538b
+void *PlayGameSound(SumoS32 p_soundIndex, SumoF32 p_frequencyScale, SumoF32 p_volumeScale, SumoS32 p_channel) {
+  ((ReplayRecordSoundCall)ReplayRecordCommand)(p_soundIndex, p_frequencyScale,
+                                               p_volumeScale, p_channel);
+
+  if (p_channel && g_gameActiveSoundSlots[p_channel] != NULL &&
+      *g_gameActiveSoundSlots[p_channel] != NULL) {
+    (*g_gameActiveSoundSlots[p_channel])->Stop();
+  }
+
+  GameSoundSlot *slots = (GameSoundSlot *)&g_gameSoundSlotFrequency0;
+  return slots[p_soundIndex].PlaySound(p_frequencyScale, p_volumeScale,
+                                       p_channel);
 }
 
 // FUNCTION: SUMO 0x004155bc
@@ -464,7 +481,6 @@ struct GameAudioTiming {
   SumoU8 unknown010[0x12c];
   SumoS32 rate;
 };
-
 
 // FUNCTION: SUMO 0x00416bc2
 // FUNCTION: EDITOR 0x00416be4
@@ -935,12 +951,14 @@ static __forceinline SumoS32 GameAudioTellBlock(GameAudioOwnedBlock *block) {
 void UpdateTrackerVibrato(TrackerChannelState *channel);
 void UpdateTrackerAutoVibrato(TrackerChannelState *channel,
                               GameAudioInstrument *instrument);
-void UpdateTrackerEnvelope(TrackerChannelState *channel, SumoS32 *pointIndex,
-                           SumoS32 *tick, SumoU8 flags, SumoS32 pointCount,
-                           TrackerEnvelopePoint *points, SumoU8 loopEnd,
-                           SumoU8 loopStart, SumoU8 sustainPoint,
-                           SumoS32 *output, SumoS32 *accumulator,
-                           SumoU8 *finished, SumoS32 *slope, SumoU8 dirtyMask);
+void UpdateTrackerEnvelope(TrackerChannelState *p_channel,
+                           SumoS32 *p_pointIndex, SumoS32 *p_tick,
+                           SumoU8 p_flags, SumoS32 p_pointCount,
+                           TrackerEnvelopePoint *p_points, SumoU8 p_loopEnd,
+                           SumoU8 p_loopStart, SumoU8 p_sustainPoint,
+                           SumoS32 *p_output, SumoS32 *p_accumulator,
+                           SumoU8 *p_finished, SumoS32 *p_slope,
+                           SumoU8 p_dirtyMask);
 void ResetTrackerChannelState(TrackerChannelState *channel,
                               GameAudioParsedSample *sample);
 extern "C" void ApplyTrackerVolumeColumn(TrackerChannelState *channel,
@@ -1920,69 +1938,38 @@ importTgaDone:
   }
 }
 
+#pragma optimize("s", off)
+#pragma optimize("t", on)
 // FUNCTION: SUMO 0x004194d0
 // FUNCTION: EDITOR 0x004194f0
-__declspec(naked) void ShutdownTextureGenerator() {
-  __asm {
-    mov eax, dword ptr [g_textureChannelSwapBuffer]
-    test eax, eax
-    jz shutdownTextureWorkBuffer
-    push eax
-    call free
-    add esp, 4
-shutdownTextureWorkBuffer:
-    mov eax, dword ptr [g_textureWorkBuffer]
-    test eax, eax
-    jz shutdownTextureLayer0
-    push eax
-    call free
-    add esp, 4
-shutdownTextureLayer0:
-    mov eax, dword ptr [g_textureLayers]
-    test eax, eax
-    jz shutdownTextureLayer1
-    push eax
-    call free
-    add esp, 4
-shutdownTextureLayer1:
-    mov eax, dword ptr [g_textureLayers + 4]
-    test eax, eax
-    jz shutdownTextureLayer2
-    push eax
-    call free
-    add esp, 4
-shutdownTextureLayer2:
-    mov eax, dword ptr [g_textureLayers + 8]
-    test eax, eax
-    jz shutdownTextureLayer3
-    push eax
-    call free
-    add esp, 4
-shutdownTextureLayer3:
-    mov eax, dword ptr [g_textureLayers + 0ch]
-    test eax, eax
-    jz shutdownTextureIoBuffer
-    push eax
-    call free
-    add esp, 4
-shutdownTextureIoBuffer:
-    mov eax, dword ptr [g_textureIoBuffer]
-    test eax, eax
-    jz shutdownTextureByteBuffer
-    push eax
-    call free
-    add esp, 4
-shutdownTextureByteBuffer:
-    mov eax, dword ptr [g_textureByteBuffer]
-    test eax, eax
-    jz shutdownTextureDone
-    push eax
-    call free
-    pop ecx
-shutdownTextureDone:
-    ret
+void ShutdownTextureGenerator() {
+  if (g_textureChannelSwapBuffer != NULL) {
+    free(g_textureChannelSwapBuffer);
+  }
+  if (g_textureWorkBuffer != NULL) {
+    free(g_textureWorkBuffer);
+  }
+  if (g_textureLayers[0] != NULL) {
+    free(g_textureLayers[0]);
+  }
+  if (g_textureLayers[1] != NULL) {
+    free(g_textureLayers[1]);
+  }
+  if (g_textureLayers[2] != NULL) {
+    free(g_textureLayers[2]);
+  }
+  if (g_textureLayers[3] != NULL) {
+    free(g_textureLayers[3]);
+  }
+  if (g_textureIoBuffer != NULL) {
+    free(g_textureIoBuffer);
+  }
+  if (g_textureByteBuffer != NULL) {
+    free(g_textureByteBuffer);
   }
 }
+#pragma optimize("t", off)
+#pragma optimize("s", on)
 
 extern const double g_textureSize;
 
@@ -2344,7 +2331,7 @@ __declspec(naked) SumoU32 SampleTexturePixel(SumoU32 *texture, SumoF32 x, SumoF3
     call SampleTexturePixelMmx
     add esp, 0ch
     ret
-sampleTextureUseX87:
+  sampleTextureUseX87:
     call SampleTexturePixelX87
     add esp, 0ch
     ret
@@ -2364,7 +2351,7 @@ __declspec(naked) void **BuildTextureSet(void **programs, void *progressCallback
     jne textureSetInitialized
     call InitializeTextureGenerator
     mov byte ptr [g_textureGeneratorInitialized], 1
-textureSetInitialized:
+  textureSetInitialized:
     mov eax, dword ptr [esp + 8]
     push ebx
     push ebp
@@ -2375,7 +2362,7 @@ textureSetInitialized:
     xor esi, esi
     xor edi, edi
     mov eax, ebp
-textureSetCountPrograms:
+  textureSetCountPrograms:
     mov ecx, dword ptr [eax + 4]
     add eax, 4
     inc edi
@@ -2387,7 +2374,7 @@ textureSetCountPrograms:
     jle textureSetAllocateResults
     mov eax, ebp
     mov ecx, edi
-textureSetSumWork:
+  textureSetSumWork:
     mov edx, dword ptr [eax]
     xor ebx, ebx
     add eax, 4
@@ -2397,7 +2384,7 @@ textureSetSumWork:
     dec ecx
     mov dword ptr [g_textureProgramTotalWork], edx
     jne textureSetSumWork
-textureSetAllocateResults:
+  textureSetAllocateResults:
     lea eax, dword ptr [edi * 4]
     push eax
     call malloc
@@ -2407,7 +2394,7 @@ textureSetAllocateResults:
     jle textureSetProgramsDone
     mov esi, ebx
     sub ebp, ebx
-textureSetBuildNext:
+  textureSetBuildNext:
     mov ecx, dword ptr [esi + ebp]
     push ecx
     call BuildTextureFromProgram
@@ -2417,7 +2404,7 @@ textureSetBuildNext:
     dec edi
     jne textureSetBuildNext
     xor esi, esi
-textureSetProgramsDone:
+  textureSetProgramsDone:
     mov dword ptr [g_textureProgramTotalWork], esi
     mov dword ptr [g_textureProgramCompletedWork], esi
     call ShutdownTextureGenerator
@@ -2490,16 +2477,15 @@ __declspec(naked) SumoU32 *BuildTextureFromProgram(void *program) {
 
 // FUNCTION: SUMO 0x0041a0d0
 // FUNCTION: EDITOR 0x0041a0f0
-__declspec(naked) SumoS32 ClearTextureWorkBuffer(void *buffer) {
-  __asm {
-    push edi
-    mov edi, dword ptr [esp + 8]
-    mov ecx, 10000h
-    xor eax, eax
-    rep stosd
-    pop edi
-    ret
+SumoS32 ClearTextureWorkBuffer(void *p_buffer) {
+  SumoU32 *cursor = (SumoU32 *)p_buffer;
+  SumoS32 count = 0x10000;
+  while (count != 0) {
+    *cursor++ = 0;
+    --count;
   }
+
+  return 0;
 }
 
 // GLOBAL: SUMO 0x00d0fac0
@@ -2879,7 +2865,7 @@ __declspec(naked) SumoU32 *AddTextureLayers(SumoU32 *destination, SumoU32 *sourc
     push edi
     sub ecx, eax
     mov edx, 10000h
-addNextSample:
+  addNextSample:
     mov esi, dword ptr [ecx + eax]
     mov edi, dword ptr [eax]
     add edi, esi
@@ -4153,7 +4139,7 @@ __declspec(naked) SumoS32 ReplicateTextureChannel(SumoS32 planeIndex, char chann
     mov ecx, dword ptr [esp + 0ch]
     mov esi, 10000h
     and ecx, 0ffh
-expandNextChannelSample:
+  expandNextChannelSample:
     mov eax, dword ptr [edx]
     add edx, 4
     shr eax, cl
