@@ -82,7 +82,7 @@ public:
   BuiltinFunctionEntry &operator[](SumoU32 index);
   void Grow();
   void PushBack(const BuiltinFunctionEntry &value);
-  SumoS32 Size() const { return m_end - m_begin; }
+  SumoS32 Size() const { return (SumoS32)(m_end - m_begin); }
 
 private:
   friend class ExpressionParser;
@@ -105,7 +105,7 @@ public:
   OperatorEntry &operator[](SumoU32 index);
   void Grow();
   void PushBack(const OperatorEntry &value);
-  SumoS32 Size() const { return m_end - m_begin; }
+  SumoS32 Size() const { return (SumoS32)(m_end - m_begin); }
 
 private:
   friend class ExpressionParser;
