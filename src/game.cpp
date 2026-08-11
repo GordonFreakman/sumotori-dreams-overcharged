@@ -5002,7 +5002,7 @@ extern SumoS32 g_gameRenderQualityCode;
 extern SumoS32 g_gameRenderQualityEnabled;
 extern SumoS32 g_gameReplayFrame;
 extern SumoS32 g_gameRuntimeMode;
-extern SumoU8 g_gameLineVertexScratch;
+extern SumoU8 g_gameLineVertexScratch[];
 extern SumoU8 *g_gameLineVertexCursor;
 extern const SumoF32 g_freeCameraAimScale;
 extern const SumoF32 g_gameProjectileSpin;
@@ -5106,7 +5106,7 @@ void RunGameFrame(SumoU8 renderFrame) {
   SetGameFpuControlWord();
   ++g_screenTintLevel;
   SumoS32 screenshotRequested = 0;
-  g_gameLineVertexCursor = &g_gameLineVertexScratch;
+  g_gameLineVertexCursor = g_gameLineVertexScratch;
 
   if (g_gameMode >= 0) {
     if (g_gameMode <= 2)
