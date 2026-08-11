@@ -6,14 +6,18 @@
 
 static SDL_GLContext s_context;
 
-bool SumoRenderCreateContext() {
+extern SumoS32 g_gameRenderQualityEnabled;
+
+void SumoRenderRequestGLAttributes() {
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
   SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
   SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
   SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+}
 
+bool SumoRenderCreateContext() {
   s_context = SDL_GL_CreateContext(SumoPlatformWindow());
   if (s_context == NULL) {
     fprintf(stderr, "sumotori: GL context creation failed: %s\n",
@@ -26,6 +30,15 @@ bool SumoRenderCreateContext() {
     return false;
   }
   SDL_GL_SetSwapInterval(1);
+
+  int stencilBits = 0;
+  SDL_GL_GetAttribute(SDL_GL_STENCIL_SIZE, &stencilBits);
+  if (stencilBits < 8) {
+    fprintf(stderr,
+            "sumotori: got %d stencil bits, need 8; shadows disabled\n",
+            stencilBits);
+    g_gameRenderQualityEnabled = 0;
+  }
   return true;
 }
 
@@ -1114,9 +1127,25 @@ SumoIntPtr CreateGameTextureFromPixels(void *p_pixels, SumoS32 p_width,
   return (SumoIntPtr)texture;
 }
 
+static GLuint s_whiteTexture;
+
+static GLuint WhiteTexture() {
+  if (s_whiteTexture == 0) {
+    const SumoU8 white[4] = {0xff, 0xff, 0xff, 0xff};
+    glGenTextures(1, &s_whiteTexture);
+    glBindTexture(GL_TEXTURE_2D, s_whiteTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 1, 1, 0, GL_RGBA,
+                 GL_UNSIGNED_BYTE, white);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  }
+  return s_whiteTexture;
+}
+
 HRESULT SetGameTexture(SumoU32 stage, SumoIntPtr texture) {
   glActiveTexture(GL_TEXTURE0 + stage);
-  glBindTexture(GL_TEXTURE_2D, (GLuint)texture);
+  glBindTexture(GL_TEXTURE_2D,
+                texture != 0 ? (GLuint)texture : WhiteTexture());
   glActiveTexture(GL_TEXTURE0);
   return 0;
 }

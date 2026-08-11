@@ -118,7 +118,7 @@ def main() -> int:
 
     if arguments.list:
         for name in names:
-            print(arguments.output_dir / name)
+            print((arguments.output_dir / name).as_posix())
         return 0
 
     arguments.output_dir.mkdir(parents=True, exist_ok=True)
