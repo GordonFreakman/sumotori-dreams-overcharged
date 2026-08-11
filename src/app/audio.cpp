@@ -7,7 +7,8 @@
 #include <xm.h>
 
 enum {
-  c_audioChannelCount = 9,
+  c_audioVoiceCount = 64,
+  c_audioStopChannelCount = 8,
   c_audioSourceCount = 6,
   c_audioDeviceRate = 44100
 };
@@ -37,7 +38,9 @@ SumoS32 g_gameAudioPlaybackMode;
 extern const SumoF64 g_gameSoundLogBase = 10.0;
 
 static SumoAudioSource s_sources[c_audioSourceCount];
-static SumoAudioVoice s_voices[c_audioChannelCount];
+static SumoAudioVoice s_voices[c_audioVoiceCount];
+static SumoS32 s_stopChannels[c_audioStopChannelCount] = {-1, -1, -1, -1,
+                                                          -1, -1, -1, -1};
 static xm_context_t *s_musicContext;
 static void *s_musicContextBuffer;
 static bool s_deviceOpen;
@@ -183,8 +186,8 @@ void SumoAudioMix(float *output, SumoS32 frameCount) {
     }
   }
 
-  for (SumoS32 channel = 0; channel < c_audioChannelCount; ++channel) {
-    SumoAudioVoice *voice = &s_voices[channel];
+  for (SumoS32 index = 0; index < c_audioVoiceCount; ++index) {
+    SumoAudioVoice *voice = &s_voices[index];
     if (!voice->playing)
       continue;
     const SumoAudioSource *source = &s_sources[voice->source];
@@ -286,7 +289,7 @@ void *PlayGameSound(SumoS32 soundIndex, SumoF32 frequencyScale,
   ReplayRecordCommand(soundIndex, frequencyBits, volumeBits, channel);
 
   if (!s_deviceOpen || soundIndex < 0 || soundIndex >= 7 || channel < 0 ||
-      channel >= c_audioChannelCount) {
+      channel >= c_audioStopChannelCount) {
     return NULL;
   }
   SumoS32 source = c_audioLogicalToSource[soundIndex];
@@ -298,7 +301,20 @@ void *PlayGameSound(SumoS32 soundIndex, SumoF32 frequencyScale,
     return NULL;
 
   SDL_LockMutex(s_mixLock);
-  SumoAudioVoice *voice = &s_voices[channel];
+  if (channel != 0) {
+    SumoS32 previous = s_stopChannels[channel];
+    if (previous >= 0)
+      s_voices[previous].playing = false;
+  }
+
+  SumoS32 slot = 0;
+  while (slot < c_audioVoiceCount && s_voices[slot].playing)
+    ++slot;
+  if (slot == c_audioVoiceCount)
+    slot = 0;
+  s_stopChannels[channel] = slot;
+
+  SumoAudioVoice *voice = &s_voices[slot];
   voice->source = source;
   voice->position = 0.0;
   voice->step = (double)s_sources[source].sampleRate * frequencyScale /

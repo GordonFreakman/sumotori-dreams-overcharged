@@ -29,6 +29,7 @@ void SumoHandleKeyDown(SumoS32 sdlScancode);
 void SumoHandleKeyUp(SumoS32 sdlScancode);
 void SumoHandleLeftMouseDown(SumoS32 x, SumoS32 y);
 
+void SumoRenderRequestGLAttributes();
 bool SumoRenderCreateContext();
 void SumoRenderPresent();
 void SumoRenderUpdateTargetSize();

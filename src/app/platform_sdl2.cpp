@@ -23,6 +23,7 @@ bool SumoPlatformCreateWindow(SumoS32 width, SumoS32 height, bool fullscreen) {
   SumoResolveWindowSize(width, height, desktopWidth, desktopHeight, &width,
                         &height);
 
+  SumoRenderRequestGLAttributes();
   s_window = SDL_CreateWindow(
       "Sumotori", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height,
       SDL_WINDOW_OPENGL | (fullscreen ? SDL_WINDOW_FULLSCREEN : 0));
