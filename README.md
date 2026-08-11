@@ -1,26 +1,18 @@
 # Sumotori Dreams
 
-## Building
+## Requirements
 
-Requirements:
+- CMake 
+- A compiler with support of both **C17 and C++17**
+- Python3 and Jinja2
 
-- CMake
-- [VS2003](https://github.com/archaic-msvc/msvc710)
+## Build
 
-From the repository root, run the following commands:
-
-```bat
-cmake -S . -B build -G "NMake Makefiles"
-cmake --build build
+```sh
+cmake -S . -B build-portable -DSUMO_SDL_VERSION=3
+cmake --build build-portable
 ```
 
-The resulting executables are `build\sumofull.exe` and
-`build\sumoeditor.exe`.
+CLI: `--fullscreen` / `--windowed`, `--width` / `--height`,
+`--audio sdl|miniaudio`, `--skip-launcher`, `--editor`, `--mod <file.smo>`.
 
-The full game is enabled by default. To build the demo
-behavior instead, configure with:
-
-```bat
-cmake -S . -B build-demo -G "NMake Makefiles" -DSUMO_REGISTERED_BUILD=OFF
-cmake --build build-demo
-```

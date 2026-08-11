@@ -2,22 +2,19 @@
 /.tools/
 /.wine-msvc/
 /.vscode/
-/build/
-/build-editor/
+/build*/
+/dist/
 /reccmp-user.yml
 /reccmp-build.yml
 
 /msvc710/
-/dev-docs/
-/Sumoeditor/
-/tools/
-/tests/
-/SUMO/**/reference/
 
 /sumofull.exe
 /sumofull.exe.*
 /sumoeditor.exe
 /sumoeditor.exe.*
+/sumosteam.exe
+/sumosteam.exe.*
 /tex*.tga
 *.id0
 *.id1

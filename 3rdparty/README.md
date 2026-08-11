@@ -1,2 +1,0 @@
-- [dxsdk](https://github.com/apitrace/dxsdk)
-- [minifmod](https://github.com/SpinningKids/minifmod)
