@@ -293,14 +293,17 @@ SumoU32 GameAudioShutdown() {
   SDL_UnlockMutex(s_mixLock);
   return 0;
 }
-
+void *GameAudioUpdateOrigin(Vector3 origin, Vector3 angle) {
+  SumoAudioUpdateOrigin(origin, angle);
+  return NULL;
+}
 void ReplayRecordCommand(SumoS32 first, SumoS32 second, SumoS32 third,
                          SumoS32 fourth);
 
 void GameAudioNoOpCallback() {}
 
 void *PlayGameSound(SumoS32 soundIndex, SumoF32 frequencyScale,
-                    SumoF32 volumeScale, SumoS32 channel) {
+                    SumoF32 volumeScale, SumoS32 channel, Vector3 origin) {
   SumoS32 frequencyBits;
   SumoS32 volumeBits;
   memcpy(&frequencyBits, &frequencyScale, sizeof(frequencyBits));
@@ -343,7 +346,7 @@ void *PlayGameSound(SumoS32 soundIndex, SumoF32 frequencyScale,
   voice->playing = true;
   #else
   SumoAudioCreateAudio(s_sources[source], frequencyScale,
-                       volumeScale, channel);
+                       volumeScale, channel, origin);
   #endif
   SDL_UnlockMutex(s_mixLock);
   return NULL;

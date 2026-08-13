@@ -17,8 +17,7 @@
 
 
 SumoS32 g_sumoMode = 0;
-void *PlayGameSound(SumoS32 soundIndex, SumoF32 frequencyScale,
-                    SumoF32 volumeScale, SumoS32 channel);
+
 SumoS32 CheckStoredGameSettings();
 void SetGameCursorVisible(SumoU8 visible);
 void StartGameLevelEditor(char *source);
@@ -621,7 +620,7 @@ void ApplyGameManPoseConstraints() {
 void SetGameManAudioState(GameMan *man, SumoS32 channel) {
   man->state144 &= 0;
   man->active = 8;
-  PlayGameSound(5, 1.0f, g_gameManEventVolume, channel ^ 3);
+  PlayGameSound(5, 1.0f, g_gameManEventVolume, channel ^ 3, man->centerOfMass);
 }
 
 // FUNCTION: SUMO 0x00410863
@@ -4829,8 +4828,6 @@ extern Vector3 g_freeCameraTarget;
 extern char *g_gameCommandLineFile;
 extern SumoS32 g_gameLevelEditorCloseRequested;
 
-void *PlayGameSound(SumoS32 soundIndex, SumoF32 frequencyScale,
-                    SumoF32 volumeScale, SumoS32 channel);
 void GameAudioNoOpCallback();
 void StartGameRound();
 void SumoAssert(bool condition);
@@ -4985,8 +4982,8 @@ SumoS32 UpdateGameReplay() {
           SumoU32 frequencyBits = ReadReplayWord();
           SumoU32 volumeBits = ReadReplayWord();
           SumoS32 channel = (SumoS32)ReadReplayWord();
-          PlayGameSound(soundIndex, *(SumoF32 *)&frequencyBits,
-                        *(SumoF32 *)&volumeBits, channel);
+         // PlayGameSound(soundIndex, *(SumoF32 *)&frequencyBits,
+       //                 *(SumoF32 *)&volumeBits, channel);
           continue;
         }
         if (tag == 6) {

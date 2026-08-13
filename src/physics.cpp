@@ -774,8 +774,6 @@ extern SumoU8 g_gameBoxesInitialized;
 extern GameRandomGenerator g_gameRandom;
 extern const SumoF32 g_randomHalf;
 
-void *PlayGameSound(SumoS32 soundIndex, SumoF32 frequencyScale,
-                    SumoF32 volumeScale, SumoS32 channel);
 SumoS32 LogGameDebugValue(const char *text, SumoS32 value);
 
 SumoU8 FractureGameBoxAtPoint(Vector3 &position, GameBox *box) {
@@ -790,8 +788,8 @@ SumoU8 FractureGameBoxAtPoint(Vector3 &position, GameBox *box) {
   GameBox *spare = &g_clipScratchBox;
   Vector3 localPoint = box->orientation.Transform(position - box->position);
   PlayGameSound(
-      box->fractureSound, (SumoF32)exp(log((SumoF64)box->volume * 0.0071428572f) * -0.25f),
-      0.25f, 0);
+      box->fractureSound, (SumoF32)exp(log((SumoF64)box->volume * 0.0071428572f) * -0.25f), 0.25f,
+      0, position);
   if (g_gameMenuSelection == 0)
     g_gameMenuSelection = box->unknownBC;
 
@@ -1719,8 +1717,7 @@ extern const SumoF32 g_gameCameraHeightScale;
 extern const SumoF32 g_gameCameraInputDamping;
 
 SumoS32 GenerateGameBoxCollisionContacts(GameBox *first, GameBox *second);
-void *PlayGameSound(SumoS32 soundIndex, SumoF32 frequencyScale,
-                    SumoF32 volumeScale, SumoS32 channel);
+
 SumoU8 FractureGameBoxAtPoint(Vector3 &position, GameBox *box);
 SumoF64 ParserAtan2(SumoF32 y, SumoF32 x);
 
@@ -2147,7 +2144,8 @@ void ResolveGameCollisions() {
           soundBox = lastRecord->boxes[0];
           SumoF32 soundVolume =
               (SumoF32)((SumoF64)magnitudeSum * soundBox->unknownC4);
-          PlayGameSound(soundBox->unknownC0, frequency, soundVolume, 0);
+          PlayGameSound(soundBox->unknownC0, frequency, soundVolume, 0,
+                        soundBox->position);
         }
         soundBox = lastRecord->boxes[0];
         if (magnitudeSum > soundBox->activityValue)
@@ -2161,7 +2159,8 @@ void ResolveGameCollisions() {
           soundBox = lastRecord->boxes[1];
           SumoF32 soundVolume =
               (SumoF32)((SumoF64)magnitudeSum * soundBox->unknownC4);
-          PlayGameSound(soundBox->unknownC0, frequency, soundVolume, 0);
+          PlayGameSound(soundBox->unknownC0, frequency, soundVolume, 0,
+                        soundBox->position);
         }
         soundBox = lastRecord->boxes[1];
         if (magnitudeSum > soundBox->activityValue)

@@ -2,6 +2,7 @@
 #define SUMOAPP_SUMOAPP_H
 
 #include "types.h"
+
 #define SUMOSPACIAL
 #if SUMO_SDL_VERSION == 3
 #include <SDL3/SDL.h>
@@ -164,5 +165,6 @@ void SumoAudioDeviceClose();
 void SumoAudioMix(float *output, SumoS32 frameCount);
 void SumoAudioCreateEngine();
 void SumoAudioPrecacheWAV(const char *path, SumoAssetBlob *blob);
-void SumoAudioCreateAudio(SumoAudioSource sound, SumoF32 frequencyScale, SumoF32 volumeScale, SumoS32 channel);
+void SumoAudioCreateAudio(SumoAudioSource sound, SumoF32 frequencyScale, SumoF32 volumeScale, SumoS32 channel, Vector3 origin);
+void SumoAudioUpdateOrigin(Vector3 origin, Vector3 angle);
 #endif
