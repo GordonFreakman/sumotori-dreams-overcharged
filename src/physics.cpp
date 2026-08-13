@@ -817,7 +817,7 @@ SumoU8 FractureGameBoxAtPoint(Vector3 &position, GameBox *box) {
       continue;
     ++seedCount;
   }
-
+  GameBox *startBox = g_gameBoxesEnd;
   for (SumoS32 fragment = 0; fragment < 5; ++fragment) {
     GameBox *newBox = g_gameBoxesEnd;
     GameBox *source = box;
@@ -897,6 +897,28 @@ SumoU8 FractureGameBoxAtPoint(Vector3 &position, GameBox *box) {
     g_gameBoxesEnd = newBox + 1;
   }
 
+  if (box->m_pOwner) 
+  {
+    GameBox *biggestBox = startBox;
+    for (int i = 0; i < 5; i++) 
+    {
+      GameBox *newBox = startBox;
+
+      if (newBox->volume >= biggestBox->volume)
+        biggestBox = newBox;
+
+      startBox = newBox + 1;
+    }
+
+    for (size_t i = 0; i < 14; i++) 
+    {
+    if (box->m_pOwner->bodyParts[i] == box) 
+    {
+        box->m_pOwner->bodyParts[i] = biggestBox;
+        break;
+    }
+    }
+  }
   box->flag58 = 1;
 
   RefreshGameContactLists();
