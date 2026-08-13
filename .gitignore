@@ -42,3 +42,4 @@ __pycache__/
 /out
 /.vs
 assets/audio/music/sumotori_old.xm
+*.bak

@@ -48,7 +48,7 @@ struct Vector3 {
   void Rotate(Vector3 &axis, SumoF32 cosine, SumoF32 sine);
   void Rotate(Vector3 &rotation);
   void operator+=(Vector3 &other);
-  __forceinline void AddInline(Vector3 &other) {
+  inline void AddInline(Vector3 &other) {
     x += other.x;
     y += other.y;
     z += other.z;
@@ -97,17 +97,17 @@ struct Matrix3 {
   Vector3 Row0();
   Vector3 Row1();
   Vector3 Row2();
-  __forceinline void SetRow0(Vector3 row) {
+  inline void SetRow0(Vector3 row) {
     m00 = row.x;
     m01 = row.y;
     m02 = row.z;
   }
-  __forceinline void SetRow1(Vector3 row) {
+  inline void SetRow1(Vector3 row) {
     m10 = row.x;
     m11 = row.y;
     m12 = row.z;
   }
-  __forceinline void SetRow2(Vector3 row) {
+  inline void SetRow2(Vector3 row) {
     m20 = row.x;
     m21 = row.y;
     m22 = row.z;
