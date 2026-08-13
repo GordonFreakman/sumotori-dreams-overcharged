@@ -1,4 +1,5 @@
 #include "boundary.h"
+#include "runtime.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -6,21 +7,7 @@
 
 #include <xm.h>
 
-enum {
-  c_audioVoiceCount = 64,
-  c_audioStopChannelCount = 8,
-  c_audioSourceCount = 5*4,
-  c_audioDeviceRate = 44100
-};
-
 static const SumoU8 c_audioLogicalToSource[8] = {0, 4, 0, 2*4, 3*4, 4*4, 2*4, 3*4}; // PLACEHOLDER
-
-struct SumoAudioSource {
-  SumoAssetBlob blob;
-  const SumoS16 *samples;
-  SumoU32 frameCount;
-  SumoU32 sampleRate;
-};
 
 struct SumoAudioVoice {
   SumoS32 source;
@@ -115,11 +102,15 @@ static bool LoadWavSource(SumoAudioSource *source, const char *relative) {
     SumoAssetClose(&blob);
     return false;
   }
-
+  #ifdef SUMOSPACIAL
+  source->path = relative;
+  SumoAudioPrecacheWAV(relative, &blob);
+  #endif
   source->blob = blob;
   source->samples = (const SumoS16 *)(header + 44);
   source->frameCount = dataBytes / 2;
   source->sampleRate = sampleRate;
+  memcpy(&source->header,blob.data,sizeof(SumoWavHeader));
   return true;
 }
 
@@ -185,7 +176,7 @@ void SumoAudioMix(float *output, SumoS32 frameCount) {
       remaining -= chunk;
     }
   }
-
+  #ifndef SUMOSPACIAL
   for (SumoS32 index = 0; index < c_audioVoiceCount; ++index) {
     SumoAudioVoice *voice = &s_voices[index];
     if (!voice->playing)
@@ -206,13 +197,19 @@ void SumoAudioMix(float *output, SumoS32 frameCount) {
       voice->position += voice->step;
     }
   }
+  #else
 
+#endif
   SDL_UnlockMutex(s_mixLock);
 }
 
 SumoU8 InitializeGameAudio() {
   if (!g_gameAudioEnabled)
     return 0;
+
+    #ifdef SUMOSPACIAL
+  SumoAudioCreateEngine();
+    #endif
 
   if (s_mixLock == NULL)
     s_mixLock = SDL_CreateMutex();
@@ -336,7 +333,7 @@ void *PlayGameSound(SumoS32 soundIndex, SumoF32 frequencyScale,
   if (slot == c_audioVoiceCount)
     slot = 0;
   s_stopChannels[channel] = slot;
-
+  #ifndef SUMOSPACIAL
   SumoAudioVoice *voice = &s_voices[slot];
   voice->source = source;
   voice->position = 0.0;
@@ -344,6 +341,10 @@ void *PlayGameSound(SumoS32 soundIndex, SumoF32 frequencyScale,
                 (double)g_gameTimeScaleDenominator / (double)c_audioDeviceRate;
   voice->gain = gain;
   voice->playing = true;
+  #else
+  SumoAudioCreateAudio(s_sources[source], frequencyScale,
+                       volumeScale, channel);
+  #endif
   SDL_UnlockMutex(s_mixLock);
-  return voice;
+  return NULL;
 }
