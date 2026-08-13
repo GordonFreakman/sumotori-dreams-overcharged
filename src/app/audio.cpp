@@ -9,11 +9,11 @@
 enum {
   c_audioVoiceCount = 64,
   c_audioStopChannelCount = 8,
-  c_audioSourceCount = 6,
+  c_audioSourceCount = 7,
   c_audioDeviceRate = 44100
 };
 
-static const SumoU8 c_audioLogicalToSource[7] = {0, 1, 0, 2, 3, 4, 5};
+static const SumoU8 c_audioLogicalToSource[8] = {0, 1, 0, 2, 3, 4, 5, 6};
 
 struct SumoAudioSource {
   SumoAssetBlob blob;
@@ -219,8 +219,9 @@ SumoU8 InitializeGameAudio() {
 
   static const char *c_sourceNames[c_audioSourceCount] = {
       "audio/sfx/source0.wav", "audio/sfx/source1.wav",
-      "audio/sfx/source2.wav", "audio/sfx/source3.wav",
-      "audio/sfx/source4.wav", "audio/sfx/source5.wav"};
+      "audio/sfx/source2.wav", "audio/sfx/source3.wav", 
+      "audio/sfx/source4.wav", "audio/sfx/source5.wav",
+      "audio/sfx/source6.wav"};
   bool complete = true;
   for (SumoS32 index = 0; index < c_audioSourceCount; ++index) {
     if (s_sources[index].samples == NULL &&
@@ -288,7 +289,7 @@ void *PlayGameSound(SumoS32 soundIndex, SumoF32 frequencyScale,
   memcpy(&volumeBits, &volumeScale, sizeof(volumeBits));
   ReplayRecordCommand(soundIndex, frequencyBits, volumeBits, channel);
 
-  if (!s_deviceOpen || soundIndex < 0 || soundIndex >= 7 || channel < 0 ||
+  if (!s_deviceOpen || soundIndex < 0 || soundIndex >= 8 || channel < 0 ||
       channel >= c_audioStopChannelCount) {
     return NULL;
   }

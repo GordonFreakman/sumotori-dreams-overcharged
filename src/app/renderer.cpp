@@ -8,8 +8,6 @@ static SDL_GLContext s_context;
 
 extern SumoS32 g_gameRenderQualityEnabled;
 
-static GLuint UndefinedMaterialTexture(SumoS32 slot);
-
 void SumoRenderRequestGLAttributes() {
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
@@ -828,8 +826,8 @@ void RenderGameBoxes(SumoS32);
 
 SumoS32 g_gameRenderQualityCode = 12;
 SumoS32 g_gameRenderQualityEnabled = 1;
-SumoS32 g_waterGridWidth = 128;
-SumoS32 g_waterGridHeight = 64;
+SumoS32 g_waterGridWidth = 512 * 2;
+SumoS32 g_waterGridHeight = 512 * 2;
 
 extern const SumoF32 g_gameLightPassRotationStep = 5.1999998f;
 
@@ -1033,10 +1031,7 @@ HRESULT RenderGameScene() {
   glBindVertexArray(s_mainVertexArray);
   for (SumoS32 texture = 0; texture < 128; ++texture) {
     if (triangleCounts[texture] != 0) {
-      SumoIntPtr albedo = g_gameTextures[texture * 2 + 1];
-      if (albedo == 0)
-        albedo = (SumoIntPtr)UndefinedMaterialTexture(texture);
-      SetGameTexture(0, albedo);
+      SetGameTexture(0, g_gameTextures[texture * 2 + 1]);
       glDrawArrays(GL_TRIANGLES, 3 * g_gameBoxTextureTriangleOffsets[texture],
                    triangleCounts[texture] * 3);
     }
@@ -1075,8 +1070,8 @@ static SumoS32 s_waterVertexCapacity;
 SumoU8 *BeginGameWaterVertices(SumoS32 byteCount) {
   if (!SumoRenderContextReady() || byteCount <= 0)
     return NULL;
-  if (byteCount > 0x250120)
-    return NULL;
+ // if (byteCount > 0x250120)
+   // return NULL;
   if (byteCount > s_waterVertexCapacity) {
     delete[] s_waterVertexScratch;
     s_waterVertexScratch = new SumoU8[(size_t)byteCount];
@@ -1092,6 +1087,7 @@ void FinishGameWaterVertices(SumoS32 triangleCount) {
   glBufferSubData(GL_ARRAY_BUFFER, 0, (GLsizeiptr)triangleCount * 3 * 24,
                   s_waterVertexScratch);
   glBindVertexArray(s_streamTextVertexArray);
+  SetGameTexture(0, g_gameFontAtlasTexture);
   glUniform1i(s_uniformMode, c_renderModeFlat);
   glEnable(GL_BLEND);
   glBlendFunc(GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA);
@@ -1147,6 +1143,7 @@ static GLuint WhiteTexture() {
   return s_whiteTexture;
 }
 
+
 enum { c_undefinedMaterialSize = 32, c_undefinedMaterialSlots = 128 };
 
 static GLuint s_undefinedMaterial[c_undefinedMaterialSlots];
@@ -1181,9 +1178,9 @@ static GLuint UndefinedMaterialTexture(SumoS32 slot) {
     for (SumoS32 x = 0; x < c_undefinedMaterialSize; ++x) {
       SumoS32 shade = (x + y) * 255 / (2 * (c_undefinedMaterialSize - 1));
       for (SumoS32 channel = 0; channel < 3; ++channel) {
-        cursor[channel] =
-            (SumoU8)((fromColor[channel] * (255 - shade) +
-                      toColor[channel] * shade) / 255);
+        cursor[channel] = (SumoU8)((fromColor[channel] * (255 - shade) +
+                                    toColor[channel] * shade) /
+                                   255);
       }
       cursor[3] = 0xff;
       cursor += 4;
@@ -1206,7 +1203,7 @@ static GLuint UndefinedMaterialTexture(SumoS32 slot) {
 HRESULT SetGameTexture(SumoU32 stage, SumoIntPtr texture) {
   glActiveTexture(GL_TEXTURE0 + stage);
   glBindTexture(GL_TEXTURE_2D,
-                texture != 0 ? (GLuint)texture : WhiteTexture());
+                texture != 0 ? (GLuint)texture : UndefinedMaterialTexture(texture));
   glActiveTexture(GL_TEXTURE0);
   return 0;
 }

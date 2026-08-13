@@ -426,7 +426,7 @@ void StartGameLevelEditor(char *source) {
   g_gameArenaExtent = 150.0f;
   InitializeGameParser();
   SetGameCursorVisible(1);
-  RestartGameMusic(6);
+  //RestartGameMusic(6);
 
   Vector3 position;
   position.x = 60.0f;

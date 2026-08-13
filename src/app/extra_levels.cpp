@@ -2,7 +2,7 @@
 
 #include "types.h"
 
-extern char g_gameMenuLabels[5][6][24];
+extern char g_gameMenuLabels[5][7][24];
 
 extern char *g_builtinLevelScripts[];
 
