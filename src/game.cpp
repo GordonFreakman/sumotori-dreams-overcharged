@@ -4302,8 +4302,8 @@ if (m_bLobotomized)
       GameBoxJoint *joint = joints[index];
       if (m_bLobotomized > 7) // severely broken
       {
-        joint->boxes[0] = NULL;
-        joint->boxes[1] = NULL;
+        //joint->boxes[0] = NULL;
+        //joint->boxes[1] = NULL;
       }
     }
     return;
@@ -5199,7 +5199,7 @@ static __forceinline void DrawNormalGameOverlay()
   SumoS32 colors[4] = {(SumoS32)0xe08080ff, (SumoS32)0xc0ffffff,
                        (SumoS32)0xe0c08000, (SumoS32)0xc020e020};
   char playerNames[2][25] = {"Blue guy (player)", "Grey guy (player2)"};
-  char deadState[3][25] = {"[dead]", "[very dead]", "[overwhelmingly dead]"};
+  char deadState[4][35] = {"[dead]", "[very dead]", "[overwhelmingly dead]", "[grounded meat]"};
   SumoF32 y = 0.5f;
   if (g_levelLoadState[4] != 11) 
   {
@@ -5217,10 +5217,10 @@ static __forceinline void DrawNormalGameOverlay()
           DrawGameText(-0.15000001f, y, name, colors[*player]);
           if (g_gameMen[*player].m_bLobotomized) // good variable name
           {
-            char *name = deadState[g_gameMen[*player].m_bLobotomized > 6];
+            char *name = deadState[g_gameMen[*player].m_bLobotomized > 20];
 
-            if (g_gameMen[*player].m_bLobotomized > 12)
-              name = deadState[2];
+            if (g_gameMen[*player].m_bLobotomized > 40)
+              name = deadState[(g_gameMen[*player].m_bLobotomized > 62) + 2];
             DrawGameText(0.1f, y, name, colors[*player]);
           }
 

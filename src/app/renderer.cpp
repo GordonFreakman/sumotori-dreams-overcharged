@@ -406,7 +406,7 @@ SumoF32 g_gameProjectionScaleX;
 SumoF32 g_gameProjectionScaleY;
 Vector3 g_gameViewOffset;
 Matrix3 g_gameViewMatrix;
-
+extern Vector3 g_gameCameraFocus;
 Vector3 *ResetGameCameraState() {
   g_gameCameraInputB = 0.0f;
   g_gameCameraInputA = 0.0f;
@@ -443,6 +443,8 @@ Vector3 *ResetGameCameraState() {
     cameraAngles.z = 0.0f;
     g_gameCameraAngles = cameraAngles;
   }
+
+  g_gameCameraFocus = cameraPosition;
 
   g_gameCameraAcceleration.z = 0.0f;
   g_gameCameraAcceleration.y = 0.0f;

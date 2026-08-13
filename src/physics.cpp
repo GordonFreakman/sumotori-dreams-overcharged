@@ -803,11 +803,6 @@ SumoU8 FractureGameBoxAtPoint(Vector3 &position, GameBox *box) {
   if (g_gameMenuSelection == 0)
     g_gameMenuSelection = box->unknownBC;
 
-  if (box->m_pOwner) 
-  {
-     box->m_pOwner->m_bLobotomized++;
-  }
-
   Vector3 seeds[5];
   SumoS32 seedCount = 0;
   SumoF32 seedScale = 0.3f;
@@ -875,8 +870,13 @@ SumoU8 FractureGameBoxAtPoint(Vector3 &position, GameBox *box) {
     newBox->modeE0 = box->modeE0;
     newBox->unknownC0 = box->unknownC0;
     newBox->unknownC4 = box->unknownC4;
+    newBox->m_pOwner = box->m_pOwner;
     if (g_gameBoxesInitialized)
       newBox->breakability = box->breakability * 3.0f;
+
+      if (box->m_pOwner && newBox->volume > 5) {
+      box->m_pOwner->m_bLobotomized++;
+    }
 
    if (!biggestBox || newBox->volume >= biggestBox->volume)
       biggestBox = newBox;
@@ -914,7 +914,6 @@ SumoU8 FractureGameBoxAtPoint(Vector3 &position, GameBox *box) {
     {
     if (box->m_pOwner->bodyParts[i] == box) 
     {
-        biggestBox->m_pOwner = box->m_pOwner;
         box->m_pOwner->bodyParts[i] = biggestBox;
         break;
     }
