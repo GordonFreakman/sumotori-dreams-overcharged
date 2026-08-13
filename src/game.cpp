@@ -227,9 +227,10 @@ char g_gameMenuWarningText[] =
     "trained professionals!!! Do not try this at home!!!\n \n"
     "Rules: When you hit the ground, you lose\n"
     "winner is the one, who stays on feet for the longest\n \n"
-    "Original decompile & portable version created by siohaza.\n"
+    "Original decompile & portable version created by siohaza\n"
     "https://github.com/siohaza/sumotori-dreams-re\n"
-    "Expanded version by Gordon Freakman.";
+    "Sumotori Dreams: Overcharged by Gordon Freakman\n \n"
+    "Features:\n - Directional audio\n - More wacky gamemodes\n - Engine enhancements\n - Cross platform\n - Optional randomized sound";
 
 // GLOBAL: SUMO 0x004ea480
 SumoS32 g_gameHumanPlayerCount;

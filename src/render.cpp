@@ -262,7 +262,7 @@ char g_gameMenuLabels[7][7][24] = {
      "4 computers", "", "", ""},
     {"You vs. Computer", "You and 2 comp.", "You & 3 comp.", "2 Computers", "",
      "", ""},
-    {"Arena selection", "AI mode: walk", "AI mode: stand", "Gamemodes", "Rules", "Quit", ""},
+    {"Arena selection", "AI mode: walk", "AI mode: stand", "Gamemodes", "Documentation", "Quit", ""},
     {"Default dojo", "Kitchen party", "Roof dancers", "play seesaw", "", "",
      ""},
     {"Up on the stage", "I go downstairs", "", "", "", "", ""},
