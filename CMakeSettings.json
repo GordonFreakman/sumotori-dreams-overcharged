@@ -35,6 +35,24 @@
           "type": "BOOL"
         }
       ]
+    },
+    {
+      "name": "x64-Release-With-Info",
+      "generator": "Ninja",
+      "configurationType": "RelWithDebInfo",
+      "buildRoot": "${projectDir}\\out\\build\\${name}",
+      "installRoot": "${projectDir}\\out\\install\\${name}",
+      "cmakeCommandArgs": "",
+      "buildCommandArgs": "",
+      "ctestCommandArgs": "",
+      "inheritEnvironments": [ "msvc_x64_x64" ],
+      "variables": [
+        {
+          "name": "SUMO_WARNINGS_AS_ERRORS",
+          "value": "False",
+          "type": "BOOL"
+        }
+      ]
     }
   ]
 }

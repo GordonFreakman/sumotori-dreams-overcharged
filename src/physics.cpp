@@ -434,6 +434,7 @@ void GameBox::InitializePhysics() {
   inertia = radiusSquared * mass;
   inverseMass = 1.0f / mass;
   inverseInertia = 1.0f / inertia;
+  m_pOwner = NULL;
 
   Vector3 value;
   value.x = 0.0f;
@@ -721,6 +722,13 @@ void ResetGameContactLists() {
   GameBoxJoint *joint = (GameBoxJoint *)g_gameContactObjects;
   g_gameContactLinksEnd = g_gameContactLinks;
   while ((SumoU8 *)joint < g_gameContactObjectsEnd) {
+
+   if (!joint->boxes[0] || !joint->boxes[1]) 
+   {
+      ++joint;
+      continue;
+    }
+
     Vector3 &unknown64 = joint->unknown64;
     Vector3 &unknownC4 = joint->unknownC4;
     Vector3 &initialImpulse = joint->initialImpulse;
@@ -817,7 +825,7 @@ SumoU8 FractureGameBoxAtPoint(Vector3 &position, GameBox *box) {
       continue;
     ++seedCount;
   }
-  GameBox *startBox = g_gameBoxesEnd;
+  GameBox *biggestBox = NULL;
   for (SumoS32 fragment = 0; fragment < 5; ++fragment) {
     GameBox *newBox = g_gameBoxesEnd;
     GameBox *source = box;
@@ -870,6 +878,9 @@ SumoU8 FractureGameBoxAtPoint(Vector3 &position, GameBox *box) {
     if (g_gameBoxesInitialized)
       newBox->breakability = box->breakability * 3.0f;
 
+   if (!biggestBox || newBox->volume >= biggestBox->volume)
+      biggestBox = newBox;
+
     for (GameBoxJoint *joint = (GameBoxJoint *)g_gameContactObjects;
          (SumoU8 *)joint < g_gameContactObjectsEnd; ++joint) {
       for (SumoS32 side = 0; side < 2; ++side) {
@@ -899,21 +910,11 @@ SumoU8 FractureGameBoxAtPoint(Vector3 &position, GameBox *box) {
 
   if (box->m_pOwner) 
   {
-    GameBox *biggestBox = startBox;
-    for (int i = 0; i < 5; i++) 
-    {
-      GameBox *newBox = startBox;
-
-      if (newBox->volume >= biggestBox->volume)
-        biggestBox = newBox;
-
-      startBox = newBox + 1;
-    }
-
     for (size_t i = 0; i < 14; i++) 
     {
     if (box->m_pOwner->bodyParts[i] == box) 
     {
+        biggestBox->m_pOwner = box->m_pOwner;
         box->m_pOwner->bodyParts[i] = biggestBox;
         break;
     }
@@ -2358,7 +2359,6 @@ GameBox *CreateGameBox(Vector3 halfSize, Vector3 position, SumoS32 type,
   box->position = position;
   box->type = type;
   box->defaultValue = defaultValue;
-  box->m_pOwner = NULL;
   ++g_gameBoxesEnd;
   return box;
 }

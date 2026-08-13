@@ -1834,8 +1834,11 @@ void GameMan::Initialize(Vector3 &position, SumoF32 angle, SumoS32 type,
     facing = -1.0f;
   }
 
-  for (SumoS32 index = 0; index < 15; ++index)
+  for (SumoS32 index = 0; index < 15; ++index) 
+  {
     bodyParts[index] = g_gameBoxesEnd - 15 + index;
+    bodyParts[index]->m_pOwner = this;
+  }
   GameBoxJoint *jointBase = (GameBoxJoint *)g_gameContactObjectsEnd - 14;
   for (SumoS32 index = 0; index < 14; ++index)
     joints[index] = jointBase + index;
@@ -2274,7 +2277,7 @@ void GameMan::Update(SumoIntPtr state) {
               continue;
 
           box->breakability = 250;
-          box->m_pOwner = this;
+          
       }
       if (eliminated == 0) 
       {
