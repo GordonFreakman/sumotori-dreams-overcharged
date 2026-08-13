@@ -19,7 +19,7 @@ public:
   void Grow();
   void Resize(SumoU32 size);
   void Clear() { m_end = m_begin; }
-  SumoU32 Size() const { return m_end - m_begin; }
+  SumoU32 Size() const { return (SumoU32)(m_end - m_begin); }
 
 private:
   SumoU32 *m_begin;

@@ -32,7 +32,7 @@ public:
   void PushBack(const SumoU32 &value);
   void PadTo(SumoU32 size);
 
-  SumoU32 Size() const { return m_end - m_begin; }
+  SumoU32 Size() const { return (SumoU32)(m_end - m_begin); }
 
 protected:
   SumoU32 *m_begin;

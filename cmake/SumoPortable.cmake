@@ -39,6 +39,8 @@ option(SUMO_WARNINGS_AS_ERRORS
   "Treat warnings in first-party portable sources as errors" OFF)
 if(MSVC)
   target_compile_options(sumo_portable_options INTERFACE /W4)
+  target_compile_definitions(sumo_portable_options INTERFACE
+    _CRT_SECURE_NO_WARNINGS)
   if(SUMO_WARNINGS_AS_ERRORS)
     target_compile_options(sumo_portable_options INTERFACE /WX)
   endif()
@@ -95,6 +97,7 @@ endif()
 
 if(MSVC)
   target_compile_options(sumo_decomp PRIVATE /wd4068)
+  target_compile_definitions(sumo_decomp PRIVATE _CRT_SECURE_NO_WARNINGS)
 else()
   target_compile_options(sumo_decomp PRIVATE
     -fno-strict-aliasing
