@@ -9,8 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-SumoU32 g_gameTextureScratch[0x10000];
-SumoU32 g_gameTextureScratchEnd;
+SumoU32 g_gameTextureScratch[4194304];
 
 enum { c_renderVertexScratchSize = 0x250120 };
 
@@ -2013,24 +2012,24 @@ SumoS32 InitializeGameTextures() {
           CreateGameTextureFromPixels(pixels, 0x100, 0x100, 0);
   }
 
-  for (SumoS32 word = 0; word < 0x10000; ++word)
+  for (SumoS32 word = 0; word < 4194304; ++word)
     g_gameTextureScratch[word] = 0xffffffffu;
 
-  for (SumoS32 glyph = 0; glyph < 0x100; ++glyph) {
+  for (SumoS32 glyph = 0; glyph < 0x400; ++glyph) {
     char glyphText[2];
     glyphText[0] = (char)glyph;
     glyphText[1] = 0;
     BlendTextIntoTexture((SumoU8 *)g_gameTextureScratch, glyphText,
-                         (glyph & 0xf) << 4, (glyph / 0x10) << 4, 0x100, 0x10,
-                         0x10, 0xc, 0, 0xffffff, g_gameConsoleFont);
+                         ((glyph & 0xf) << 4) * 4, ((glyph / 0x10) << 4) * 4, 1024, 0x40,
+                         0x40, (0xc * 4), 0, 0xffffff, g_gameConsoleFont);
   }
 
   for (SumoU32 *cursor = g_gameTextureScratch;
-       cursor < g_gameTextureScratch + 0x10000; ++cursor)
+       cursor < g_gameTextureScratch + 0x80000; ++cursor)
     *cursor = ~*cursor;
 
   g_gameFontAtlasTexture =
-      CreateGameTextureFromPixels(g_gameTextureScratch, 0x100, 0x100, 0);
+      CreateGameTextureFromPixels(g_gameTextureScratch, 1024, 1024, 0);
   return (SumoS32)g_gameFontAtlasTexture;
 }
 
