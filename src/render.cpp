@@ -2029,7 +2029,7 @@ SumoS32 InitializeGameTextures() {
     *cursor = ~*cursor;
 
   g_gameFontAtlasTexture =
-      CreateGameTextureFromPixels(g_gameTextureScratch, 1024, 1024, 0);
+      CreateGameTextureFromPixels(g_gameTextureScratch, 1024, 1024, 1);
   return (SumoS32)g_gameFontAtlasTexture;
 }
 
