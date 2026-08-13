@@ -1979,7 +1979,7 @@ extern SumoIntPtr g_gameFontAtlasTexture;
 SumoS32 InitializeGameTextures() {
   CreateGameAttenuationTexture();
   CreateGameRampTexture();
-  g_textureLoadFromTga = 1;
+  g_textureLoadFromTga = 0;
   g_textureUseMmxSampler = 1;
   void **pixelSets = BuildTextureSet((void **)g_gameTexturePrograms,
                                      (void *)IgnoreGameTextureProgress);
