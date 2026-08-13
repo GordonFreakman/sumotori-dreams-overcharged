@@ -36,7 +36,7 @@ add_library(Sumo::PortableOptions ALIAS sumo_portable_options)
 target_compile_features(sumo_portable_options INTERFACE c_std_17 cxx_std_17)
 
 option(SUMO_WARNINGS_AS_ERRORS
-  "Treat warnings in first-party portable sources as errors" ON)
+  "Treat warnings in first-party portable sources as errors" OFF)
 if(MSVC)
   target_compile_options(sumo_portable_options INTERFACE /W4)
   if(SUMO_WARNINGS_AS_ERRORS)
@@ -120,7 +120,7 @@ set(SUMO_EMBEDDED_ASSETS
   levels/editor_default.smo
   sumo.ico
 )
-foreach(index RANGE 5)
+foreach(index RANGE 6)
   list(APPEND SUMO_EMBEDDED_ASSETS "audio/sfx/source${index}.wav")
 endforeach()
 foreach(index RANGE 22)

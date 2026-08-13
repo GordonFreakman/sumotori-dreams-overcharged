@@ -9,11 +9,11 @@
 
 GameCollisionFeatureLink g_gameCollisionFeatureLinks[8192];
 
-GameBox g_gameBoxes[512];
+GameBox g_gameBoxes[2048];
 
 GameRandomGenerator g_gameRandom;
 
-GameCollisionCorrectionRecord g_gameCollisionCorrections[2048];
+GameCollisionCorrectionRecord g_gameCollisionCorrections[8192];
 
 SumoU8 g_gameContactObjects[0xf400];
 
@@ -21,7 +21,7 @@ GameBox g_cutPlaneBox;
 
 GameBox g_clipScratchBox;
 
-GameCollisionPointRecord g_gameCollisionPoints[2048];
+GameCollisionPointRecord g_gameCollisionPoints[8192];
 
 GameCollisionFeatureLink *g_gameCollisionFeatureLinksEnd;
 
@@ -90,10 +90,10 @@ extern const SumoF32 g_boxWaterDiagonalScale = 1.5f;
 extern const SumoF32 g_boxWaterVerticalRetention = 0.93f;
 // GLOBAL: SUMO 0x0042c730
 // GLOBAL: EDITOR 0x0042c730
-extern const SumoF32 g_boxWaterBuoyancyScale = 1.4f;
+extern const SumoF32 g_boxWaterBuoyancyScale = 0.95f;
 // GLOBAL: SUMO 0x0042c72c
 // GLOBAL: EDITOR 0x0042c72c
-extern const SumoF32 g_boxWaterLinearDamping = 0.95f;
+extern const SumoF32 g_boxWaterLinearDamping = 0.995f;
 // GLOBAL: SUMO 0x0042c728
 // GLOBAL: EDITOR 0x0042c728
 extern const SumoF32 g_boxWaterAngularDamping = 0.995f;
@@ -178,11 +178,11 @@ DECOMP_SIZE_ASSERT(GameCollisionCorrectionRecord, 0x20);
 
 // GLOBAL: SUMO 0x00511600
 // GLOBAL: EDITOR 0x00511e20
-extern GameCollisionCorrectionRecord g_gameCollisionCorrections[2048];
+//extern GameCollisionCorrectionRecord g_gameCollisionCorrections[2048];
 
 // GLOBAL: SUMO 0x00530c00
 // GLOBAL: EDITOR 0x00531420
-extern GameCollisionPointRecord g_gameCollisionPoints[2048];
+//extern GameCollisionPointRecord g_gameCollisionPoints[2048];
 
 // GLOBAL: SUMO 0x00562414
 // GLOBAL: EDITOR 0x00562c34
@@ -460,6 +460,7 @@ void GameBox::InitializePhysics() {
   unknownC0 = 0;
   unknownC4 = 0.0f;
   unknownC8 = 170.0f;
+  fractureSound = 1;
 }
 
 // GLOBAL: SUMO 0x0042c720
@@ -702,7 +703,7 @@ void LimitDynamicBoxes() {
     ++box;
   }
 
-  if (dynamicCount > 90 && smallestBox != 0) {
+  if (dynamicCount > 256 && smallestBox != 0) {
     smallestBox->flag58 = true;
   }
 }
@@ -780,17 +781,24 @@ SumoS32 LogGameDebugValue(const char *text, SumoS32 value);
 SumoU8 FractureGameBoxAtPoint(Vector3 &position, GameBox *box) {
   if (box->flag58)
     return 0;
-  if (g_gameBoxesEnd > (GameBox *)((SumoU8 *)g_gameBoxesLimit - 0x9d8))
-    return 0;
-
+  //if (g_gameBoxesEnd > (GameBox *)((SumoU8 *)g_gameBoxesLimit - 0x9d8))
+//    return 0;
+  if (box->unknownC0 == 4 || box->unknownC0 == 3) {
+    box->fractureSound = 7;
+  }
   GameBox *destination = &g_cutPlaneBox;
   GameBox *spare = &g_clipScratchBox;
   Vector3 localPoint = box->orientation.Transform(position - box->position);
   PlayGameSound(
-      1, (SumoF32)exp(log((SumoF64)box->volume * 0.0071428572f) * -0.25f),
+      box->fractureSound, (SumoF32)exp(log((SumoF64)box->volume * 0.0071428572f) * -0.25f),
       0.25f, 0);
   if (g_gameMenuSelection == 0)
     g_gameMenuSelection = box->unknownBC;
+
+  if (box->m_pOwner) 
+  {
+     box->m_pOwner->m_bLobotomized++;
+  }
 
   Vector3 seeds[5];
   SumoS32 seedCount = 0;
@@ -1102,7 +1110,7 @@ extern SumoS32 g_screenTintLevel;
 // FUNCTION: EDITOR 0x00416810
 void InitializeWaterField() {
   SumoS32 cellCount = g_waterGridWidth * g_waterGridHeight;
-  g_waterBaseHeight = 23.0f;
+  g_waterBaseHeight = -50.0f;
   g_waterFieldActive = 1;
   g_waterHeights.Resize(cellCount);
   g_waterVelocities.Resize(g_waterGridWidth * g_waterGridHeight);
@@ -1130,7 +1138,7 @@ extern SumoF32 g_waterHeightCorrection;
 void UpdateWaterField() {
   if (g_screenTintLevel % 3 != 0)
     return;
-  if (!g_waterHeights.HasElements())
+  //if (!g_waterHeights.HasElements())
     return;
 
   SumoS32 width = g_waterGridWidth;
@@ -1191,6 +1199,8 @@ void GameBox::ApplyWaterInteraction() {
     return;
   SumoS32 gridX = (SumoS32)((SumoF64)g_gameInverseSimulationStep * position.x);
   SumoS32 gridZ = (SumoS32)((SumoF64)g_gameInverseSimulationStep * position.z);
+  gridX += g_waterGridWidth / 2;
+  gridZ += g_waterGridHeight / 2;
   if (gridX >= g_waterGridWidth || gridX < 0 || gridZ >= g_waterGridHeight ||
       gridZ < 0)
     return;
@@ -1269,7 +1279,7 @@ void GameBox::ApplyWaterInteraction() {
   angularVelocity.z = angularVelocity.z * g_boxWaterAngularDamping;
 }
 
-extern GameBox g_gameBoxes[512];
+//extern GameBox g_gameBoxes[512];
 extern GameBox *g_gameBoxesEnd;
 extern SumoF32 g_gameSimulationStep;
 extern SumoF32 g_gameInverseSimulationStep;
@@ -1278,7 +1288,7 @@ extern const SumoF32 g_waterMotionThreshold;
 void ApplyWaterInteractionToMovingBoxes() {
   g_gameInverseSimulationStep = 1.0f / g_gameSimulationStep;
   for (GameBox *box = g_gameBoxes; box < g_gameBoxesEnd; ++box) {
-    if (box->linearVelocity.LengthSquared() > g_waterMotionThreshold)
+    //if (box->linearVelocity.LengthSquared() > g_waterMotionThreshold)
       box->ApplyWaterInteraction();
   }
 }
@@ -1639,6 +1649,9 @@ SumoS32 GenerateGameBoxCollisionContacts(GameBox *first, GameBox *second) {
     g_gameCollisionPointsEnd = record + 1;
   }
 
+  if (g_gameCollisionCorrectionsEnd > g_gameCollisionCorrections + 8192)
+    return 1;
+
   if (!(clipped->volume > 1e-9f))
     return 1;
 
@@ -1687,13 +1700,13 @@ SumoS32 GenerateGameBoxCollisionContacts(GameBox *first, GameBox *second) {
   return 1;
 }
 
-extern GameBox g_gameBoxes[512];
+extern GameBox g_gameBoxes[2048];
 extern GameBox *g_gameBoxesEnd;
 extern SumoU8 g_gameContactObjects[0xf400];
 extern SumoU8 *g_gameContactObjectsEnd;
-extern GameCollisionPointRecord g_gameCollisionPoints[2048];
+//extern GameCollisionPointRecord g_gameCollisionPoints[8192];
 extern GameCollisionPointRecord *g_gameCollisionPointsEnd;
-extern GameCollisionCorrectionRecord g_gameCollisionCorrections[2048];
+//extern GameCollisionCorrectionRecord g_gameCollisionCorrections[2048];
 extern GameCollisionCorrectionRecord *g_gameCollisionCorrectionsEnd;
 extern GameCollisionFeatureLink g_gameCollisionFeatureLinks[8192];
 extern GameCollisionFeatureLink *g_gameCollisionFeatureLinksEnd;
@@ -1751,6 +1764,9 @@ void ResolveGameCollisions() {
 
   for (GameBoxJoint *joint = (GameBoxJoint *)g_gameContactObjects;
        (SumoU8 *)joint < g_gameContactObjectsEnd; ++joint) {
+
+    if (!joint->boxes[0] || !joint->boxes[1])
+      continue;
     GameBox *first = joint->boxes[0];
     if (first->flag58)
       continue;
@@ -1966,6 +1982,9 @@ void ResolveGameCollisions() {
     for (GameBoxJoint *joint = (GameBoxJoint *)g_gameContactObjects;
          (SumoU8 *)joint < g_gameContactObjectsEnd; ++joint) {
       GameBox *first = joint->boxes[0];
+      if (!joint->boxes[0] || !joint->boxes[1])
+          continue;
+
       if (first->flag58)
         continue;
       GameBox *second = joint->boxes[1];
@@ -2312,6 +2331,7 @@ GameBox *CreateGameBox(Vector3 halfSize, Vector3 position, SumoS32 type,
   box->position = position;
   box->type = type;
   box->defaultValue = defaultValue;
+  box->m_pOwner = NULL;
   ++g_gameBoxesEnd;
   return box;
 }
@@ -2319,6 +2339,6 @@ GameBox *CreateGameBox(Vector3 halfSize, Vector3 position, SumoS32 type,
 // FUNCTION: SUMO 0x00408ddf
 // FUNCTION: EDITOR 0x00408e01
 void InitializeClipBoxes() {
-  g_cutPlaneBox.ReserveGeometry(512, 2048, 512);
-  g_clipScratchBox.ReserveGeometry(512, 2048, 512);
+  g_cutPlaneBox.ReserveGeometry(2048, 2048 * 4, 2048);
+  g_clipScratchBox.ReserveGeometry(2048, 2048 * 4, 2048);
 }

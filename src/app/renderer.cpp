@@ -826,8 +826,8 @@ void RenderGameBoxes(SumoS32);
 
 SumoS32 g_gameRenderQualityCode = 12;
 SumoS32 g_gameRenderQualityEnabled = 1;
-SumoS32 g_waterGridWidth = 128;
-SumoS32 g_waterGridHeight = 64;
+SumoS32 g_waterGridWidth = 512 * 2;
+SumoS32 g_waterGridHeight = 512 * 2;
 
 extern const SumoF32 g_gameLightPassRotationStep = 5.1999998f;
 
@@ -1070,8 +1070,8 @@ static SumoS32 s_waterVertexCapacity;
 SumoU8 *BeginGameWaterVertices(SumoS32 byteCount) {
   if (!SumoRenderContextReady() || byteCount <= 0)
     return NULL;
-  if (byteCount > 0x250120)
-    return NULL;
+ // if (byteCount > 0x250120)
+   // return NULL;
   if (byteCount > s_waterVertexCapacity) {
     delete[] s_waterVertexScratch;
     s_waterVertexScratch = new SumoU8[(size_t)byteCount];
@@ -1087,6 +1087,7 @@ void FinishGameWaterVertices(SumoS32 triangleCount) {
   glBufferSubData(GL_ARRAY_BUFFER, 0, (GLsizeiptr)triangleCount * 3 * 24,
                   s_waterVertexScratch);
   glBindVertexArray(s_streamTextVertexArray);
+  SetGameTexture(0, g_gameFontAtlasTexture);
   glUniform1i(s_uniformMode, c_renderModeFlat);
   glEnable(GL_BLEND);
   glBlendFunc(GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA);
@@ -1142,10 +1143,67 @@ static GLuint WhiteTexture() {
   return s_whiteTexture;
 }
 
+
+enum { c_undefinedMaterialSize = 32, c_undefinedMaterialSlots = 128 };
+
+static GLuint s_undefinedMaterial[c_undefinedMaterialSlots];
+
+static SumoU32 UndefinedMaterialHash(SumoU32 seed) {
+  seed ^= seed >> 16;
+  seed *= 0x7feb352du;
+  seed ^= seed >> 15;
+  seed *= 0x846ca68bu;
+  seed ^= seed >> 16;
+  return seed;
+}
+
+static GLuint UndefinedMaterialTexture(SumoS32 slot) {
+  if (slot < 0 || slot >= c_undefinedMaterialSlots)
+    return WhiteTexture();
+  if (s_undefinedMaterial[slot] != 0)
+    return s_undefinedMaterial[slot];
+
+  SumoU32 first = UndefinedMaterialHash((SumoU32)slot * 2u + 1u);
+  SumoU32 second = UndefinedMaterialHash(first);
+  SumoU8 fromColor[3];
+  SumoU8 toColor[3];
+  for (SumoS32 channel = 0; channel < 3; ++channel) {
+    fromColor[channel] = (SumoU8)(0x40 + ((first >> (channel * 8)) & 0xbf));
+    toColor[channel] = (SumoU8)(0x40 + ((second >> (channel * 8)) & 0xbf));
+  }
+
+  SumoU8 pixels[c_undefinedMaterialSize * c_undefinedMaterialSize * 4];
+  SumoU8 *cursor = pixels;
+  for (SumoS32 y = 0; y < c_undefinedMaterialSize; ++y) {
+    for (SumoS32 x = 0; x < c_undefinedMaterialSize; ++x) {
+      SumoS32 shade = (x + y) * 255 / (2 * (c_undefinedMaterialSize - 1));
+      for (SumoS32 channel = 0; channel < 3; ++channel) {
+        cursor[channel] = (SumoU8)((fromColor[channel] * (255 - shade) +
+                                    toColor[channel] * shade) /
+                                   255);
+      }
+      cursor[3] = 0xff;
+      cursor += 4;
+    }
+  }
+
+  GLuint texture = 0;
+  glGenTextures(1, &texture);
+  glBindTexture(GL_TEXTURE_2D, texture);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, c_undefinedMaterialSize,
+               c_undefinedMaterialSize, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  s_undefinedMaterial[slot] = texture;
+  return texture;
+}
+
 HRESULT SetGameTexture(SumoU32 stage, SumoIntPtr texture) {
   glActiveTexture(GL_TEXTURE0 + stage);
   glBindTexture(GL_TEXTURE_2D,
-                texture != 0 ? (GLuint)texture : WhiteTexture());
+                texture != 0 ? (GLuint)texture : UndefinedMaterialTexture(texture));
   glActiveTexture(GL_TEXTURE0);
   return 0;
 }

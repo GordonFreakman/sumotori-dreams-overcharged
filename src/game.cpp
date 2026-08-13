@@ -15,6 +15,8 @@
 #include <new>
 #include <stdlib.h>
 
+
+SumoS32 g_sumoMode = 0;
 void *PlayGameSound(SumoS32 soundIndex, SumoF32 frequencyScale,
                     SumoF32 volumeScale, SumoS32 channel);
 SumoS32 CheckStoredGameSettings();
@@ -24,7 +26,7 @@ void RestartGameMusic(SumoS32 playbackMode);
 void ResetAndSetSceneTransform(Vector3 &position, SumoF32 angle);
 typedef void(__cdecl *ResetSceneTransformLegacyCall)(Vector3 &, SumoF32,
                                                      SumoS32);
-
+void InitializeWaterField();
 static __forceinline void ResetAndSetSceneTransformLegacy(Vector3 &position,
                                                           SumoF32 angle) {
   ((ResetSceneTransformLegacyCall)ResetAndSetSceneTransform)(position, angle,
@@ -152,10 +154,10 @@ extern GameBox g_cutPlaneBox;
 extern GameBox g_clipScratchBox;
 
 // GLOBAL: SUMO 0x00746430
-extern GameBox g_gameBoxes[512];
+extern GameBox g_gameBoxes[2048];
 
 // GLOBAL: SUMO 0x004536e4
-GameBox *g_gameBoxesLimit = g_gameBoxes + 512;
+GameBox *g_gameBoxesLimit = g_gameBoxes + 2048;
 
 // GLOBAL: SUMO 0x00560c08
 extern GameBox *g_gameBoxesEnd;
@@ -224,8 +226,11 @@ SumoS32 g_gamePlayerCount = 3;
 char g_gameMenuWarningText[] =
     "WARNING: The characters in the game were performed by\n"
     "trained professionals!!! Do not try this at home!!!\n \n"
-    "Rules: When you hit the ground, you loose\n"
-    "winner is the one, who stays on feet for the longest\n";
+    "Rules: When you hit the ground, you lose\n"
+    "winner is the one, who stays on feet for the longest\n \n"
+    "Original decompile & portable version created by siohaza.\n"
+    "https://github.com/siohaza/sumotori-dreams-re\n"
+    "Expanded version by Gordon Freakman.";
 
 // GLOBAL: SUMO 0x004ea480
 SumoS32 g_gameHumanPlayerCount;
@@ -340,6 +345,10 @@ void UpdateGameMenuScreen(SumoU8 drawOverlay) {
     g_gameMenuTransitionTicks -= 2;
     if (g_gameMenuTransitionTicks <= 0) {
       switch (g_gameMenuPage) {
+      case 3:
+          g_gameMenuPage = 0;
+        InitializeGameRuntimeState();
+          break;
       case 1:
         g_externalLevelScriptOverride = 0;
         g_gameMenuPage = 0;
@@ -347,6 +356,22 @@ void UpdateGameMenuScreen(SumoU8 drawOverlay) {
             g_gameMenuSelection % 16 + 4 * (g_gameMenuSelection / 16) - 1;
         InitializeGameRuntimeState();
         break;
+      case 2:
+        g_gameMenuPage = 0;
+        switch (g_gameMenuSelection)
+        {
+        case 17:
+          g_gameHumanPlayerCount = 0;
+          g_gamePlayerCount = 1;
+          StartGameRound();
+          break;
+        default:
+          g_sumoMode = g_gameMenuSelection % 16 + 4 * (g_gameMenuSelection / 16) - 1;
+          InitializeGameRuntimeState();
+          break;
+        }
+        break;
+
       case 0:
         switch (g_gameMenuSelection) {
         case 1:
@@ -402,7 +427,15 @@ void UpdateGameMenuScreen(SumoU8 drawOverlay) {
           g_gameMenuAlternateLayout ^= 1;
           InitializeGameRuntimeState();
           break;
-        case 35: g_gameLevelEditorCloseRequested = 1; break;
+        case 37: g_gameLevelEditorCloseRequested = 1; break;
+        case 35:
+          g_gameMenuPage = 2;
+            InitializeGameRuntimeState();
+            break;
+        case 36:
+          g_gameMenuPage = 3;
+          InitializeGameRuntimeState();
+          break;
         }
         break;
       }
@@ -438,10 +471,10 @@ void UpdateGameMenuScreen(SumoU8 drawOverlay) {
           (0x007f007f & ((SumoS32)g_screenTintColor / 2)) +
           ((3 * ((SumoS32)g_screenTintColor & 0xff00) / 4) & 0xff00);
     }
-    DrawGameText(-0.2f, 0.56f, "Sumotori Dreams Full", 0xc08080ff);
-    DrawGameText(0.27000001f, g_gameNegativeHalf, "\"Tested on party animals\"",
+    DrawGameText(-0.4f, 0.56f, "Sumotori Dreams: Overcharged", 0xc08080ff);
+    DrawGameText(0.27000001f, -0.5, "\"Tested on party animals\"",
                  0xc0ffffff);
-    DrawGameText(-0.85000002f, g_gameNegativeHalf,
+    DrawGameText(-0.85000002f, -0.5,
                  "www.gravitysensation.com/sumotori", 0xc0ffffff);
   }
 }
@@ -495,7 +528,7 @@ void AdvanceGameSimulation() {
     g_gameSkipPhysicsStep = 0;
     g_gameBoxesInitialized = 1;
   }
-  if (g_gameMode >= 2) {
+  if (g_sumoMode == 1 || g_gameMode >= 2) {
     ApplyWaterInteractionToMovingBoxes();
   }
   UpdateGameReplay();
@@ -598,6 +631,7 @@ GameMan *CreateGameMen() {
   if (g_gameResetScores) {
     g_gameScores[0] = 0;
     g_gameScores[1] = 0;
+    g_gameResetScores = false;
   }
 
   g_levelLoadState[0] = -1;
@@ -668,6 +702,9 @@ GameMan *CreateGameMen() {
 void StartGameRound() {
   SetGameCursorVisible(0);
   g_gameEditorControlMode = 4;
+  if (g_sumoMode == 2)
+    RestartGameMusic(10);
+     else
   RestartGameMusic(6);
 
   Vector3 position;
@@ -692,6 +729,8 @@ void StartGameRound() {
     g_gameUsesScriptedArena = 0;
     BuildDefaultGameArena(0);
   }
+  if (g_sumoMode == 1)
+    InitializeWaterField();
 
   CreateGameMen();
   RefreshGameContactLists();
@@ -1203,7 +1242,7 @@ extern char g_gameLevelEditBuffer[0x80000];
 
 // GLOBAL: SUMO 0x0042c5b8
 // GLOBAL: EDITOR 0x0042c5b8
-extern const SumoF32 g_gameLevelArenaExtent = 100.0f;
+SumoF32 g_gameLevelArenaExtent = 100.0f;
 
 // FUNCTION: SUMO 0x00406985
 // FUNCTION: EDITOR 0x004069a7
@@ -1337,18 +1376,26 @@ void BuildDefaultGameArena(SumoS32 type) {
   memset(g_gameContactObjects, 0, 0xf400);
   g_gameContactObjectsEnd = g_gameContactObjects;
 
+  g_nextGameMan = g_gameMen;
+  g_gameBoxesEnd = g_gameBoxes;
+
   Vector3 floorPosition;
   floorPosition.x = 0.0f;
   floorPosition.z = 0.0f;
   floorPosition.y = -4.0f;
   Vector3 floorHalfSize;
-  floorHalfSize.x = g_gameFloorHalfExtent;
-  floorHalfSize.y = -3.0f;
-  floorHalfSize.z = g_gameFloorHalfExtent;
-  g_nextGameMan = g_gameMen;
-  g_gameBoxesEnd = g_gameBoxes;
-  CreateGameBox(floorHalfSize, floorPosition, 1, g_gameRampStep32)
-      ->MakeImmovable();
+  if (g_sumoMode != 4) {
+    if (g_sumoMode == 1) {
+      floorHalfSize.x = g_gameFloorHalfExtent / 4;
+      floorHalfSize.y = -3.0f;
+      floorHalfSize.z = g_gameFloorHalfExtent / 4;
+    } else {
+      floorHalfSize.x = g_gameFloorHalfExtent;
+      floorHalfSize.y = -3.0f;
+      floorHalfSize.z = g_gameFloorHalfExtent;
+    }
+    CreateGameBox(floorHalfSize, floorPosition, 1, g_gameRampStep32)->MakeImmovable();
+  }
 
   Vector3 platformPosition;
   platformPosition.x = 0.0f;
@@ -1436,6 +1483,9 @@ void BuildDefaultGameArena(SumoS32 type) {
   g_gameArenaExtent = 40.0f;
   if (g_gameIsRunning != 0)
     g_gameArenaExtent = 200.0f;
+
+    if (g_sumoMode == 1)
+    g_gameArenaExtent = 2000.0f;
 }
 
 // FUNCTION: SUMO 0x0040e718
@@ -1540,24 +1590,38 @@ void GameMan::Initialize(Vector3 &position, SumoF32 angle, SumoS32 type,
   GameBox *pelvis =
       CreateGameBox(MakeVector3(2.8f, -2.2f, 2.0f), pelvisOffset + position,
                     type, g_gameProjectileDefaultValue);
+
+  if (g_sumoMode == 2)
+  {
+    pelvis->breakability = 550;
+  }
   pelvis->modeE0 = 0x28;
   pelvis->orientation.RotateRows02(angle);
   Vector3 nudge = MakeVector3(0.0f, 0.0f, 0.1f);
   pelvis->linearVelocity += pelvis->orientation.Transform(nudge);
   pelvis->unknownC0 = 4;
   pelvis->unknownC4 = 0.01f;
-
+  pelvis->m_pOwner = this;
   GameBox *chest = CreateGameBox(MakeVector3(2.7f, -2.2f, 1.5f),
                                  MakeVector3(0.0f, 30.0f, 0.0f), type,
                                  g_gameProjectileDefaultValue);
   chest->modeE0 = 0x28;
   chest->unknownC0 = 4;
   chest->unknownC4 = 0.01f;
+  chest->m_pOwner = this;
+    if (g_sumoMode == 2) 
+    {
+    chest->breakability = 300;
+    }
 
   GameBox *head = CreateGameBox(MakeVector3(1.2f, -1.5f, 1.2f),
                                 MakeVector3(0.0f, 36.0f, 0.0f), type,
                                 g_gameProjectileDefaultValue);
   head->modeE0 = 0x28;
+  head->m_pOwner = this;
+    if (g_sumoMode == 2) {
+    head->breakability = 150;
+  }
 
   GameBoxJoint *joint = (GameBoxJoint *)g_gameContactObjectsEnd;
   joint->boxes[0] = pelvis;
@@ -1605,7 +1669,9 @@ void GameMan::Initialize(Vector3 &position, SumoF32 angle, SumoS32 type,
     foot->inertia = foot->inertia * g_randomHalf;
     foot->unknownC8 = 400.0f;
     foot->inverseInertia = foot->inverseInertia + foot->inverseInertia;
-
+    if (g_sumoMode == 2) {
+      //foot->breakability = 550;
+    }
     Vector3 shinOffset = MakeVector3(legReach, 2.2f, 0.0f);
     GameBox *shin =
         CreateGameBox(MakeVector3(1.0f, -2.3f, 1.0f), shinOffset + position,
@@ -1614,7 +1680,9 @@ void GameMan::Initialize(Vector3 &position, SumoF32 angle, SumoS32 type,
     shin->modeE0 = 0x28;
     shin->unknownC0 = 4;
     shin->unknownC4 = 0.005f;
-
+    if (g_sumoMode == 2) {
+      //shin->breakability = 500;
+    }
     Vector3 thighOffset = MakeVector3(facing * 3.0f, 2.2f, 0.0f);
     GameBox *thigh =
         CreateGameBox(MakeVector3(1.2f, -3.0f, 1.2f), thighOffset + position,
@@ -1622,6 +1690,10 @@ void GameMan::Initialize(Vector3 &position, SumoF32 angle, SumoS32 type,
     thigh->modeE0 = 0x28;
     thigh->unknownC0 = 4;
     thigh->unknownC4 = 0.005f;
+
+    if (g_sumoMode == 2) {
+      //thigh->breakability = 750;
+    }
 
     joint = (GameBoxJoint *)g_gameContactObjectsEnd;
     joint->boxes[0] = thigh;
@@ -1794,6 +1866,8 @@ Vector3 GameMan::CalculateCenterOfMassPosition() {
     GameBox *bodyPart = bodyParts[index];
     totalMass += bodyPart->mass;
     weightedPosition.AddInline(bodyPart->position.Scale(bodyPart->mass));
+
+    if (m_bLobotomized) break;
   }
 
   SumoF32 inverseMass = 1.0f / totalMass;
@@ -1804,6 +1878,8 @@ Vector3 GameMan::CalculateCenterOfMassPosition() {
                                       weightedPosition.x * weightedPosition.x;
   if (horizontalDistanceSquared + weightedPosition.y * weightedPosition.y >
       g_gameMaximumCenterDistanceSquared) {
+    if (m_bLobotomized == 0)
+    m_bLobotomized++;
     weightedPosition.z = 0.0f;
     weightedPosition.y = 0.0f;
     weightedPosition.x = 0.0f;
@@ -2070,7 +2146,7 @@ SumoU32 GameMan::ChooseAiInput(GameMan *opponent) {
     }
   }
   if (level == 2) {
-    if (g_gameMenuAlternateLayout != 0) {
+    if (g_gameMenuAlternateLayout != 0 || g_sumoMode == 3) {
       input &= ~4u;
     } else if (tint % 0x190 > 0xc8) {
       input |= 4;
@@ -2101,7 +2177,6 @@ extern const SumoF32 g_gameCameraInputDamping;
 extern const SumoF32 g_gameCameraInputOffsetScale;
 extern const SumoF32 g_gameCameraMinimumDistance;
 extern const SumoF32 g_gameCameraMinimumDistanceScale;
-extern const SumoF32 g_gameLevelArenaExtent;
 extern const SumoF32 g_gameManPoseImpulseGain;
 extern const SumoF32 g_gameNegativeHalf;
 extern const SumoF32 g_gameProjectileHalfSize;
@@ -2151,7 +2226,17 @@ void GameMan::Update(SumoIntPtr state) {
   SumoU8 footHomeFlag;
   SumoU8 poseOverride;
   SumoU8 actionRerun;
-
+  if (m_bLobotomized)
+  {
+    postureState = 3;
+    postureTick = 0;
+    balancePitch = 0.0f;
+    stanceBlend = 0.5f;
+    balanceRoll = 0.0f;
+    balancePitchIntegral = 0.0f;
+    balancePitchVelocity = 0.0f;
+    balanceRollVelocity = 0.0f;
+  }
   handTargetWorld[0].x = 0.0f;
   handTargetWorld[0].y = 0.0f;
   handTargetWorld[0].z = 0.0f;
@@ -2174,20 +2259,45 @@ void GameMan::Update(SumoIntPtr state) {
   if (g_levelLoadState[6] < g_screenTintLevel - 50) {
     for (SumoS32 part = 0; part < 15; ++part) {
       GameBox *box = bodyParts[part];
-      if (box->unknownD8 < g_screenTintLevel - 1)
-        continue;
-      if (part == 3 || part == 6 || part == 4 || part == 7)
-        continue;
-      if (g_levelLoadState[4] == 0)
-        continue;
-      if (eliminated == 0) {
+      if (g_sumoMode != 2) 
+      {
+        if (box->unknownD8 < g_screenTintLevel - 1)
+          continue;
+        if (part == 3 || part == 6 || part == 4 || part == 7)
+          continue;
+        if (g_levelLoadState[4] == 0)
+          continue;
+      }
+      else
+      {
+          if (!m_bLobotomized)
+              continue;
+
+          box->breakability = 250;
+          box->m_pOwner = this;
+      }
+      if (eliminated == 0) 
+      {
         eliminated = 1;
-        SumoS32 placement = g_gameRoundPlayerCount - 1;
-        g_gameRoundPlayerCount = placement;
-        g_levelLoadState[placement] = (SumoS32)(this - g_gameMen);
-        if (placement == 1) {
+        if (g_sumoMode == 3)
+        {
+          opponent->eliminated = -1;
+          g_gameScores[&g_gameMen[0] == this]++;
+          mode = 2;
+          RestartGameMusic(9);
           g_levelLoadState[7] = 0;
           g_levelLoadState[4] = 2;
+        } 
+        else 
+        {
+          SumoS32 placement = g_gameRoundPlayerCount - 1;
+          g_gameRoundPlayerCount = placement;
+          g_levelLoadState[placement] = (SumoS32)(this - g_gameMen);
+          if (placement == 1) 
+          {
+            g_levelLoadState[7] = 0;
+            g_levelLoadState[4] = 2;
+          }
         }
       }
       active = 5;
@@ -2198,7 +2308,8 @@ void GameMan::Update(SumoIntPtr state) {
     g_levelLoadState[0] = (SumoS32)(this - g_gameMen);
 
   ++g_levelLoadState[7];
-
+  if (m_bLobotomized)
+      return;
   {
     Vector3 unit;
     unit.x = 1.0f;
@@ -4163,6 +4274,21 @@ tailJoin: {
 extern const SumoF32 g_gameManPoseImpulseGain;
 
 void GameMan::Render(void *poseState) {
+
+if (m_bLobotomized) 
+{
+    for (SumoS32 index = 0; index < 14; ++index) 
+    {
+      GameBoxJoint *joint = joints[index];
+      if (m_bLobotomized > 7) // severely broken
+      {
+        joint->boxes[0] = NULL;
+        joint->boxes[1] = NULL;
+      }
+    }
+    return;
+ }
+
   GameManJointPose *poseJoint = ((GameManPose *)poseState)->joints;
   SumoF32 primaryGain = 0.4f;
   SumoF32 secondaryGain = 0.25f;
@@ -4267,6 +4393,7 @@ SumoS32 InitializeGameRuntimeState() {
   BuildDefaultGameArena(0);
   g_gameArenaExtent = 80.0f;
   g_gameMenuSelection = 0;
+  g_gameResetScores = true;
 
   SumoF32 laneOffsets[3];
   laneOffsets[0] = -7.0f;
@@ -4275,11 +4402,11 @@ SumoS32 InitializeGameRuntimeState() {
   SumoS32 rowCounts[3];
   rowCounts[0] = 3;
   rowCounts[1] = 3;
-  rowCounts[2] = 4;
+  rowCounts[2] = 3;
   SumoS32 stackCounts[3];
   stackCounts[0] = 4;
   stackCounts[1] = 4;
-  stackCounts[2] = 3;
+  stackCounts[2] = 4;
 
   for (SumoS32 slab = -4; slab < 5; ++slab) {
     Vector3 slabPosition = MakeVector3(-80.0f, 15.0f, (SumoF32)slab * 7.0f);
@@ -4300,25 +4427,46 @@ SumoS32 InitializeGameRuntimeState() {
   SumoS32 typeBase = page + 4;
   SumoS32 selectBase = 0;
   Vector3 columnOffset = MakeVector3(0.0f, 0.0f, 0.0f);
-  if (page == 0) {
-    columnCount = 3;
-    columnOffset.z = 20.0f;
-  }
-  if (page == 3) {
-    columnCount = 2;
-    stackCounts[0] = 0;
-    selectBase = 2;
-    typeBase = 4;
-  }
-  if (page == 1) {
+  switch (page) {
+  case 1:
     columnOffset.z = 10.0f;
     columnCount = 2;
     stackCounts[1] = g_gameArenaPageRowCount;
     rowCounts[1] = g_gameArenaPageChainLinks;
     selectBase = 0;
     typeBase = 7;
-  }
+    break;
+  case 2:
+    columnOffset.z = 10.0f;
+    columnCount = 2;
+    stackCounts[0] = 5;
+    rowCounts[0] = 2;
+    stackCounts[1] = 1;
+    selectBase = 0;
+    typeBase = 12;
+    break;
+  case 3:
+    columnCount = 2;
+    stackCounts[0] = 0;
+    stackCounts[1] = 1;
+    rowCounts[1] = 4;
+    selectBase = 5;
+    typeBase = 12;
+  break;
 
+  default: 
+  columnCount = 3; 
+  columnOffset.z = 20.0f; 
+
+  if (g_sumoMode == 3)
+  {
+    stackCounts[0] = 1;
+    stackCounts[1] = 1;
+  }
+      stackCounts[2] = g_gameArenaPageRowCount;
+  rowCounts[2] = g_gameArenaPageChainLinks;
+  break;
+  }
   for (SumoS32 column = 0; column < columnCount; ++column) {
     Vector3 laneAnchorPositions[2];
     laneAnchorPositions[0] = MakeVector3(-5.0f, 0.0f, -7.0f) + columnOffset;
@@ -4457,7 +4605,10 @@ SumoS32 UpdateHiddenGameScreen() {
       Vector3 start =
           g_gameCameraWorldPosition +
           MakeVector3(5.0f, 0.0f, 4.0f).Transform(g_gameInverseViewMatrix);
+      if (g_sumoMode != 2)
       LaunchGameBoxProjectile(start, target, 30.0f, 2);
+      else
+        LaunchGameBoxProjectile(start, target, 10.0f, 2);  
     }
     g_gameMouseX = -1;
   }
@@ -4473,7 +4624,7 @@ SumoS32 UpdateHiddenGameScreen() {
                  (SumoS32)0xb0ffffff);
   }
 
-  if (g_gameBoxesEnd > g_gameBoxes + 400)
+  if (g_gameBoxesEnd > g_gameBoxes + 2048)
     InitializeGameRuntimeState();
   return 0;
 }
@@ -4661,7 +4812,6 @@ bool g_replayRecording;
 // GLOBAL: SUMO 0x00c0602c
 // GLOBAL: EDITOR 0x00c0684c
 SumoS32 g_gameMode;
-
 // GLOBAL: SUMO 0x00c0601c
 // GLOBAL: EDITOR 0x00c0683c
 SumoS32 g_gameReplayFrame;
@@ -4670,7 +4820,7 @@ extern SumoU8 g_gameKeyDown[256];
 extern SumoU8 g_gameKeyPressed[256];
 extern SumoS32 g_gameIsRunning;
 extern SumoS32 g_screenTintLevel;
-extern GameBox g_gameBoxes[512];
+extern GameBox g_gameBoxes[2048];
 extern GameBox *g_gameBoxesEnd;
 extern Vector3 g_gameCameraWorldPosition;
 extern Matrix3 g_gameInverseViewMatrix;
@@ -4684,7 +4834,6 @@ void *PlayGameSound(SumoS32 soundIndex, SumoF32 frequencyScale,
 void GameAudioNoOpCallback();
 void StartGameRound();
 void SumoAssert(bool condition);
-void InitializeWaterField();
 void BuildDefaultGameArena(SumoS32 type);
 void SetSceneTransform(Vector3 &position, SumoF32 angle);
 
@@ -5002,7 +5151,7 @@ extern SumoS32 g_gameRenderQualityCode;
 extern SumoS32 g_gameRenderQualityEnabled;
 extern SumoS32 g_gameReplayFrame;
 extern SumoS32 g_gameRuntimeMode;
-extern SumoU8 g_gameLineVertexScratch;
+extern SumoU8 g_gameLineVertexScratch[0x80000];
 extern SumoU8 *g_gameLineVertexCursor;
 extern const SumoF32 g_freeCameraAimScale;
 extern const SumoF32 g_gameProjectileSpin;
@@ -5025,31 +5174,56 @@ char g_gameDemoTimeoutText[] = "              demo time out\n"
                                "box in the settings dialog at startup.\n"
                                "press ESC to quit\n";
 
-static __forceinline void DrawNormalGameOverlay() {
+static __forceinline void DrawNormalGameOverlay() 
+{
   char computerNames[4][25] = {"Blue guy", "Grey guy", "Brown guy",
                                "Green guy"};
   SumoS32 colors[4] = {(SumoS32)0xe08080ff, (SumoS32)0xc0ffffff,
                        (SumoS32)0xe0c08000, (SumoS32)0xc020e020};
   char playerNames[2][25] = {"Blue guy (player)", "Grey guy (player2)"};
-
+  char deadState[3][25] = {"[dead]", "[very dead]", "[overwhelmingly dead]"};
   SumoF32 y = 0.5f;
-  if (g_levelLoadState[4] != 11) {
-    for (SumoS32 slot = 0; slot < g_nextGameMan - g_gameMen; ++slot) {
-      SumoS32 *player = &g_levelLoadState[slot];
-      if (*player != -1) {
-        char number[2];
-        number[1] = 0;
-        number[0] = (char)('1' + slot);
-        DrawGameText(-0.2f, y, number, colors[*player]);
-        char *name = g_gameMen[*player].mode == 1 ? playerNames[*player]
-                                                  : computerNames[*player];
-        DrawGameText(-0.15000001f, y, name, colors[*player]);
-        y -= 0.050000001f;
+  if (g_levelLoadState[4] != 11) 
+  {
+    if (g_sumoMode != 3)
+    {
+      for (SumoS32 slot = 0; slot < g_nextGameMan - g_gameMen; ++slot) {
+        SumoS32 *player = &g_levelLoadState[slot];
+        if (*player != -1) {
+          char number[2];
+          number[1] = 0;
+          number[0] = (char)('1' + slot);
+          DrawGameText(-0.2f, y, number, colors[*player]);
+          char *name = g_gameMen[*player].mode == 1 ? playerNames[*player]
+                                                    : computerNames[*player];
+          DrawGameText(-0.15000001f, y, name, colors[*player]);
+          if (g_gameMen[*player].m_bLobotomized) // good variable name
+          {
+            char *name = deadState[g_gameMen[*player].m_bLobotomized > 6];
+
+            if (g_gameMen[*player].m_bLobotomized > 12)
+              name = deadState[2];
+            DrawGameText(0.1f, y, name, colors[*player]);
+          }
+
+          y -= 0.050000001f;
+        }
       }
+    }
+    else  if (g_levelLoadState[4] != 10)
+    {
+      char Buffer[6] = "xx:xx";
+      Buffer[0] = g_gameScores[1] / 10 + '0';
+      Buffer[1] = g_gameScores[1] % 10 + '0';
+      Buffer[3] = g_gameScores[0] / 10 + '0';
+      Buffer[4] = g_gameScores[0] % 10 + '0';
+      DrawGameText(0.04, 0.5f, Buffer, 0xC0C0C0C0);
     }
   }
 
-  if (g_levelLoadState[4] == 2) {
+  if (g_levelLoadState[4] == 2) 
+  {
+
     SumoS32 gameOver = 0;
     if ((g_gameScores[0] >= 5 || g_gameScores[1] >= 5) &&
         (g_gameScores[0] >= g_gameScores[1] + 2 ||
@@ -5064,13 +5238,24 @@ static __forceinline void DrawNormalGameOverlay() {
       DrawGameText(g_freeCameraAimScale, g_gameProjectileSpin,
                    "           \n Game Over \n           ",
                    (SumoS32)0xc0ffff00);
-    }
-
-    DrawGameText(-0.80000001f, g_gameProjectionMinimum, "Space to restart game",
+    } 
+    if (g_sumoMode == 3) 
+    {
+      int winner = g_gameMen[1].eliminated == -1;
+      char arrows[2][16] = {" Winner \n  ->  ", " Winner \n  <-  "};
+      DrawGameText(-0.2f, 0.5f, arrows[winner],
+                   colors[winner]);
+    } 
+    char spacetext[2][32] = {
+        "Space to restart game","Space to main menu"
+    };
+    DrawGameText(-0.80000001f, g_gameProjectionMinimum, spacetext[gameOver],
                  (SumoS32)0xc0c0c0c0);
     if (g_gameKeyPressed[c_gameRoundRestartInput]) {
-      if (gameOver)
+      if (gameOver) 
+      {
         InitializeGameRuntimeState();
+      }
       else
         StartGameRound();
     }
@@ -5106,9 +5291,9 @@ void RunGameFrame(SumoU8 renderFrame) {
   SetGameFpuControlWord();
   ++g_screenTintLevel;
   SumoS32 screenshotRequested = 0;
-  g_gameLineVertexCursor = &g_gameLineVertexScratch;
+  g_gameLineVertexCursor = &g_gameLineVertexScratch[0];
 
-  if (g_gameMode >= 0) {
+  if (1) {
     if (g_gameMode <= 2)
       UpdateGameCamera();
     else if (g_gameMode == 3)
@@ -5142,7 +5327,7 @@ void RunGameFrame(SumoU8 renderFrame) {
     g_gameRenderQualityEnabled = 1;
   }
 
-  if (g_gameMode == 0) {
+  if (g_gameMode <= 0) {
     DrawNormalGameOverlay();
   } else {
     if (g_gameKeyPressed[c_gameRoundRestartInput])

@@ -243,7 +243,7 @@ SumoU8 g_textureProgram_44e520[139] = {
 
 // GLOBAL: SUMO 0x00453890
 // GLOBAL: EDITOR 0x00453890
-SumoU8 *g_gameTexturePrograms[24] = {
+SumoU8 *g_gameTexturePrograms[29] = {
     g_textureProgram_44eae0, g_textureProgram_44ebc0, g_textureProgram_44f4b0,
     g_textureProgram_44e830, g_textureProgram_44ecb0, g_textureProgram_44ed50,
     g_textureProgram_44ecb0, g_textureProgram_44edd0, g_textureProgram_44e7c0,
@@ -251,18 +251,24 @@ SumoU8 *g_gameTexturePrograms[24] = {
     g_textureProgram_44e7c0, g_textureProgram_44e740, g_textureProgram_44e7c0,
     g_textureProgram_44e740, g_textureProgram_44e7c0, g_textureProgram_44e740,
     g_textureProgram_44ecb0, g_textureProgram_44ee40, g_textureProgram_44e9f0,
-    g_textureProgram_44f550, g_textureProgram_44e520, 0};
+    g_textureProgram_44f550, g_textureProgram_44e520, g_textureProgram_44e740,
+    g_textureProgram_44e7c0, g_textureProgram_44e740,
+    g_textureProgram_44e7c0, g_textureProgram_44e740, 0};
 
 // GLOBAL: SUMO 0x004538f0
 // GLOBAL: EDITOR 0x004538f0
-char g_gameMenuLabels[5][6][24] = {
+char g_gameMenuLabels[7][7][24] = {
     {"2 players duel", "2 players & 1 comp.", "2 player & 2 comp.",
-     "4 computers", "", ""},
+     "4 computers", "", "", ""},
     {"You vs. Computer", "You and 2 comp.", "You & 3 comp.", "2 Computers", "",
+     "", ""},
+    {"Arena selection", "AI mode: walk", "AI mode: stand", "Gamemodes", "Rules", "Quit", ""},
+    {"Default dojo", "Kitchen party", "Roof dancers", "play seesaw", "", "",
      ""},
-    {"Arena selection", "AI mode: walk", "AI mode: stand", "Quit", "", ""},
-    {"Default dojo", "Kitchen party", "Roof dancers", "play seesaw", "", ""},
-    {"Up on the stage", "I go downstairs", "", "", "", ""}};
+    {"Up on the stage", "I go downstairs", "", "", "", "", ""},
+    {"Default mode", "Water mode", "Breakable guys", "Classic mode", "The abyss...", "", ""},
+    {"Hidden part.", " ", " ", " ", " ", "OK", ""},
+};
 
 // GLOBAL: SUMO 0x0042cb50
 // GLOBAL: EDITOR 0x0042cb50
@@ -1964,9 +1970,7 @@ SumoIntPtr CreateGameTextureFromPixels(void *pixels, SumoS32 width,
 
 extern SumoU8 g_textureLoadFromTga;
 extern SumoU8 g_textureUseMmxSampler;
-extern SumoU8 *g_gameTexturePrograms[24];
 extern SumoIntPtr g_gameTextures[256];
-extern char g_gameMenuLabels[5][6][24];
 extern char g_gameTimesFont[];
 extern char g_gameConsoleFont[];
 extern SumoU32 g_gameTextureScratch[];
@@ -1983,8 +1987,11 @@ SumoS32 InitializeGameTextures() {
   for (SumoS32 index = 0; g_gameTexturePrograms[index] != 0; ++index) {
     SumoU8 *pixels = (SumoU8 *)pixelSets[index];
     SumoS32 labelIndex = index / 2 - 4;
-
-    if (index >= 8 && index < 0x12) {
+    if (index > 22)
+    {
+      labelIndex = (index / 2 - 11) + 4;
+    }
+    if (index >= 8 && index < 18 || index > 22) {
       char (*line)[24] = &g_gameMenuLabels[labelIndex][0];
       if ((*line)[0] != 0) {
         SumoS32 textColor = (index & 1) * 0x7f7f7f;
@@ -2318,7 +2325,7 @@ extern const SumoF32 g_gameArenaHalfExtent;
 extern const SumoF32 g_freeCameraPositionRecordScale;
 
 void RenderWaterSurface() {
-  if (!g_waterHeights.HasElements())
+ // if (!g_waterHeights.HasElements())
     return;
 
   SumoS32 width = g_waterGridWidth;
@@ -2372,7 +2379,7 @@ void RenderWaterSurface() {
                         g_waterHeights[cellIndex + heightSteps[corner]],
                         (SumoF32)((SumoF64)(row + c_rowOffsets[corner]) *
                                   g_gameSimulationStep));
-        *(Vector3 *)cursor = cornerPosition;
+        memcpy(cursor, &cornerPosition, sizeof(Vector3));
         *(SumoF32 *)(cursor + 0x10) = 0.0f;
         *(SumoF32 *)(cursor + 0x14) = 0.0f;
         cursor += 0x18;
@@ -2389,6 +2396,7 @@ extern GameMan g_gameMen[];
 extern GameMan *g_nextGameMan;
 extern SumoS32 g_levelLoadState[8];
 extern SumoS32 g_gameMode;
+extern SumoS32 g_sumoMode;
 extern SumoS32 g_gameAlternateCameraMode;
 extern Matrix3 g_gameInverseViewMatrix;
 extern Vector3 g_gameCameraWorldPosition;
@@ -2432,7 +2440,7 @@ static __forceinline Vector3 MakeGameCameraVector3(SumoF32 p_x, SumoF32 p_y,
   result.z = p_z;
   return result;
 }
-
+GameMan *lastManFocused;
 void UpdateGameCamera() {
   Vector3 direction = MakeGameCameraVector3(0.0f, 0.0f, 0.0f);
   Vector3 focus = direction;
@@ -2450,7 +2458,22 @@ void UpdateGameCamera() {
     for (SumoS32 iteration = 64; iteration != 0; --iteration) {
       farthestDistanceSquared = 0.0f;
       direction = zeroStep;
+      bool m_bOneManFound = false;
       for (GameMan *man = g_gameMen; man < g_nextGameMan; ++man) {
+
+        if (man->m_bLobotomized)
+          continue;
+        m_bOneManFound = true;
+        if ((man->centerOfMass - focus).LengthSquared() >
+            farthestDistanceSquared) {
+          farthestDistanceSquared = (man->centerOfMass - focus).LengthSquared();
+          direction = (man->centerOfMass - focus).Normalized();
+        }
+
+        lastManFocused = man;
+      }
+      if (!m_bOneManFound) {
+        GameMan *man = lastManFocused;
         if ((man->centerOfMass - focus).LengthSquared() >
             farthestDistanceSquared) {
           farthestDistanceSquared = (man->centerOfMass - focus).LengthSquared();
@@ -2517,7 +2540,10 @@ void UpdateGameCamera() {
     Vector3 anchor = g_gameMen[0].centerOfMass;
     Vector3 target = anchor;
     SumoF32 cameraDistance = 50.0f;
-
+    if (g_sumoMode == 2) 
+    {
+      count = 4;
+    }
     if (count == 2) {
       target = g_gameMen[1].CalculateCenterOfMassPosition();
       cameraDistance =

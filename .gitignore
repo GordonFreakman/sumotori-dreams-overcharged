@@ -39,3 +39,6 @@ __pycache__/
 *.user
 *.kate-swp
 /.cmake-win/
+/out
+/.vs
+assets/audio/music/sumotori_old.xm

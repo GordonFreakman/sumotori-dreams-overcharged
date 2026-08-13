@@ -92,6 +92,8 @@ struct GameBoxJoint {
   SumoU32 limitFlags;
 };
 
+struct GameMan;
+
 struct GameBox {
   GameBoxPoint *pointsBegin;
   GameBoxPoint *pointsEnd;
@@ -138,7 +140,8 @@ struct GameBox {
   bool replayPresent;
   SumoU8 unknownED[3];
   Vector3 replayPosition;
-
+  GameMan *m_pOwner;
+  SumoS32 fractureSound;
   void FinishContacts(SumoS32 preserveState);
   void RecalculateMass();
   void ClearForces();
@@ -235,8 +238,6 @@ void ResolveGameCollisions();
 void AdvanceGameSimulation();
 void AlignGameBoxJointTransform(GameBoxJoint *joint, SumoS32 sourceIndex);
 
-struct GameMan;
-
 struct GameManJointPose {
   SumoU8 unknown000[0x18];
   Vector3 firstDirection;
@@ -304,7 +305,7 @@ struct GameMan {
   SumoS32 alternateBehavior;
   SumoS32 randomHeading;
   SumoS32 randomActionDelay;
-
+  int m_bLobotomized;
   void Initialize(Vector3 &position, SumoF32 angle, SumoS32 type,
                   SumoIntPtr flags);
   void Render(void *poseState);
@@ -333,7 +334,7 @@ extern const SumoF32 g_cutPlaneFloor;
 extern GameBox *g_currentBox;
 extern GameBox g_cutPlaneBox;
 extern GameBox g_clipScratchBox;
-extern GameBox g_gameBoxes[512];
+extern GameBox g_gameBoxes[2048];
 extern GameBox *g_gameBoxesEnd;
 extern SumoU8 g_gameContactObjects[0xf400];
 extern SumoU8 *g_gameContactObjectsEnd;
