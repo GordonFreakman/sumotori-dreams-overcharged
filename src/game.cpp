@@ -1885,15 +1885,19 @@ Vector3 GameMan::CalculateCenterOfMassPosition() {
   weightedPosition.x *= inverseMass;
   weightedPosition.y *= inverseMass;
   weightedPosition.z *= inverseMass;
-  SumoF32 horizontalDistanceSquared = weightedPosition.z * weightedPosition.z +
-                                      weightedPosition.x * weightedPosition.x;
-  if (horizontalDistanceSquared + weightedPosition.y * weightedPosition.y >
-      g_gameMaximumCenterDistanceSquared) {
-    if (m_bLobotomized == 0 && weightedPosition.y < 0.f)
-    m_bLobotomized++;
-    weightedPosition.z = 0.0f;
-    weightedPosition.y = 0.0f;
-    weightedPosition.x = 0.0f;
+  if (!(g_gamePlayerCount == 1 && g_gameHumanPlayerCount == 1)) 
+  {
+    SumoF32 horizontalDistanceSquared =
+        weightedPosition.z * weightedPosition.z +
+        weightedPosition.x * weightedPosition.x;
+    if (horizontalDistanceSquared + weightedPosition.y * weightedPosition.y >
+        g_gameMaximumCenterDistanceSquared) {
+      if (m_bLobotomized == 0 && weightedPosition.y < 0.f)
+        m_bLobotomized++;
+      weightedPosition.z = 0.0f;
+      weightedPosition.y = 0.0f;
+      weightedPosition.x = 0.0f;
+    }
   }
   return weightedPosition;
 }
