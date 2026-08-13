@@ -2271,9 +2271,6 @@ void GameMan::Update(SumoIntPtr state) {
     for (SumoS32 part = 0; part < 15; ++part) {
       GameBox *box = bodyParts[part];
 
-      if (g_levelLoadState[4] == 11)
-      continue;
-
       if (g_sumoMode != 2) 
       {
         if (box->unknownD8 < g_screenTintLevel - 1)
@@ -2291,6 +2288,10 @@ void GameMan::Update(SumoIntPtr state) {
           box->breakability = 250;
           
       }
+
+      if (g_levelLoadState[4] == 11)
+      continue;
+
       if (eliminated == 0) 
       {
         eliminated = 1;
