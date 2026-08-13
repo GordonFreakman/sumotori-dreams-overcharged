@@ -688,7 +688,7 @@ GameMan *CreateGameMen() {
       next->Initialize(position, -angle, playerTypes[index],
                        (SumoIntPtr)(g_gameMen + opponentIndex));
       next->active = 4;
-      if (g_levelLoadState[4] == 11)
+      if (g_levelLoadState[4] != 0)
         next->active = 0;
       if (index < humanCount)
         next->mode = index;
@@ -736,6 +736,9 @@ void StartGameRound() {
   }
   if (g_sumoMode == 1)
     InitializeWaterField();
+
+    if (g_gamePlayerCount == 1 && g_gameHumanPlayerCount == 1)
+    g_levelLoadState[4] = 2;
 
   CreateGameMen();
   RefreshGameContactLists();
@@ -1886,7 +1889,7 @@ Vector3 GameMan::CalculateCenterOfMassPosition() {
                                       weightedPosition.x * weightedPosition.x;
   if (horizontalDistanceSquared + weightedPosition.y * weightedPosition.y >
       g_gameMaximumCenterDistanceSquared) {
-    if (m_bLobotomized == 0)
+    if (m_bLobotomized == 0 && weightedPosition.y < 0.f)
     m_bLobotomized++;
     weightedPosition.z = 0.0f;
     weightedPosition.y = 0.0f;
@@ -2267,6 +2270,10 @@ void GameMan::Update(SumoIntPtr state) {
   if (g_levelLoadState[6] < g_screenTintLevel - 50) {
     for (SumoS32 part = 0; part < 15; ++part) {
       GameBox *box = bodyParts[part];
+
+      if (g_levelLoadState[4] == 11)
+      continue;
+
       if (g_sumoMode != 2) 
       {
         if (box->unknownD8 < g_screenTintLevel - 1)
