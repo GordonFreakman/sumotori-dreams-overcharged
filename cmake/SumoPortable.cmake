@@ -121,18 +121,37 @@ set(SUMO_EMBEDDED_ASSETS
   fonts/DejaVuSansMono.ttf
   audio/music/sumotori.xm
   levels/editor_default.smo
+  audio/sfx/hehehehe.wav
   sumo.ico
 )
-foreach(index RANGE 6)
-  list(APPEND SUMO_EMBEDDED_ASSETS "audio/sfx/source${index}.wav")
+
+foreach(index RANGE 3)
+  list(APPEND SUMO_EMBEDDED_ASSETS "audio/sfx/wood_impact_light/source${index}.wav")
 endforeach()
-foreach(index RANGE 22)
-  set(padded "0000${index}")
-  string(LENGTH "${padded}" padded_length)
-  math(EXPR padded_start "${padded_length} - 5")
-  string(SUBSTRING "${padded}" ${padded_start} 5 padded)
-  list(APPEND SUMO_EMBEDDED_ASSETS "textures/tex${padded}.tga")
+
+foreach(index RANGE 3)
+  list(APPEND SUMO_EMBEDDED_ASSETS "audio/sfx/box_snap/source${index}.wav")
 endforeach()
+
+foreach(index RANGE 3)
+  list(APPEND SUMO_EMBEDDED_ASSETS "audio/sfx/footstep/source${index}.wav")
+endforeach()
+
+foreach(index RANGE 3)
+  list(APPEND SUMO_EMBEDDED_ASSETS "audio/sfx/body_impact/source${index}.wav")
+endforeach()
+
+#foreach(index RANGE 6)
+ # list(APPEND SUMO_EMBEDDED_ASSETS "audio/sfx/source${index}.wav")
+#endforeach()
+
+#foreach(index RANGE 22)
+#  set(padded "0000${index}")
+#  string(LENGTH "${padded}" padded_length)
+#  math(EXPR padded_start "${padded_length} - 5")
+#  string(SUBSTRING "${padded}" ${padded_start} 5 padded)
+#  list(APPEND SUMO_EMBEDDED_ASSETS "textures/tex${padded}.tga")
+#endforeach()
 
 set(SUMO_EMBED_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/cmake/embed_assets.py")
 set(SUMO_EMBED_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/generated")

@@ -9,11 +9,11 @@
 enum {
   c_audioVoiceCount = 64,
   c_audioStopChannelCount = 8,
-  c_audioSourceCount = 7,
+  c_audioSourceCount = 5*4,
   c_audioDeviceRate = 44100
 };
 
-static const SumoU8 c_audioLogicalToSource[8] = {0, 1, 0, 2, 3, 4, 5, 6};
+static const SumoU8 c_audioLogicalToSource[8] = {0, 4, 0, 2*4, 3*4, 4*4, 2*4, 3*4}; // PLACEHOLDER
 
 struct SumoAudioSource {
   SumoAssetBlob blob;
@@ -218,10 +218,31 @@ SumoU8 InitializeGameAudio() {
     s_mixLock = SDL_CreateMutex();
 
   static const char *c_sourceNames[c_audioSourceCount] = {
-      "audio/sfx/source0.wav", "audio/sfx/source1.wav",
-      "audio/sfx/source2.wav", "audio/sfx/source3.wav", 
-      "audio/sfx/source4.wav", "audio/sfx/source5.wav",
-      "audio/sfx/source6.wav"};
+      "audio/sfx/wood_impact_light/source0.wav", 
+      "audio/sfx/wood_impact_light/source1.wav", 
+      "audio/sfx/wood_impact_light/source2.wav",
+      "audio/sfx/wood_impact_light/source3.wav", 
+
+      "audio/sfx/box_snap/source0.wav",
+      "audio/sfx/box_snap/source1.wav",
+      "audio/sfx/box_snap/source2.wav",
+      "audio/sfx/box_snap/source3.wav", 
+
+      "audio/sfx/footstep/source0.wav",
+      "audio/sfx/footstep/source1.wav",
+      "audio/sfx/footstep/source2.wav",
+      "audio/sfx/footstep/source3.wav", 
+
+      "audio/sfx/body_impact/source0.wav",
+      "audio/sfx/body_impact/source1.wav",
+      "audio/sfx/body_impact/source2.wav",
+      "audio/sfx/body_impact/source3.wav", 
+
+      "audio/sfx/hehehehe.wav",
+      "audio/sfx/hehehehe.wav",
+      "audio/sfx/hehehehe.wav",
+      "audio/sfx/hehehehe.wav",
+  };
   bool complete = true;
   for (SumoS32 index = 0; index < c_audioSourceCount; ++index) {
     if (s_sources[index].samples == NULL &&
@@ -294,6 +315,7 @@ void *PlayGameSound(SumoS32 soundIndex, SumoF32 frequencyScale,
     return NULL;
   }
   SumoS32 source = c_audioLogicalToSource[soundIndex];
+  source += rand() % 4;
   if (s_sources[source].samples == NULL)
     return NULL;
 
