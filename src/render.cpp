@@ -267,7 +267,7 @@ char g_gameMenuLabels[7][7][24] = {
      ""},
     {"Up on the stage", "I go downstairs", "", "", "", "", ""},
     {"Default mode", "Water mode", "Breakable guys", "Classic mode", "The abyss...", "", ""},
-    {"Hidden part.", " ", " ", " ", " ", "OK", ""},
+    {"Hidden part.", "You and.. uhhhh", " ", " ", " ", "OK", ""},
 };
 
 // GLOBAL: SUMO 0x0042cb50

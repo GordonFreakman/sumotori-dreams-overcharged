@@ -365,6 +365,11 @@ void UpdateGameMenuScreen(SumoU8 drawOverlay) {
           g_gamePlayerCount = 1;
           StartGameRound();
           break;
+        case 18:
+          g_gameHumanPlayerCount = 1;
+          g_gamePlayerCount = 1;
+          StartGameRound();
+          break;
         default:
           g_sumoMode = g_gameMenuSelection % 16 + 4 * (g_gameMenuSelection / 16) - 1;
           InitializeGameRuntimeState();
@@ -2296,7 +2301,7 @@ void GameMan::Update(SumoIntPtr state) {
           SumoS32 placement = g_gameRoundPlayerCount - 1;
           g_gameRoundPlayerCount = placement;
           g_levelLoadState[placement] = (SumoS32)(this - g_gameMen);
-          if (placement == 1) 
+          if (placement <= 1) 
           {
             g_levelLoadState[7] = 0;
             g_levelLoadState[4] = 2;
@@ -4444,7 +4449,7 @@ SumoS32 InitializeGameRuntimeState() {
     columnCount = 2;
     stackCounts[0] = 5;
     rowCounts[0] = 2;
-    stackCounts[1] = 1;
+    stackCounts[1] = 2;
     selectBase = 0;
     typeBase = 12;
     break;
