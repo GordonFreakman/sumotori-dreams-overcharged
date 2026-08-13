@@ -475,7 +475,7 @@ void UpdateGameMenuScreen(SumoU8 drawOverlay) {
     DrawGameText(0.27000001f, -0.5, "\"Tested on party animals\"",
                  0xc0ffffff);
     DrawGameText(-0.85000002f, -0.5,
-                 "www.gravitysensation.com/sumotori", 0xc0ffffff);
+                 "GordonFreakman/sumotori-dreams-overcharged", 0xc0ffffff);
   }
 }
 
