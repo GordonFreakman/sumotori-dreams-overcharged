@@ -17,6 +17,10 @@ struct GameBoxPoint {
   }
 };
 
+void *PlayGameSound(SumoS32 soundIndex, SumoF32 frequencyScale,
+                    SumoF32 volumeScale, SumoS32 channel, Vector3 origin);
+void *GameAudioUpdateOrigin(Vector3 origin, Vector3 angle);
+
 struct GameBoxPointReference;
 struct GameBox;
 struct GameCollisionFeatureLink;

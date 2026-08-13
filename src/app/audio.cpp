@@ -1,4 +1,5 @@
 #include "boundary.h"
+#include "runtime.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -6,21 +7,7 @@
 
 #include <xm.h>
 
-enum {
-  c_audioVoiceCount = 64,
-  c_audioStopChannelCount = 8,
-  c_audioSourceCount = 7,
-  c_audioDeviceRate = 44100
-};
-
-static const SumoU8 c_audioLogicalToSource[8] = {0, 1, 0, 2, 3, 4, 5, 6};
-
-struct SumoAudioSource {
-  SumoAssetBlob blob;
-  const SumoS16 *samples;
-  SumoU32 frameCount;
-  SumoU32 sampleRate;
-};
+static const SumoU8 c_audioLogicalToSource[8] = {0, 4, 0, 2*4, 3*4, 4*4, 2*4, 3*4}; // PLACEHOLDER
 
 struct SumoAudioVoice {
   SumoS32 source;
@@ -46,24 +33,13 @@ static void *s_musicContextBuffer;
 static bool s_deviceOpen;
 static SumoMutex *s_mixLock;
 
-#if !defined(SUMO_AUDIO_DEFAULT_BACKEND)
-#define SUMO_AUDIO_DEFAULT_BACKEND 0
-#endif
-static SumoAudioBackend s_backend =
-    (SumoAudioBackend)SUMO_AUDIO_DEFAULT_BACKEND;
+static SumoAudioBackend s_backend = c_sumoAudioBackendMiniaudio;
 
 bool SumoParseAudioBackend(const char *text, SumoAudioBackend *backend) {
   if (text == NULL)
     return false;
-  if (SDL_strcasecmp(text, "sdl") == 0) {
-    *backend = c_sumoAudioBackendSdl;
-    return true;
-  }
-  if (SDL_strcasecmp(text, "miniaudio") == 0) {
     *backend = c_sumoAudioBackendMiniaudio;
     return true;
-  }
-  return false;
 }
 
 const char *SumoAudioBackendName(SumoAudioBackend backend) {
@@ -71,29 +47,17 @@ const char *SumoAudioBackendName(SumoAudioBackend backend) {
 }
 
 void SumoAudioSetBackend(SumoAudioBackend backend) {
-  if (s_deviceOpen && backend != s_backend) {
-    fprintf(
-        stderr,
-        "sumotori: audio device already open on %s; ignoring switch to %s\n",
-        SumoAudioBackendName(s_backend), SumoAudioBackendName(backend));
-    return;
-  }
   s_backend = backend;
 }
 
 SumoAudioBackend SumoAudioGetBackend() { return s_backend; }
 
 bool SumoAudioDeviceOpen(SumoS32 sampleRate) {
-  if (s_backend == c_sumoAudioBackendMiniaudio)
     return SumoAudioDeviceOpenMiniaudio(sampleRate);
-  return SumoAudioDeviceOpenSdl(sampleRate);
 }
 
 void SumoAudioDeviceClose() {
-  if (s_backend == c_sumoAudioBackendMiniaudio)
     SumoAudioDeviceCloseMiniaudio();
-  else
-    SumoAudioDeviceCloseSdl();
 }
 
 static bool LoadWavSource(SumoAudioSource *source, const char *relative) {
@@ -115,11 +79,15 @@ static bool LoadWavSource(SumoAudioSource *source, const char *relative) {
     SumoAssetClose(&blob);
     return false;
   }
-
+  #ifdef SUMOSPACIAL
+  source->path = relative;
+  SumoAudioPrecacheWAV(relative, &blob);
+  #endif
   source->blob = blob;
   source->samples = (const SumoS16 *)(header + 44);
   source->frameCount = dataBytes / 2;
   source->sampleRate = sampleRate;
+  memcpy(&source->header,blob.data,sizeof(SumoWavHeader));
   return true;
 }
 
@@ -185,7 +153,7 @@ void SumoAudioMix(float *output, SumoS32 frameCount) {
       remaining -= chunk;
     }
   }
-
+  #ifndef SUMOSPACIAL
   for (SumoS32 index = 0; index < c_audioVoiceCount; ++index) {
     SumoAudioVoice *voice = &s_voices[index];
     if (!voice->playing)
@@ -206,7 +174,9 @@ void SumoAudioMix(float *output, SumoS32 frameCount) {
       voice->position += voice->step;
     }
   }
+  #else
 
+#endif
   SDL_UnlockMutex(s_mixLock);
 }
 
@@ -214,14 +184,39 @@ SumoU8 InitializeGameAudio() {
   if (!g_gameAudioEnabled)
     return 0;
 
+    #ifdef SUMOSPACIAL
+  SumoAudioCreateEngine();
+    #endif
+
   if (s_mixLock == NULL)
     s_mixLock = SDL_CreateMutex();
 
   static const char *c_sourceNames[c_audioSourceCount] = {
-      "audio/sfx/source0.wav", "audio/sfx/source1.wav",
-      "audio/sfx/source2.wav", "audio/sfx/source3.wav", 
-      "audio/sfx/source4.wav", "audio/sfx/source5.wav",
-      "audio/sfx/source6.wav"};
+      "audio/sfx/wood_impact_light/source0.wav", 
+      "audio/sfx/wood_impact_light/source1.wav", 
+      "audio/sfx/wood_impact_light/source2.wav",
+      "audio/sfx/wood_impact_light/source3.wav", 
+
+      "audio/sfx/box_snap/source0.wav",
+      "audio/sfx/box_snap/source1.wav",
+      "audio/sfx/box_snap/source2.wav",
+      "audio/sfx/box_snap/source3.wav", 
+
+      "audio/sfx/footstep/source0.wav",
+      "audio/sfx/footstep/source1.wav",
+      "audio/sfx/footstep/source2.wav",
+      "audio/sfx/footstep/source3.wav", 
+
+      "audio/sfx/body_impact/source0.wav",
+      "audio/sfx/body_impact/source1.wav",
+      "audio/sfx/body_impact/source2.wav",
+      "audio/sfx/body_impact/source3.wav", 
+
+      "audio/sfx/hehehehe.wav",
+      "audio/sfx/hehehehe.wav",
+      "audio/sfx/hehehehe.wav",
+      "audio/sfx/hehehehe.wav",
+  };
   bool complete = true;
   for (SumoS32 index = 0; index < c_audioSourceCount; ++index) {
     if (s_sources[index].samples == NULL &&
@@ -275,14 +270,17 @@ SumoU32 GameAudioShutdown() {
   SDL_UnlockMutex(s_mixLock);
   return 0;
 }
-
+void *GameAudioUpdateOrigin(Vector3 origin, Vector3 angle) {
+  SumoAudioUpdateOrigin(origin, angle);
+  return NULL;
+}
 void ReplayRecordCommand(SumoS32 first, SumoS32 second, SumoS32 third,
                          SumoS32 fourth);
 
 void GameAudioNoOpCallback() {}
 
 void *PlayGameSound(SumoS32 soundIndex, SumoF32 frequencyScale,
-                    SumoF32 volumeScale, SumoS32 channel) {
+                    SumoF32 volumeScale, SumoS32 channel, Vector3 origin) {
   SumoS32 frequencyBits;
   SumoS32 volumeBits;
   memcpy(&frequencyBits, &frequencyScale, sizeof(frequencyBits));
@@ -294,6 +292,8 @@ void *PlayGameSound(SumoS32 soundIndex, SumoF32 frequencyScale,
     return NULL;
   }
   SumoS32 source = c_audioLogicalToSource[soundIndex];
+  if (s_backend == c_sumoAudioBackendMiniaudio)
+  source += rand() % 4;
   if (s_sources[source].samples == NULL)
     return NULL;
 
@@ -314,7 +314,7 @@ void *PlayGameSound(SumoS32 soundIndex, SumoF32 frequencyScale,
   if (slot == c_audioVoiceCount)
     slot = 0;
   s_stopChannels[channel] = slot;
-
+  #ifndef SUMOSPACIAL
   SumoAudioVoice *voice = &s_voices[slot];
   voice->source = source;
   voice->position = 0.0;
@@ -322,6 +322,10 @@ void *PlayGameSound(SumoS32 soundIndex, SumoF32 frequencyScale,
                 (double)g_gameTimeScaleDenominator / (double)c_audioDeviceRate;
   voice->gain = gain;
   voice->playing = true;
+  #else
+  SumoAudioCreateAudio(s_sources[source], frequencyScale,
+                       volumeScale, channel, origin);
+  #endif
   SDL_UnlockMutex(s_mixLock);
-  return voice;
+  return NULL;
 }

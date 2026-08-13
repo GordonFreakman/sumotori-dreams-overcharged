@@ -3,11 +3,59 @@
 
 #include "types.h"
 
+#define SUMOSPACIAL
 #if SUMO_SDL_VERSION == 3
 #include <SDL3/SDL.h>
 #else
 #include <SDL.h>
 #endif
+
+enum {
+  c_audioVoiceCount = 64,
+  c_audioStopChannelCount = 8,
+  c_audioSourceCount = 5 * 4,
+  c_audioDeviceRate = 44100
+};
+
+struct SumoAssetBlob {
+  const void *data;
+  SumoU32 size;
+  bool owned;
+};
+
+struct SumoWavHeader {
+  // RIFF Header
+  char riff_header[4]; // Contains "RIFF"
+  int wav_size;        // Size of the wav portion of the file, which follows the
+                       // first 8 bytes. File size - 8
+  char wave_header[4]; // Contains "WAVE"
+
+  // Format Header
+  char fmt_header[4]; // Contains "fmt " (includes trailing space)
+  int fmt_chunk_size; // Should be 16 for PCM
+  short audio_format; // Should be 1 for PCM. 3 for IEEE Float
+  short num_channels;
+  int sample_rate;
+  int byte_rate; // Number of bytes per second. sample_rate * num_channels *
+                 // Bytes Per Sample
+  short sample_alignment; // num_channels * Bytes Per Sample
+  short bit_depth;        // Number of bits per sample
+
+  // Data
+  char data_header[4]; // Contains "data"
+  int data_bytes; // Number of bytes in data. Number of samples * num_channels
+                  // * sample byte size
+                  // uint8_t bytes[]; // Remainder of wave file is bytes
+};
+
+struct SumoAudioSource {
+  SumoAssetBlob blob;
+  const SumoS16 *samples;
+  SumoU32 frameCount;
+  SumoU32 sampleRate;
+  SumoWavHeader header;
+  const char *path;
+};
 
 bool SumoPlatformCreateWindow(SumoS32 width, SumoS32 height, bool fullscreen);
 void SumoPlatformDestroyWindow();
@@ -43,6 +91,7 @@ struct SumoStartupConfig {
   bool fullscreen;
   SumoS32 quality;
   bool soundEnabled;
+  bool soundRandomized;
   SumoS32 audioBackend;
   bool editorRequested;
   char modPath[1024];
@@ -54,11 +103,6 @@ bool SumoRunStartupUI(SumoStartupConfig *config);
 
 void SumoInstallExtraLevels();
 
-struct SumoAssetBlob {
-  const void *data;
-  SumoU32 size;
-  bool owned;
-};
 bool SumoAssetOpen(const char *relative, SumoAssetBlob *blob);
 bool SumoAssetOpenFile(const char *path, SumoAssetBlob *blob);
 void SumoAssetClose(SumoAssetBlob *blob);
@@ -120,5 +164,8 @@ bool SumoParseAudioBackend(const char *text, SumoAudioBackend *backend);
 bool SumoAudioDeviceOpen(SumoS32 sampleRate);
 void SumoAudioDeviceClose();
 void SumoAudioMix(float *output, SumoS32 frameCount);
-
+void SumoAudioCreateEngine();
+void SumoAudioPrecacheWAV(const char *path, SumoAssetBlob *blob);
+void SumoAudioCreateAudio(SumoAudioSource sound, SumoF32 frequencyScale, SumoF32 volumeScale, SumoS32 channel, Vector3 origin);
+void SumoAudioUpdateOrigin(Vector3 origin, Vector3 angle);
 #endif

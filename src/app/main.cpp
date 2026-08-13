@@ -32,7 +32,7 @@ int main(int argc, char **argv) {
   char *modFile = NULL;
 
   SumoAudioBackend audioBackend = (SumoAudioBackend)config.audioBackend;
-  SumoParseAudioBackend(SDL_getenv("SUMOTORI_AUDIO_BACKEND"), &audioBackend);
+  //SumoParseAudioBackend(SDL_getenv("SUMOTORI_AUDIO_BACKEND"), &audioBackend);
 
   for (int index = 1; index < argc; ++index) {
     if (strcmp(argv[index], "--fullscreen") == 0) {
@@ -49,12 +49,6 @@ int main(int argc, char **argv) {
       editorRequested = true;
     } else if (strcmp(argv[index], "--mod") == 0 && index + 1 < argc) {
       modFile = argv[++index];
-    } else if (strcmp(argv[index], "--audio") == 0 && index + 1 < argc) {
-      const char *requested = argv[++index];
-      if (!SumoParseAudioBackend(requested, &audioBackend))
-        fprintf(stderr,
-                "sumotori: unknown audio backend '%s' (sdl, miniaudio)\n",
-                requested);
     }
   }
 

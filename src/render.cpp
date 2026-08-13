@@ -1979,7 +1979,7 @@ extern SumoIntPtr g_gameFontAtlasTexture;
 SumoS32 InitializeGameTextures() {
   CreateGameAttenuationTexture();
   CreateGameRampTexture();
-  g_textureLoadFromTga = 1;
+  g_textureLoadFromTga = 0;
   g_textureUseMmxSampler = 1;
   void **pixelSets = BuildTextureSet((void **)g_gameTexturePrograms,
                                      (void *)IgnoreGameTextureProgress);
@@ -2441,6 +2441,7 @@ static __forceinline Vector3 MakeGameCameraVector3(SumoF32 p_x, SumoF32 p_y,
   return result;
 }
 GameMan *lastManFocused;
+
 void UpdateGameCamera() {
   Vector3 direction = MakeGameCameraVector3(0.0f, 0.0f, 0.0f);
   Vector3 focus = direction;
@@ -2664,4 +2665,9 @@ void UpdateGameCamera() {
   g_gameCameraAngles.x = g_gameCameraAcceleration.x + g_gameCameraAngles.x;
   g_gameCameraAngles.y = g_gameCameraAcceleration.y + g_gameCameraAngles.y;
   g_gameCameraAngles.z = g_gameCameraAcceleration.z + g_gameCameraAngles.z;
+
+    GameAudioUpdateOrigin(
+      g_gameCameraPosition,
+      MakeVector3(0.0f, 0.0f, 1.0f).Transform(
+                                                  g_gameInverseViewMatrix));
 }
