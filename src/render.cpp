@@ -2025,7 +2025,7 @@ SumoS32 InitializeGameTextures() {
   }
 
   for (SumoU32 *cursor = g_gameTextureScratch;
-       cursor < g_gameTextureScratch + 0x80000; ++cursor)
+       cursor < g_gameTextureScratch + 4194304; ++cursor)
     *cursor = ~*cursor;
 
   g_gameFontAtlasTexture =
