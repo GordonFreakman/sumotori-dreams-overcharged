@@ -133,7 +133,7 @@ struct GameBox {
   SumoF32 unknownC4;
   SumoF32 unknownC8;
   SumoF32 activityValue;
-  bool flagD0;
+  bool immovable;
   SumoU8 unknownD1[3];
   SumoS32 unknownD4;
   SumoS32 unknownD8;

@@ -143,7 +143,7 @@ SumoF32 g_gameGravityStep = -0.0098f;
 // FUNCTION: SUMO 0x00409a4a
 // FUNCTION: EDITOR 0x00409a6c
 void GameBox::IntegratePhysics() {
-  if (!flag58 && !flagD0) {
+  if (!flag58 && !immovable) {
     if (!sleeping) {
       orientation.Rotate(angularVelocity);
       orientation.Orthonormalize();
@@ -453,7 +453,7 @@ void GameBox::InitializePhysics() {
   value.z = 0.0f;
   accumulatedForce = value;
 
-  flagD0 = false;
+  immovable = false;
   collisionFeatures = 0;
   breakability = 100000.0f;
   contactLinks = 0;
@@ -470,7 +470,7 @@ extern volatile const SumoF32 g_immovableMass = 1.0e36f;
 // FUNCTION: SUMO 0x0040844b
 // FUNCTION: EDITOR 0x0040846d
 void GameBox::ApplyAngularImpulse(Vector3 &contactOffset, Vector3 &impulse) {
-  if (!flagD0) {
+  if (!immovable) {
     ((GameBoxPoint *)&angularVelocity)
         ->SubtractOffset(impulse.Scale(inverseInertia));
   }
@@ -534,7 +534,7 @@ void GameBox::ClearForces() {
 // FUNCTION: SUMO 0x00408992
 // FUNCTION: EDITOR 0x004089b4
 void GameBox::MakeImmovable() {
-  flagD0 = true;
+  immovable = true;
   inverseMass = 0.0f;
   mass = g_immovableMass;
   inverseInertia = 0.0f;
@@ -564,7 +564,7 @@ void GameBox::FinishContacts(SumoS32 preserveState) {
 // FUNCTION: SUMO 0x004083df
 // FUNCTION: EDITOR 0x00408401
 Vector3 GameBox::VelocityAtPoint(Vector3 &point) {
-  if (flagD0) {
+  if (immovable) {
     Vector3 zero;
     zero.x = 0.0f;
     zero.y = 0.0f;
@@ -624,7 +624,7 @@ Matrix3 GameBox::CalculateImpulseResponseMatrix(Vector3 &impulsePoint,
 // FUNCTION: SUMO 0x004085f0
 // FUNCTION: EDITOR 0x00408612
 void GameBox::ApplyImpulseAtPoint(Vector3 &point, Vector3 &impulse) {
-  if (!flagD0) {
+  if (!immovable) {
     Vector3 angularDelta;
     angularDelta = (point - position).Cross(impulse).Scale(inverseInertia);
     Vector3 *angular = &angularVelocity;
@@ -693,7 +693,7 @@ void LimitDynamicBoxes() {
 
   GameBox *box = g_gameBoxes;
   while (box < g_gameBoxesEnd) {
-    if (box->contactLinks == 0 && !box->flagD0 && !box->flag58) {
+    if (box->contactLinks == 0 && !box->immovable && !box->flag58) {
       if (smallestMass > box->mass) {
         smallestBox = box;
         smallestMass = box->mass;
@@ -864,6 +864,7 @@ SumoU8 FractureGameBoxAtPoint(Vector3 &position, GameBox *box) {
     newBox->orientation = box->orientation;
     newBox->collisionFeatures = 0;
     newBox->accumulatedForce = box->accumulatedForce + offset;
+    newBox->modeE0 = box->modeE0;
     newBox->unknownC0 = box->unknownC0;
     newBox->unknownC4 = box->unknownC4;
     if (g_gameBoxesInitialized)
@@ -897,6 +898,9 @@ SumoU8 FractureGameBoxAtPoint(Vector3 &position, GameBox *box) {
   }
 
   box->flag58 = 1;
+
+  RefreshGameContactLists();
+
   return 1;
 }
 
@@ -1691,9 +1695,9 @@ SumoS32 GenerateGameBoxCollisionContacts(GameBox *first, GameBox *second) {
 
   first->unknownD4 = g_screenTintLevel;
   second->unknownD4 = g_screenTintLevel;
-  if (second->flagD0 == 0)
+  if (second->immovable == 0)
     first->sleepCounter = 0;
-  if (first->flagD0 == 0)
+  if (first->immovable == 0)
     second->sleepCounter = 0;
   first->sleeping = 0;
   second->sleeping = 0;
@@ -1730,13 +1734,13 @@ void ResolveGameCollisions() {
   for (GameBox *outer = g_gameBoxes; outer < g_gameBoxesEnd; ++outer) {
     if (outer->flag58)
       continue;
-    if (outer->flagD0 == 0 && outer->sleeping == 0) {
+    if (outer->immovable == 0 && outer->sleeping == 0) {
       if (outer <= g_gameBoxes)
         continue;
       for (GameBox *inner = g_gameBoxes; inner < outer; ++inner) {
         if (inner->flag58)
           continue;
-        if (outer->flagD0)
+        if (outer->immovable)
           continue;
         SumoF32 radiusSum = inner->boundingRadius + outer->boundingRadius;
         Vector3 difference = outer->position - inner->position;
@@ -1751,7 +1755,7 @@ void ResolveGameCollisions() {
           continue;
         if (inner->sleeping)
           continue;
-        if (inner->flagD0)
+        if (inner->immovable)
           continue;
         SumoF32 radiusSum = inner->boundingRadius + outer->boundingRadius;
         Vector3 difference = outer->position - inner->position;
@@ -1797,11 +1801,11 @@ void ResolveGameCollisions() {
 
     SumoF32 unitScale = 1.0f;
     Vector3 impulse = joint->initialImpulse.Scale(unitScale);
-    if (first->flagD0 == 0) {
+    if (first->immovable == 0) {
       Vector3 negativeImpulse = -impulse;
       first->ApplyImpulseAtPoint(firstAnchor, negativeImpulse);
     }
-    if (joint->boxes[1]->flagD0 == 0)
+    if (joint->boxes[1]->immovable == 0)
       joint->boxes[1]->ApplyImpulseAtPoint(secondAnchor, impulse);
 
     Vector3 firstDirection =
@@ -1969,11 +1973,11 @@ void ResolveGameCollisions() {
       }
 
       GameBox *first = record->boxes[0];
-      if (first->flagD0 == 0) {
+      if (first->immovable == 0) {
         Vector3 negativeDelta = -delta;
         first->ApplyImpulseAtPoint(record->point, negativeDelta);
       }
-      if (record->boxes[1]->flagD0 == 0)
+      if (record->boxes[1]->immovable == 0)
         record->boxes[1]->ApplyImpulseAtPoint(record->point, delta);
       record->boxes[0]->collisionFeatures = 0;
     }
@@ -2002,11 +2006,11 @@ void ResolveGameCollisions() {
       Vector3 impulse =
           (relative - (secondAnchor - firstAnchor).Scale(biasScale))
               .Transform(joint->inverseResponse);
-      if (first->flagD0 == 0) {
+      if (first->immovable == 0) {
         Vector3 negativeImpulse = -impulse;
         first->ApplyImpulseAtPoint(firstAnchor, negativeImpulse);
       }
-      if (joint->boxes[1]->flagD0 == 0)
+      if (joint->boxes[1]->immovable == 0)
         joint->boxes[1]->ApplyImpulseAtPoint(secondAnchor, impulse);
 
       if (joint->limitFlags & 4) {

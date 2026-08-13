@@ -1306,7 +1306,7 @@ void LoadGameLevel(char *source) {
   if (g_currentBox != NULL) {
     Matrix3 savedOrientation = g_currentBox->orientation;
     SumoF32 savedBreakability = g_currentBox->breakability;
-    bool wasImmovable = g_currentBox->flagD0;
+    bool wasImmovable = g_currentBox->immovable;
 
     g_currentBox->FinishContacts(1);
     g_currentBox->RecalculateMass();
@@ -5082,7 +5082,7 @@ SumoS32 UpdateGameReplay() {
               MakeVector3((SumoF32)(boxIndex * 2 + 12),
                           (SumoF32)(boxIndex + 12), (SumoF32)(boxIndex + 12));
           box->orientation.SetIdentity();
-          box->flagD0 = 1;
+          box->immovable = 1;
           continue;
         }
         if (tag == 2) {

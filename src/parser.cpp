@@ -225,7 +225,7 @@ void ParserBuiltinAddBox(ParserBuiltinCall *call) {
   if (g_currentBox != 0) {
     Matrix3 savedOrientation = g_currentBox->orientation;
     SumoF32 savedBreakability = g_currentBox->breakability;
-    bool wasImmovable = g_currentBox->flagD0;
+    bool wasImmovable = g_currentBox->immovable;
 
     g_currentBox->FinishContacts(1);
     g_currentBox->RecalculateMass();
