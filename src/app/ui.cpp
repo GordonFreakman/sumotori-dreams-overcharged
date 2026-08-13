@@ -283,7 +283,7 @@ bool SumoRunStartupUI(SumoStartupConfig *config) {
     ImGui::Combo("Quality", &qualityIndex, c_qualityLabels, 4);
     ImGui::Combo("Display mode", &modeIndex, s_modeLabelPointers, s_modeCount);
     ImGui::Checkbox("Sound", &sound);
-    ImGui::Combo("Audio backend", &audioIndex, c_audioBackendLabels, 2);
+    //ImGui::Combo("Audio backend", &audioIndex, c_audioBackendLabels, 2);
     ImGui::Checkbox("Fullscreen", &fullscreen);
     if (fullscreen != appliedFullscreen) {
       ApplyWindowFullscreen(fullscreen);
@@ -349,7 +349,7 @@ bool SumoRunStartupUI(SumoStartupConfig *config) {
   config->quality = c_qualityCodes[qualityIndex];
   config->soundEnabled = sound;
   config->audioBackend =
-      audioIndex == 1 ? c_sumoAudioBackendMiniaudio : c_sumoAudioBackendSdl;
+      audioIndex == c_sumoAudioBackendMiniaudio;
   config->fullscreen = fullscreen;
   config->width = s_modes[modeIndex].width;
   config->height = s_modes[modeIndex].height;
