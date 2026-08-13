@@ -788,7 +788,9 @@ SumoU8 FractureGameBoxAtPoint(Vector3 &position, GameBox *box) {
   GameBox *spare = &g_clipScratchBox;
   Vector3 localPoint = box->orientation.Transform(position - box->position);
   PlayGameSound(
-      box->fractureSound, (SumoF32)exp(log((SumoF64)box->volume * 0.0071428572f) * -0.25f), 0.25f,
+      box->fractureSound,
+      (SumoF32)exp(log((SumoF64)box->volume * 0.0071428572f) * -0.25f),
+      exp(log((SumoF64)box->volume * 0.0071428572f)) / 2.f, // 0.25f,
       0, position);
   if (g_gameMenuSelection == 0)
     g_gameMenuSelection = box->unknownBC;

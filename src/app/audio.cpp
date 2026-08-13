@@ -33,24 +33,13 @@ static void *s_musicContextBuffer;
 static bool s_deviceOpen;
 static SumoMutex *s_mixLock;
 
-#if !defined(SUMO_AUDIO_DEFAULT_BACKEND)
-#define SUMO_AUDIO_DEFAULT_BACKEND 0
-#endif
-static SumoAudioBackend s_backend =
-    (SumoAudioBackend)SUMO_AUDIO_DEFAULT_BACKEND;
+static SumoAudioBackend s_backend = c_sumoAudioBackendMiniaudio;
 
 bool SumoParseAudioBackend(const char *text, SumoAudioBackend *backend) {
   if (text == NULL)
     return false;
-  if (SDL_strcasecmp(text, "sdl") == 0) {
-    *backend = c_sumoAudioBackendSdl;
-    return true;
-  }
-  if (SDL_strcasecmp(text, "miniaudio") == 0) {
     *backend = c_sumoAudioBackendMiniaudio;
     return true;
-  }
-  return false;
 }
 
 const char *SumoAudioBackendName(SumoAudioBackend backend) {
@@ -58,29 +47,17 @@ const char *SumoAudioBackendName(SumoAudioBackend backend) {
 }
 
 void SumoAudioSetBackend(SumoAudioBackend backend) {
-  if (s_deviceOpen && backend != s_backend) {
-    fprintf(
-        stderr,
-        "sumotori: audio device already open on %s; ignoring switch to %s\n",
-        SumoAudioBackendName(s_backend), SumoAudioBackendName(backend));
-    return;
-  }
   s_backend = backend;
 }
 
 SumoAudioBackend SumoAudioGetBackend() { return s_backend; }
 
 bool SumoAudioDeviceOpen(SumoS32 sampleRate) {
-  if (s_backend == c_sumoAudioBackendMiniaudio)
     return SumoAudioDeviceOpenMiniaudio(sampleRate);
-  return SumoAudioDeviceOpenSdl(sampleRate);
 }
 
 void SumoAudioDeviceClose() {
-  if (s_backend == c_sumoAudioBackendMiniaudio)
     SumoAudioDeviceCloseMiniaudio();
-  else
-    SumoAudioDeviceCloseSdl();
 }
 
 static bool LoadWavSource(SumoAudioSource *source, const char *relative) {
@@ -315,6 +292,7 @@ void *PlayGameSound(SumoS32 soundIndex, SumoF32 frequencyScale,
     return NULL;
   }
   SumoS32 source = c_audioLogicalToSource[soundIndex];
+  if (s_backend == c_sumoAudioBackendMiniaudio)
   source += rand() % 4;
   if (s_sources[source].samples == NULL)
     return NULL;

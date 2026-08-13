@@ -91,6 +91,7 @@ struct SumoStartupConfig {
   bool fullscreen;
   SumoS32 quality;
   bool soundEnabled;
+  bool soundRandomized;
   SumoS32 audioBackend;
   bool editorRequested;
   char modPath[1024];
