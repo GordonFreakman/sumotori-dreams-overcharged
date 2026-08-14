@@ -9,13 +9,13 @@
 
 GameCollisionFeatureLink g_gameCollisionFeatureLinks[8192];
 
-GameBox g_gameBoxes[2048];
+GameBox g_gameBoxes[4096];
 
 GameRandomGenerator g_gameRandom;
 
 GameCollisionCorrectionRecord g_gameCollisionCorrections[8192];
 
-SumoU8 g_gameContactObjects[0xf400];
+GameBoxJoint g_gameContactObjects[0xf400];
 
 GameBox g_cutPlaneBox;
 
@@ -25,13 +25,13 @@ GameCollisionPointRecord g_gameCollisionPoints[8192];
 
 GameCollisionFeatureLink *g_gameCollisionFeatureLinksEnd;
 
-SumoU8 *g_gameContactObjectsEnd;
+GameBoxJoint *g_gameContactObjectsEnd;
 
 GameBox *g_gameBoxesEnd;
 
-SumoU8 *g_gameContactLinksEnd;
+GameBoxContactLink *g_gameContactLinksEnd;
 
-SumoU8 g_gameContactLinks[0x1800];
+GameBoxContactLink g_gameContactLinks[0x1800];
 
 SumoS32 g_gameMenuSelection;
 
@@ -718,16 +718,24 @@ void ResetGameContactLists() {
     box->contactLinks = NULL;
     ++box;
   }
-
-  GameBoxJoint *joint = (GameBoxJoint *)g_gameContactObjects;
+  int tracker = 0;
+  GameBoxJoint *joint = g_gameContactObjects;
   g_gameContactLinksEnd = g_gameContactLinks;
-  while ((SumoU8 *)joint < g_gameContactObjectsEnd) {
+  while (joint < g_gameContactObjectsEnd) {
 
-   if (!joint->boxes[0] || !joint->boxes[1]) 
+   if (joint->boxes[0] == NULL) 
    {
       ++joint;
+     tracker++;
       continue;
     }
+
+      if (joint->boxes[1] == NULL) 
+      {
+      ++joint;
+        tracker++;
+      continue;
+        }
 
     Vector3 &unknown64 = joint->unknown64;
     Vector3 &unknownC4 = joint->unknownC4;
@@ -747,23 +755,24 @@ void ResetGameContactLists() {
     initialImpulse.y = 0.0f;
     initialImpulse.x = 0.0f;
 
-    ((GameBoxContactLink *)g_gameContactLinksEnd)->other = joint->boxes[1];
-    ((GameBoxContactLink *)g_gameContactLinksEnd)->owner = joint;
-    GameBoxContactLink *link = (GameBoxContactLink *)g_gameContactLinksEnd;
+    g_gameContactLinksEnd->other = joint->boxes[1];
+    g_gameContactLinksEnd->owner = joint;
+    GameBoxContactLink *link = g_gameContactLinksEnd;
     GameBoxContactLink **boxContactLinks = &joint->boxes[0]->contactLinks;
     link->next = *boxContactLinks;
     *boxContactLinks = link;
-    g_gameContactLinksEnd += sizeof(GameBoxContactLink);
+    g_gameContactLinksEnd++;
 
-    ((GameBoxContactLink *)g_gameContactLinksEnd)->other = joint->boxes[0];
-    ((GameBoxContactLink *)g_gameContactLinksEnd)->owner = joint;
-    link = (GameBoxContactLink *)g_gameContactLinksEnd;
+    g_gameContactLinksEnd->other = joint->boxes[0];
+    g_gameContactLinksEnd->owner = joint;
+    link = g_gameContactLinksEnd;
     boxContactLinks = &joint->boxes[1]->contactLinks;
     link->next = *boxContactLinks;
     *boxContactLinks = link;
-    g_gameContactLinksEnd += sizeof(GameBoxContactLink);
+    g_gameContactLinksEnd++;
 
     ++joint;
+    tracker++;
   }
 }
 
@@ -775,8 +784,6 @@ extern GameBox g_cutPlaneBox;
 extern GameBox g_clipScratchBox;
 extern GameBox *g_gameBoxesEnd;
 extern GameBox *g_gameBoxesLimit;
-extern SumoU8 g_gameContactObjects[0xf400];
-extern SumoU8 *g_gameContactObjectsEnd;
 extern SumoS32 g_gameMenuSelection;
 extern SumoU8 g_gameBoxesInitialized;
 extern GameRandomGenerator g_gameRandom;
@@ -787,8 +794,8 @@ SumoS32 LogGameDebugValue(const char *text, SumoS32 value);
 SumoU8 FractureGameBoxAtPoint(Vector3 &position, GameBox *box) {
   if (box->flag58)
     return 0;
-  //if (g_gameBoxesEnd > (GameBox *)((SumoU8 *)g_gameBoxesLimit - 0x9d8))
-//    return 0;
+  if (g_gameBoxesEnd > (GameBox *)((SumoU8 *)g_gameBoxesLimit - 0x9d8))
+    return 0;
   if (box->unknownC0 == 4 || box->unknownC0 == 3) {
     box->fractureSound = 7;
   }
@@ -881,8 +888,8 @@ SumoU8 FractureGameBoxAtPoint(Vector3 &position, GameBox *box) {
    if (!biggestBox || newBox->volume >= biggestBox->volume)
       biggestBox = newBox;
 
-    for (GameBoxJoint *joint = (GameBoxJoint *)g_gameContactObjects;
-         (SumoU8 *)joint < g_gameContactObjectsEnd; ++joint) {
+    for (GameBoxJoint *joint = g_gameContactObjects;
+         joint < g_gameContactObjectsEnd; ++joint) {
       for (SumoS32 side = 0; side < 2; ++side) {
         if (joint->boxes[side] != box)
           continue;
@@ -1726,13 +1733,9 @@ SumoS32 GenerateGameBoxCollisionContacts(GameBox *first, GameBox *second) {
   return 1;
 }
 
-extern GameBox g_gameBoxes[2048];
+extern GameBox g_gameBoxes[4096];
 extern GameBox *g_gameBoxesEnd;
-extern SumoU8 g_gameContactObjects[0xf400];
-extern SumoU8 *g_gameContactObjectsEnd;
-//extern GameCollisionPointRecord g_gameCollisionPoints[8192];
 extern GameCollisionPointRecord *g_gameCollisionPointsEnd;
-//extern GameCollisionCorrectionRecord g_gameCollisionCorrections[2048];
 extern GameCollisionCorrectionRecord *g_gameCollisionCorrectionsEnd;
 extern GameCollisionFeatureLink g_gameCollisionFeatureLinks[8192];
 extern GameCollisionFeatureLink *g_gameCollisionFeatureLinksEnd;
@@ -1787,8 +1790,8 @@ void ResolveGameCollisions() {
     }
   }
 
-  for (GameBoxJoint *joint = (GameBoxJoint *)g_gameContactObjects;
-       (SumoU8 *)joint < g_gameContactObjectsEnd; ++joint) {
+  for (GameBoxJoint *joint = g_gameContactObjects;
+       joint < g_gameContactObjectsEnd; ++joint) {
 
     if (!joint->boxes[0] || !joint->boxes[1])
       continue;
@@ -2004,8 +2007,8 @@ void ResolveGameCollisions() {
       record->boxes[0]->collisionFeatures = 0;
     }
 
-    for (GameBoxJoint *joint = (GameBoxJoint *)g_gameContactObjects;
-         (SumoU8 *)joint < g_gameContactObjectsEnd; ++joint) {
+    for (GameBoxJoint *joint = g_gameContactObjects;
+         joint < g_gameContactObjectsEnd; ++joint) {
       GameBox *first = joint->boxes[0];
       if (!joint->boxes[0] || !joint->boxes[1])
           continue;

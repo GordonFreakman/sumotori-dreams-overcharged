@@ -153,25 +153,25 @@ extern GameBox g_cutPlaneBox;
 extern GameBox g_clipScratchBox;
 
 // GLOBAL: SUMO 0x00746430
-extern GameBox g_gameBoxes[2048];
+extern GameBox g_gameBoxes[4096];
 
 // GLOBAL: SUMO 0x004536e4
-GameBox *g_gameBoxesLimit = g_gameBoxes + 2048;
+GameBox *g_gameBoxesLimit = g_gameBoxes + 4000;
 
 // GLOBAL: SUMO 0x00560c08
 extern GameBox *g_gameBoxesEnd;
 
 // GLOBAL: SUMO 0x00521600
-extern SumoU8 g_gameContactObjects[0xf400];
+extern GameBoxJoint g_gameContactObjects[0xf400];
 
 // GLOBAL: SUMO 0x00560c04
-extern SumoU8 *g_gameContactObjectsEnd;
+extern GameBoxJoint *g_gameContactObjectsEnd;
 
 // GLOBAL: SUMO 0x00560c10
-extern SumoU8 g_gameContactLinks[0x1800];
+extern GameBoxContactLink g_gameContactLinks[0x1800];
 
 // GLOBAL: SUMO 0x00560c0c
-extern SumoU8 *g_gameContactLinksEnd;
+extern GameBoxContactLink *g_gameContactLinksEnd;
 
 // GLOBAL: SUMO 0x00765c38
 extern GameRandomGenerator g_gameRandom;
@@ -280,33 +280,29 @@ SumoS32 g_gameSimulationTick;
 // GLOBAL: SUMO 0x00562410
 extern SumoS32 g_gameMenuSelection;
 
-DECOMP_SIZE_ASSERT(GameBoxJoint, 0xf4);
-
 static __forceinline void AddGameMenuConstraint(
     GameBox *first, GameBox *second, const Vector3 &firstAnchor,
     const Vector3 &secondAnchor, const Vector3 &firstDirection,
     const Vector3 &secondAnchorDirection, const Vector3 &secondDirection,
     const Vector3 &secondAxis, const Vector3 *firstDirectionOverride,
     SumoF32 minimumAngle) {
-  ((GameBoxJoint *)g_gameContactObjectsEnd)->boxes[0] = first;
-  ((GameBoxJoint *)g_gameContactObjectsEnd)->localAnchors[0] = firstAnchor;
-  ((GameBoxJoint *)g_gameContactObjectsEnd)->firstPoseDirection =
-      firstDirection;
+  g_gameContactObjectsEnd->boxes[0] = first;
+  g_gameContactObjectsEnd->localAnchors[0] = firstAnchor;
+  g_gameContactObjectsEnd->firstPoseDirection =firstDirection;
   if (firstDirectionOverride != 0) {
-    ((GameBoxJoint *)g_gameContactObjectsEnd)->firstPoseDirection =
-        *firstDirectionOverride;
+    g_gameContactObjectsEnd->firstPoseDirection = *firstDirectionOverride;
   }
-  ((GameBoxJoint *)g_gameContactObjectsEnd)->secondPoseDirection =
+  g_gameContactObjectsEnd->secondPoseDirection =
       secondDirection;
-  ((GameBoxJoint *)g_gameContactObjectsEnd)->boxes[1] = g_gameBoxesEnd - 1;
-  ((GameBoxJoint *)g_gameContactObjectsEnd)->localAnchors[1] = secondAnchor;
-  ((GameBoxJoint *)g_gameContactObjectsEnd)->secondAnchorDirection =
+  g_gameContactObjectsEnd->boxes[1] = g_gameBoxesEnd - 1;
+  g_gameContactObjectsEnd->localAnchors[1] = secondAnchor;
+  g_gameContactObjectsEnd->secondAnchorDirection =
       secondAnchorDirection;
-  ((GameBoxJoint *)g_gameContactObjectsEnd)->secondAxis = secondAxis;
-  ((GameBoxJoint *)g_gameContactObjectsEnd)->minimumAngle = minimumAngle;
-  ((GameBoxJoint *)g_gameContactObjectsEnd)->maximumAngle = 1.21f;
-  ((GameBoxJoint *)g_gameContactObjectsEnd)->state = 0.0f;
-  g_gameContactObjectsEnd += sizeof(GameBoxJoint);
+  g_gameContactObjectsEnd->secondAxis = secondAxis;
+  g_gameContactObjectsEnd->minimumAngle = minimumAngle;
+  g_gameContactObjectsEnd->maximumAngle = 1.21f;
+  g_gameContactObjectsEnd->state = 0.0f;
+  g_gameContactObjectsEnd ++;
 }
 
 static __forceinline Vector3 MakeGameRuntimeVector3(SumoF32 x, SumoF32 y,
@@ -337,7 +333,7 @@ static __forceinline void LaunchGameMenuProjectile(Vector3 &direction,
 
 // FUNCTION: SUMO 0x0040793d
 void UpdateGameMenuScreen(SumoU8 drawOverlay) {
-  if (g_gameBoxesEnd > g_gameBoxes + 200) {
+  if (g_gameBoxesEnd > g_gameBoxes + 400) {
     InitializeGameRuntimeState();
   }
 
@@ -1356,8 +1352,6 @@ void LoadGameLevel(char *source) {
   RefreshGameContactLists();
 }
 
-extern SumoU8 g_gameContactObjects[0xf400];
-extern SumoU8 *g_gameContactObjectsEnd;
 extern GameMan g_gameMen[];
 extern GameMan *g_nextGameMan;
 extern GameBox g_gameBoxes[];
@@ -1381,7 +1375,7 @@ extern SumoS32 g_gameIsRunning;
 extern SumoF32 g_gameArenaExtent;
 
 void BuildDefaultGameArena(SumoS32 type) {
-  memset(g_gameContactObjects, 0, 0xf400);
+  memset(g_gameContactObjects, 0, sizeof(g_gameContactObjects));
   g_gameContactObjectsEnd = g_gameContactObjects;
 
   g_nextGameMan = g_gameMen;
@@ -1575,7 +1569,6 @@ void RenderGameCrossMarker(Vector3 *center, void *context) {
   (void)secondEnd;
 }
 
-extern SumoU8 *g_gameContactObjectsEnd;
 extern GameBox *g_gameBoxesEnd;
 extern const SumoF32 g_gameOne;
 extern const SumoF32 g_randomHalf;
@@ -1631,7 +1624,7 @@ void GameMan::Initialize(Vector3 &position, SumoF32 angle, SumoS32 type,
     head->breakability = 150;
   }
 
-  GameBoxJoint *joint = (GameBoxJoint *)g_gameContactObjectsEnd;
+  GameBoxJoint *joint = g_gameContactObjectsEnd;
   joint->boxes[0] = pelvis;
   joint->localAnchors[0] = MakeVector3(0.0f, 2.4f, 0.0f);
   joint->firstPoseDirection = MakeVector3(0.0f, -1.0f, 0.0f);
@@ -1645,9 +1638,9 @@ void GameMan::Initialize(Vector3 &position, SumoF32 angle, SumoS32 type,
   joint->state = 0.0f;
   joint->mode60 = 1;
   AlignGameBoxJointTransform(joint, 0);
-  g_gameContactObjectsEnd += sizeof(GameBoxJoint);
+  g_gameContactObjectsEnd++;
 
-  joint = (GameBoxJoint *)g_gameContactObjectsEnd;
+  joint = g_gameContactObjectsEnd;
   joint->boxes[0] = chest;
   joint->localAnchors[0] = MakeVector3(0.0f, 2.7f, 0.0f);
   joint->firstPoseDirection = MakeVector3(0.0f, -1.0f, 0.0f);
@@ -1661,7 +1654,7 @@ void GameMan::Initialize(Vector3 &position, SumoF32 angle, SumoS32 type,
   joint->state = 0.0f;
   joint->mode60 = 0;
   AlignGameBoxJointTransform(joint, 0);
-  g_gameContactObjectsEnd += sizeof(GameBoxJoint);
+  g_gameContactObjectsEnd++;
 
   SumoF32 facing = 1.0f;
   Vector3 footSize = MakeVector3(1.2f, -0.7f, 2.0f);
@@ -1703,7 +1696,7 @@ void GameMan::Initialize(Vector3 &position, SumoF32 angle, SumoS32 type,
       //thigh->breakability = 750;
     }
 
-    joint = (GameBoxJoint *)g_gameContactObjectsEnd;
+    joint = g_gameContactObjectsEnd;
     joint->boxes[0] = thigh;
     joint->localAnchors[0] = MakeVector3(0.0f, 2.2f, 0.0f);
     joint->firstPoseDirection = MakeVector3(0.0f, -1.0f, 0.0f);
@@ -1720,9 +1713,9 @@ void GameMan::Initialize(Vector3 &position, SumoF32 angle, SumoS32 type,
     joint->state = 0.0f;
     joint->mode60 = 0;
     AlignGameBoxJointTransform(joint, 1);
-    g_gameContactObjectsEnd += sizeof(GameBoxJoint);
+    g_gameContactObjectsEnd++;
 
-    joint = (GameBoxJoint *)g_gameContactObjectsEnd;
+    joint = g_gameContactObjectsEnd;
     joint->boxes[0] = shin;
     joint->localAnchors[0] = MakeVector3(0.0f, 2.3f, 0.0f);
     joint->firstPoseDirection = MakeVector3(0.0f, -1.0f, 0.0f);
@@ -1740,9 +1733,9 @@ void GameMan::Initialize(Vector3 &position, SumoF32 angle, SumoS32 type,
     Vector3 thighSpan = hipAnchor - joint->localAnchors[1];
     firstLimbLength = (SumoF32)sqrt(thighSpan.LengthSquared());
     AlignGameBoxJointTransform(joint, 1);
-    g_gameContactObjectsEnd += sizeof(GameBoxJoint);
+    g_gameContactObjectsEnd ++;
 
-    joint = (GameBoxJoint *)g_gameContactObjectsEnd;
+    joint = g_gameContactObjectsEnd;
     joint->boxes[0] = foot;
     joint->localAnchors[0] = MakeVector3(0.0f, 1.0f, -1.0f);
     joint->firstPoseDirection = MakeVector3(0.0f, -1.0f, 0.0f);
@@ -1758,7 +1751,7 @@ void GameMan::Initialize(Vector3 &position, SumoF32 angle, SumoS32 type,
     Vector3 shinSpan = kneeAnchor - joint->localAnchors[1];
     secondLimbLength = (SumoF32)sqrt(shinSpan.LengthSquared());
     AlignGameBoxJointTransform(joint, 1);
-    g_gameContactObjectsEnd += sizeof(GameBoxJoint);
+    g_gameContactObjectsEnd++;
 
     facing = -1.0f;
   }
@@ -1787,7 +1780,7 @@ void GameMan::Initialize(Vector3 &position, SumoF32 angle, SumoS32 type,
     hand->ScaleMassProperties(2.0f);
     forearm->ScaleMassProperties(1.5f);
 
-    joint = (GameBoxJoint *)g_gameContactObjectsEnd;
+    joint = g_gameContactObjectsEnd;
     joint->boxes[1] = chest;
     joint->localAnchors[1] = MakeVector3(facing * 3.2f, 2.0f, 0.1f);
     joint->secondAnchorDirection = MakeVector3(facing, 0.0f, 0.2f);
@@ -1803,10 +1796,10 @@ void GameMan::Initialize(Vector3 &position, SumoF32 angle, SumoS32 type,
     joint->state = 0.0f;
     joint->mode60 = 0;
     AlignGameBoxJointTransform(joint, 1);
-    g_gameContactObjectsEnd += sizeof(GameBoxJoint);
+    g_gameContactObjectsEnd ++;
 
     SumoF32 armReach = facing * 1.5f;
-    joint = (GameBoxJoint *)g_gameContactObjectsEnd;
+    joint = g_gameContactObjectsEnd;
     joint->boxes[0] = upperArm;
     joint->localAnchors[0] = MakeVector3(armReach, 0.0f, -0.3f);
     joint->firstPoseDirection = MakeVector3(facing * 0.6f, 0.0f, 1.0f);
@@ -1821,9 +1814,9 @@ void GameMan::Initialize(Vector3 &position, SumoF32 angle, SumoS32 type,
     joint->state = 1.0f;
     joint->mode60 = 0;
     AlignGameBoxJointTransform(joint, 0);
-    g_gameContactObjectsEnd += sizeof(GameBoxJoint);
+    g_gameContactObjectsEnd++;
 
-    joint = (GameBoxJoint *)g_gameContactObjectsEnd;
+    joint = g_gameContactObjectsEnd;
     joint->boxes[0] = forearm;
     joint->localAnchors[0] = MakeVector3(armReach, 0.0f, 0.1f);
     joint->firstPoseDirection = MakeVector3(facing, 0.0f, 0.0f);
@@ -1837,7 +1830,7 @@ void GameMan::Initialize(Vector3 &position, SumoF32 angle, SumoS32 type,
     joint->state = 0.0f;
     joint->mode60 = 0;
     AlignGameBoxJointTransform(joint, 0);
-    g_gameContactObjectsEnd += sizeof(GameBoxJoint);
+    g_gameContactObjectsEnd++;
 
     facing = -1.0f;
   }
@@ -1847,7 +1840,7 @@ void GameMan::Initialize(Vector3 &position, SumoF32 angle, SumoS32 type,
     bodyParts[index] = g_gameBoxesEnd - 15 + index;
     bodyParts[index]->m_pOwner = this;
   }
-  GameBoxJoint *jointBase = (GameBoxJoint *)g_gameContactObjectsEnd - 14;
+  GameBoxJoint *jointBase = g_gameContactObjectsEnd - 14;
   for (SumoS32 index = 0; index < 14; ++index)
     joints[index] = jointBase + index;
 
@@ -4369,7 +4362,6 @@ extern SumoF32 g_gameArenaExtent;
 extern SumoS32 g_gameMenuSelection;
 extern SumoS32 g_gameMenuPage;
 extern SumoS32 g_gameMenuAlternateLayout;
-extern SumoU8 *g_gameContactObjectsEnd;
 extern GameBox *g_gameBoxesEnd;
 extern GameRandomGenerator g_gameRandom;
 extern const SumoF32 g_gameProjectileDefaultValue;
@@ -4517,7 +4509,7 @@ SumoS32 InitializeGameRuntimeState() {
             link->inertia = link->inertia * 3.0f;
             link->inverseInertia = link->inverseInertia * 0.33333334f;
 
-            GameBoxJoint *joint = (GameBoxJoint *)g_gameContactObjectsEnd;
+            GameBoxJoint *joint = g_gameContactObjectsEnd;
             joint->boxes[0] = laneAnchorBoxes[lane];
             joint->localAnchors[0] = laneAnchorPositions[lane];
             if (row == 0 && stack == 0)
@@ -4534,7 +4526,7 @@ SumoS32 InitializeGameRuntimeState() {
             joint->minimumAngle = 0.81f;
             joint->maximumAngle = 1.21f;
             laneAnchorBoxes[lane] = link;
-            g_gameContactObjectsEnd += sizeof(GameBoxJoint);
+            g_gameContactObjectsEnd++;
           }
           towerHeight = towerHeight + 1.8f;
         }
@@ -4575,7 +4567,7 @@ SumoS32 InitializeGameRuntimeState() {
         letter->breakability = 15.0f;
 
         for (SumoS32 lane = 0; lane < 2; ++lane) {
-          GameBoxJoint *joint = (GameBoxJoint *)g_gameContactObjectsEnd;
+          GameBoxJoint *joint = g_gameContactObjectsEnd;
           joint->boxes[0] = laneAnchorBoxes[lane];
           joint->localAnchors[0] = laneAnchorPositions[lane];
           joint->firstPoseDirection = MakeVector3(0.0f, 1.0f, 0.0f);
@@ -4591,7 +4583,7 @@ SumoS32 InitializeGameRuntimeState() {
           laneAnchorPositions[lane] =
               MakeVector3(0.0f, letterHalf, laneOffsets[lane]);
           laneAnchorBoxes[lane] = letter;
-          g_gameContactObjectsEnd += sizeof(GameBoxJoint);
+          g_gameContactObjectsEnd++;
         }
       }
     }
@@ -4644,7 +4636,7 @@ SumoS32 UpdateHiddenGameScreen() {
                  (SumoS32)0xb0ffffff);
   }
 
-  if (g_gameBoxesEnd > g_gameBoxes + 2048)
+  if (g_gameBoxesEnd > g_gameBoxes + 4000)
     InitializeGameRuntimeState();
   return 0;
 }
@@ -4840,7 +4832,7 @@ extern SumoU8 g_gameKeyDown[256];
 extern SumoU8 g_gameKeyPressed[256];
 extern SumoS32 g_gameIsRunning;
 extern SumoS32 g_screenTintLevel;
-extern GameBox g_gameBoxes[2048];
+extern GameBox g_gameBoxes[4096];
 extern GameBox *g_gameBoxesEnd;
 extern Vector3 g_gameCameraWorldPosition;
 extern Matrix3 g_gameInverseViewMatrix;
