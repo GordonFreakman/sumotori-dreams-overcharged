@@ -257,6 +257,8 @@ SumoU8 *g_gameTexturePrograms[] =
     g_textureProgram_DiamondHeight,         g_textureProgram_GreenDiamond, 
     g_textureProgram_PaintHeight,           g_textureProgram_Paint, 
     g_textureProgram_PaintHeight,           g_textureProgram_Lava,
+
+    // game menu texture programs, if you change the amount of in-game textures change MENU_START_INDEX!!!!
     g_textureProgram_BlueWoodHeight,        g_textureProgram_BlueWood,
     g_textureProgram_BlueWoodHeight,        g_textureProgram_BlueWood,
     g_textureProgram_BlueWoodHeight,        g_textureProgram_BlueWood, 
