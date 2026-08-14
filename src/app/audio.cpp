@@ -249,7 +249,7 @@ static void InitializeGameMusicCommon() {
 }
 
 void InitializeGameMusic() {
-  g_gameAudioPlaybackMode = 3;
+  g_gameAudioPlaybackMode = 15;
   InitializeGameMusicCommon();
 }
 

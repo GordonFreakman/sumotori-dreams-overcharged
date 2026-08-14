@@ -23,9 +23,12 @@ extern SumoS32 g_gameSimulationPaused;
 
 SumoS32 g_gameFrameClock;
 
+SumoU32 GameAudioShutdown();
+
 int main(int argc, char **argv) {
   SumoAttachParentConsole();
   SumoStartupConfig config;
+
   SumoLoadStartupConfig(&config);
   bool skipLauncher = false;
   bool editorRequested = false;
@@ -60,6 +63,12 @@ int main(int argc, char **argv) {
   SumoAudioSetBackend(audioBackend);
   g_gameAudioEnabled = config.soundEnabled ? 1 : 0;
   ApplyGameQuality(config.quality);
+  SumoU8 oldgameAudioEnabled = g_gameAudioEnabled;
+  if (g_gameAudioEnabled) 
+  {
+    InitializeGameAudio();
+    InitializeGameMusic();
+  }
 
   SetGameFpuControlWord();
 
@@ -87,6 +96,18 @@ int main(int argc, char **argv) {
       editorRequested = true;
   }
 
+  if (oldgameAudioEnabled != g_gameAudioEnabled)
+  {
+    if (!g_gameAudioEnabled) 
+    {
+      GameAudioShutdown();
+    } 
+    else 
+    {
+      InitializeGameAudio();
+      InitializeGameMusic();
+    }
+  }
   if (editorRequested) {
     g_gameIsRunning = 1;
     SumoEditorEnter();
@@ -95,8 +116,8 @@ int main(int argc, char **argv) {
   SumoInstallExtraLevels();
 
   PumpGameMessages();
-  InitializeGameAudio();
-  InitializeGameMusic();
+  //InitializeGameAudio();
+  //InitializeGameMusic();
   StartGameRuntime();
   SumoS32 frameClock = g_gameFrameClock;
   while (!g_gameLevelEditorCloseRequested && !SumoPlatformQuitRequested()) {

@@ -597,6 +597,7 @@ SumoS32 StartGameRuntime() {
   InitializeGameVertexBuffers();
   InitializeClipBoxes();
   ResetGameRoundState();
+  RestartGameMusic(3);
   return InitializeGameRuntimeState();
 }
 
