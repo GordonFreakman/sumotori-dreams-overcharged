@@ -2,6 +2,7 @@
 #define SUMO_TYPES_H
 
 #define MENU_START_INDEX 12
+#define SUMO_CSM
 
 typedef signed char SumoS8;
 typedef unsigned char SumoU8;
@@ -135,6 +136,17 @@ struct Matrix3 {
   Matrix3 Multiply(const Matrix3 &other) {
     return Multiply(const_cast<Matrix3 &>(other));
   }
+};
+
+struct GameBoxLitVertex {
+  Vector3 position;
+#ifndef SUMO_CSM
+  SumoS32 color;
+#else
+  Vector3 normals;
+#endif
+  SumoF32 u;
+  SumoF32 v;
 };
 
 #endif
