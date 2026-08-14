@@ -65,8 +65,8 @@ else()
 endif()
 
 FetchContent_Declare(sumo_imgui_source
-  GIT_REPOSITORY https://github.com/ocornut/imgui.git
-  GIT_TAG f1cc2ae15e53a861a874c3034aae6798fde194ab
+  GIT_REPOSITORY https://github.com/GordonFreakman/sumotori_imgui.git
+  GIT_TAG 682ed8ae0f15a09b1c498cf84202a7a30abfd71b
   GIT_SHALLOW FALSE
   GIT_PROGRESS TRUE
 )
