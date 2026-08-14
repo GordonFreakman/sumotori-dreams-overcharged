@@ -151,7 +151,7 @@ static SumoFontSlot s_fontSlots[2] = {
      false,
      false},
     {"Lucida Console",
-     "fonts/DejaVuSansMono.ttf",
+     "fonts/ProggyVector-Regular.ttf",
      "SUMOTORI_FONT_CONSOLE",
      {},
      NULL,

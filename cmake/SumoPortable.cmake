@@ -118,7 +118,7 @@ endif()
 
 set(SUMO_EMBEDDED_ASSETS
   fonts/LiberationSerif-Regular.ttf
-  fonts/DejaVuSansMono.ttf
+  fonts/ProggyVector-Regular.ttf
   audio/music/sumotori.xm
   levels/editor_default.smo
   audio/sfx/hehehehe.wav
