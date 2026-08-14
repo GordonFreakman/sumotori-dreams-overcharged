@@ -4444,7 +4444,7 @@ SumoS32 InitializeGameRuntimeState() {
 
   SumoS32 page = g_gameMenuPage;
   SumoS32 columnCount = 1;
-  SumoS32 typeBase = page + 4;
+  SumoS32 typeBase = page;
   SumoS32 selectBase = 0;
   Vector3 columnOffset = MakeVector3(0.0f, 0.0f, 0.0f);
   switch (page) {
@@ -4454,7 +4454,7 @@ SumoS32 InitializeGameRuntimeState() {
     stackCounts[1] = g_gameArenaPageRowCount;
     rowCounts[1] = g_gameArenaPageChainLinks;
     selectBase = 0;
-    typeBase = 7;
+    typeBase = 3;
     break;
   case 2:
     columnOffset.z = 10.0f;
@@ -4463,7 +4463,7 @@ SumoS32 InitializeGameRuntimeState() {
     rowCounts[0] = 2;
     stackCounts[1] = 2;
     selectBase = 0;
-    typeBase = 12;
+    typeBase = 5;
     break;
   case 3:
     columnCount = 2;
@@ -4471,7 +4471,7 @@ SumoS32 InitializeGameRuntimeState() {
     stackCounts[1] = 1;
     rowCounts[1] = 4;
     selectBase = 5;
-    typeBase = 12;
+    typeBase = 5;
   break;
 
   default: 
@@ -4499,7 +4499,7 @@ SumoS32 InitializeGameRuntimeState() {
     SumoS32 stackCount = stackCounts[column];
     if (stackCount > 0) {
       SumoS32 rowCount = rowCounts[column];
-      SumoS32 letterType = typeBase + column;
+      SumoS32 letterType = typeBase + column + MENU_START_INDEX;
       SumoS32 textureBase = column * 16 + 1;
       for (SumoS32 stack = 0; stack < stackCount; ++stack) {
         for (SumoS32 row = 0; row < rowCount; ++row) {

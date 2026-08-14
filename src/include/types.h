@@ -1,6 +1,8 @@
 #ifndef SUMO_TYPES_H
 #define SUMO_TYPES_H
 
+#define MENU_START_INDEX 12
+
 typedef signed char SumoS8;
 typedef unsigned char SumoU8;
 typedef signed short SumoS16;

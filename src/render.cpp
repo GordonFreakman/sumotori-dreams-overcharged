@@ -250,15 +250,21 @@ SumoU8 *g_gameTexturePrograms[] =
     g_textureProgram_DiamondHeight,         g_textureProgram_BlueDiamond,
     g_textureProgram_DiamondHeight,         g_textureProgram_WhiteDiamond, 
     g_textureProgram_BlueWoodHeight,        g_textureProgram_BlueWood, 
-    g_textureProgram_BlueWoodHeight,        g_textureProgram_BlueWood,
-    g_textureProgram_BlueWoodHeight,        g_textureProgram_BlueWood, 
-    g_textureProgram_BlueWoodHeight,        g_textureProgram_BlueWood, 
-    g_textureProgram_BlueWoodHeight,        g_textureProgram_BlueWood,
+    g_textureProgram_BlueWoodHeight,        g_textureProgram_BlueWood, //TODO: replace with something unique?
+    g_textureProgram_BlueWoodHeight,        g_textureProgram_BlueWood, //TODO: replace with something unique? 
+    g_textureProgram_BlueWoodHeight,        g_textureProgram_BlueWood, //TODO: replace with something unique?
+    g_textureProgram_BlueWoodHeight,        g_textureProgram_BlueWood, //TODO: replace with something unique?
     g_textureProgram_DiamondHeight,         g_textureProgram_GreenDiamond, 
     g_textureProgram_PaintHeight,           g_textureProgram_Paint, 
-    g_textureProgram_Lava,                  g_textureProgram_BlueWood,
+    g_textureProgram_PaintHeight,           g_textureProgram_Lava,
+    g_textureProgram_BlueWoodHeight,        g_textureProgram_BlueWood,
     g_textureProgram_BlueWoodHeight,        g_textureProgram_BlueWood,
     g_textureProgram_BlueWoodHeight,        g_textureProgram_BlueWood, 
+    g_textureProgram_BlueWoodHeight,        g_textureProgram_BlueWood, 
+    g_textureProgram_BlueWoodHeight,        g_textureProgram_BlueWood,
+    g_textureProgram_BlueWoodHeight,        g_textureProgram_BlueWood, 
+    g_textureProgram_BlueWoodHeight,        g_textureProgram_BlueWood, 
+    g_textureProgram_BlueWoodHeight,        g_textureProgram_BlueWood,
     0
 };
 
@@ -1993,12 +1999,9 @@ SumoS32 InitializeGameTextures() {
 
   for (SumoS32 index = 0; g_gameTexturePrograms[index] != 0; ++index) {
     SumoU8 *pixels = (SumoU8 *)pixelSets[index];
-    SumoS32 labelIndex = index / 2 - 4;
-    if (index > 22)
-    {
-      labelIndex = (index / 2 - 11) + 4;
-    }
-    if (index >= 8 && index < 18 || index > 22) {
+    SumoS32 labelIndex = (index / 2 - MENU_START_INDEX);
+
+    if (index >= (MENU_START_INDEX * 2)) {
       char (*line)[24] = &g_gameMenuLabels[labelIndex][0];
       if ((*line)[0] != 0) {
         SumoS32 textColor = (index & 1) * 0x7f7f7f;
