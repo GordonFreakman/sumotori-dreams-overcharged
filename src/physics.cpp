@@ -694,7 +694,7 @@ void LimitDynamicBoxes() {
 
   GameBox *box = g_gameBoxes;
   while (box < g_gameBoxesEnd) {
-    if (box->contactLinks == 0 && !box->immovable && !box->flag58) {
+    if (box->contactLinks == 0 && !box->immovable && !box->flag58 && !box->m_pOwner) {
       if (smallestMass > box->mass) {
         smallestBox = box;
         smallestMass = box->mass;
