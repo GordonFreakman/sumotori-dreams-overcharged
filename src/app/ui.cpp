@@ -276,7 +276,7 @@ bool SumoRunStartupUI(SumoStartupConfig *config) {
     const ImGuiViewport *viewport = ImGui::GetMainViewport();
     ImGui::SetNextWindowPos(viewport->GetCenter(), ImGuiCond_Always,
                             ImVec2(0.5f, 0.5f));
-    ImGui::Begin("Sumotori Dreams", NULL,
+    ImGui::Begin("Sumotori Dreams: Overcharged", NULL,
                  ImGuiWindowFlags_AlwaysAutoResize |
                      ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove);
 

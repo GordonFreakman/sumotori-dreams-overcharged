@@ -25,7 +25,7 @@ bool SumoPlatformCreateWindow(SumoS32 width, SumoS32 height, bool fullscreen) {
                         &height);
 
   SumoRenderRequestGLAttributes();
-  s_window = SDL_CreateWindow("Sumotori", width, height,
+  s_window = SDL_CreateWindow("Sumotori Dreams: Overcharged", width, height,
                               SDL_WINDOW_OPENGL |
                                   (fullscreen ? SDL_WINDOW_FULLSCREEN : 0));
   if (s_window == NULL)

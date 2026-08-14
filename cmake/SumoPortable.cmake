@@ -134,11 +134,11 @@ foreach(index RANGE 3)
 endforeach()
 
 foreach(index RANGE 3)
-  list(APPEND SUMO_EMBEDDED_ASSETS "audio/sfx/footstep/source${index}.wav")
+ list(APPEND SUMO_EMBEDDED_ASSETS "audio/sfx/footstep/source${index}.wav")
 endforeach()
 
 foreach(index RANGE 3)
-  list(APPEND SUMO_EMBEDDED_ASSETS "audio/sfx/body_impact/source${index}.wav")
+ list(APPEND SUMO_EMBEDDED_ASSETS "audio/sfx/body_impact/source${index}.wav")
 endforeach()
 
 #foreach(index RANGE 6)
@@ -236,17 +236,17 @@ if(WIN32)
   list(APPEND SUMO_APP_CORE_SOURCES "${CMAKE_CURRENT_BINARY_DIR}/sumotori.rc")
 endif()
 
-add_executable(sumotori WIN32
+add_executable(sumo_overcharged WIN32
   src/app/main.cpp
   ${SUMO_APP_CORE_SOURCES}
 )
-target_include_directories(sumotori PRIVATE
+target_include_directories(sumo_overcharged PRIVATE
   "${CMAKE_CURRENT_SOURCE_DIR}/src/app"
   "${CMAKE_CURRENT_SOURCE_DIR}/src/include"
   "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/stb"
   "${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/miniaudio"
 )
-target_link_libraries(sumotori PRIVATE
+target_link_libraries(sumo_overcharged PRIVATE
   sumo_decomp
   sumo_assets
   Sumo::PortableOptions
@@ -257,23 +257,23 @@ target_link_libraries(sumotori PRIVATE
 )
 if(UNIX)
   find_package(Threads REQUIRED)
-  target_link_libraries(sumotori PRIVATE m Threads::Threads ${CMAKE_DL_LIBS})
+  target_link_libraries(sumo_overcharged PRIVATE m Threads::Threads ${CMAKE_DL_LIBS})
 endif()
-target_compile_definitions(sumotori PRIVATE
+target_compile_definitions(sumo_overcharged PRIVATE
   SUMO_SDL_VERSION=${SUMO_SDL_VERSION}
   SUMO_AUDIO_DEFAULT_BACKEND=${SUMO_AUDIO_DEFAULT_BACKEND}
 )
 
 if(WIN32)
   if(MSVC)
-    target_link_options(sumotori PRIVATE /ENTRY:mainCRTStartup)
+    target_link_options(sumo_overcharged PRIVATE /ENTRY:mainCRTStartup)
   else()
-    target_link_options(sumotori PRIVATE -static)
+    target_link_options(sumo_overcharged PRIVATE -static)
   endif()
 endif()
 
-sumo_verify_portable_target_sources(sumotori)
+sumo_verify_portable_target_sources(sumo_overcharged)
 
-install(TARGETS sumotori
+install(TARGETS sumo_overcharged
   RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
 )
