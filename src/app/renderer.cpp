@@ -482,7 +482,7 @@ unsigned int lightFBO;
 unsigned int depthMap;
 static GLint s_uniformLightDir;
 static GLint s_uniformViewPos;
-constexpr unsigned int depthMapResolution = 8192;
+constexpr unsigned int depthMapResolution = 8192 * 2;
 unsigned int matricesUBO;
 #endif
 static GLint s_uniformFactor;
@@ -589,6 +589,8 @@ static const char *const c_fragmentShaderSource =
     "uniform vec3 lightDir;\n"
     "uniform vec3 viewPos;\n"
     "uniform float farPlane;\n"
+    "uniform int lightmapSize;\n"
+    "uniform int lightmapFilter;\n"
     "uniform mat4 view;\n"
     "uniform int uMode;\n"
     "uniform vec3 uFactor;\n"
@@ -599,9 +601,20 @@ static const char *const c_fragmentShaderSource =
     "{\n"
     "vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;\n"
     "projCoords = projCoords * 0.5 + 0.5;\n"
-    "float closestDepth = texture(shadowMap, projCoords.xy).r; \n"
+    //"float closestDepth = texture(shadowMap, projCoords.xy).r; \n"
     "float currentDepth = projCoords.z;\n"
-    "float shadow = currentDepth > closestDepth  ? 1.0 : 0.0;\n"
+    //"float shadow = currentDepth > closestDepth  ? 1.0 : 0.0;\n"
+    "float shadow = 0.0;\n"
+    "int HalfFilterSize = lightmapFilter / 2;"
+    "for (int y = -HalfFilterSize ; y < HalfFilterSize ; y++) {\n"
+    "for (int x = -HalfFilterSize ; x < HalfFilterSize ; x++) {\n"
+    "float texelsize = (1.0f / lightmapSize);"
+    "float closestDepth = texture(shadowMap, projCoords.xy + (vec2(x,y) * texelsize)).r; \n"
+    "if (currentDepth > closestDepth) {\n"
+    "shadow += 1.0; }\n"
+    "}\n"
+    "}\n"
+    "shadow = shadow / float(pow(lightmapFilter,2));"
     "return shadow;\n"
     "}  \n"
 
@@ -624,7 +637,7 @@ static const char *const c_fragmentShaderSource =
     "spec = pow(max(dot(normal, halfwayDir), 0.0), 64.0);\n"
     "vec3 specular = spec * lightColor; \n"
     "float shadow = ShadowCalculation(fs_in.FragPosLightSpace);\n"
-    "vec3 lighting = (ambient + (1.0 - shadow) * (diffuse)) * vec3(color);\n"
+    "vec3 lighting = ((ambient + diffuse * 0.05)  + (1.0 - shadow) * (diffuse)) * vec3(color);\n"
     "FragColor = vec4(uFactor * lighting, color.a);\n"
     "}";
 
@@ -1085,22 +1098,22 @@ HRESULT RenderGameScene() {
   float near_plane = 5500.0f, far_plane = 1.5f;
 
   lightProjection =
-      glm::ortho(-512.0f, 512.0f, -512.0f, 512.0f, near_plane, far_plane);
-  lightView = glm::lookAt(lightDir * 250.f, glm::vec3(0.0), glm::vec3(0.0, 1.0, 0.0));
-  lightView = glm::translate(lightView, glm::vec3(0,-g_gameCameraWorldPosition.y / 2,0));
+      glm::ortho(-1024.0f, 1024.0f, -1024.0f, 1024.0f, near_plane, far_plane);
+  lightView = glm::lookAt(lightDir * 900.f, glm::vec3(0.0), glm::vec3(0.0, 1.0, 0.0));
+  lightView =
+      glm::translate(lightView, glm::vec3(-g_gameCameraWorldPosition.x,
+                                          -g_gameCameraWorldPosition.y / 2,
+                                          -g_gameCameraWorldPosition.z));
   lightSpaceMatrix = lightProjection * lightView;
 
   glUniform3fv(glGetUniformLocation(s_program, "lightDir"), 1, &lightDir[0]); 
-
+    glUniform1i(glGetUniformLocation(s_program, "lightmapSize"),
+              depthMapResolution);
+  glUniform1i(glGetUniformLocation(s_program, "lightmapFilter"), 4);
   glUniformMatrix4fv(glGetUniformLocation(s_program, "lightSpaceMatrix"), 1, GL_FALSE, &lightSpaceMatrix[0][0]); 
   glUseProgram(s_CSMprogram);
   glUniformMatrix4fv(glGetUniformLocation(s_CSMprogram, "lightSpaceMatrix"), 1,GL_FALSE, &lightSpaceMatrix[0][0]); 
 
-  //glUniformMatrix4fv(s_uniformView, 1, GL_FALSE, &lightView[0][0]);
-  //glUniformMatrix4fv(s_uniformProjection, 1, GL_FALSE, &lightProjection[0][0]);
-
-
- // renderScene(simpleDepthShader);
 
   #endif
   bool firstLightPass = true;
@@ -1267,6 +1280,11 @@ HRESULT RenderGameScene() {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT |
                 GL_STENCIL_BUFFER_BIT);
         glViewport(0, 0, g_gameRenderWidth, g_gameRenderHeight);
+
+        //debug
+        //glUniformMatrix4fv(s_uniformView, 1, GL_FALSE, &lightView[0][0]);
+        //glUniformMatrix4fv(s_uniformProjection, 1, GL_FALSE, &lightProjection[0][0]);
+
           firstLightPass = false;
       }
       #endif
