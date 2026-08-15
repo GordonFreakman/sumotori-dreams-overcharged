@@ -474,11 +474,12 @@ static GLuint s_program;
 static GLint s_uniformView;
 static GLint s_uniformProjection;
 #ifdef SUMO_CSM
+static GLuint s_CSMprogram;
 unsigned int lightFBO;
-unsigned int lightDepthMaps;
+unsigned int depthMap;
 static GLint s_uniformLightDir;
 static GLint s_uniformViewPos;
-constexpr unsigned int depthMapResolution = 4096;
+constexpr unsigned int depthMapResolution = 1024;
 unsigned int matricesUBO;
 #endif
 static GLint s_uniformFactor;
@@ -555,6 +556,7 @@ static const char *const c_vertexShaderSource =
      "vec3 FragPos;\n" 
     "vec3 Normal;\n" 
     "vec2 TexCoords;\n" 
+    "vec4 FragPosLightSpace;\n"
     "}\n" 
     "vs_out;\n"
 
@@ -573,62 +575,30 @@ static const char *const c_fragmentShaderSource =
     "  vec3 FragPos;\n"
     "  vec3 Normal;\n"
     "  vec2 TexCoords;\n"
+    "  vec4 FragPosLightSpace;\n"
     "}\n"
     "fs_in;\n"
     "uniform sampler2D diffuseTexture;\n"
-    "uniform sampler2DArray shadowMap;\n"
+    "uniform sampler2D shadowMap;\n"
     "uniform sampler2D normalMap;\n"
     "uniform vec3 lightDir;\n"
     "uniform vec3 viewPos;\n"
     "uniform float farPlane;\n"
     "uniform mat4 view;\n"
     "uniform int uMode;\n"
+    "uniform vec3 uFactor;\n"
     "layout(std140) uniform LightSpaceMatrices { mat4 lightSpaceMatrices[16]; };\n"
     "uniform float cascadePlaneDistances[16];\n"
     "uniform int cascadeCount; // number of frusta - 1\n"
-    "float ShadowCalculation(vec3 fragPosWorldSpace) {\n"
-    "vec4 fragPosViewSpace = view * vec4(fragPosWorldSpace, 1.0);\n"
-    "float depthValue = abs(fragPosViewSpace.z);\n"
-    "int layer = -1;\n"
-    "for (int i = 0; i < cascadeCount; ++i) {\n"
-    " if (depthValue < cascadePlaneDistances[i]) {\n"
-    "   layer = i;\n"
-    "  break;\n"
-    "}\n"
-    "}\n"
-    "if (layer == -1) {\n"
-    "  layer = cascadeCount;\n"
-    "}\n"
-    "vec4 fragPosLightSpace =\n"
-    "lightSpaceMatrices[layer] * vec4(fragPosWorldSpace, 1.0);\n"
+    "float ShadowCalculation(vec4 fragPosLightSpace)\n"
+    "{\n"
     "vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;\n"
     "projCoords = projCoords * 0.5 + 0.5;\n"
+    "float closestDepth = texture(shadowMap, projCoords.xy).r; \n"
     "float currentDepth = projCoords.z;\n"
-    "if (currentDepth > 1.0) {\n"
-    "  return 0.0;\n"
-    "}\n"
-    "vec3 normal = normalize(fs_in.Normal);\n"
-    "float bias = max(0.05 * (1.0 - dot(normal, lightDir)), 0.005);\n"
-    "const float biasModifier = 0.5f;\n"
-    "if (layer == cascadeCount) {\n"
-    "  bias *= 1 / (farPlane * biasModifier);\n"
-    "} else {\n"
-    "  bias *= 1 / (cascadePlaneDistances[layer] * biasModifier);\n"
-    "}\n"
-    "float shadow = 0.0;\n"
-    "vec2 texelSize = 1.0 / vec2(textureSize(shadowMap, 0));\n"
-    "for (int x = -1; x <= 1; ++x) {\n"
-    "for (int y = -1; y <= 1; ++y) {\n"
-    "  float pcfDepth =\n"
-    "      texture(shadowMap,\n"
-    "             vec3(projCoords.xy + vec2(x, y) * texelSize, layer))\n"
-    "          .r;\n"
-    "  shadow += (currentDepth - bias) > pcfDepth ? 1.0 : 0.0;\n"
-    "}\n"
-    "}\n"
-    "shadow /= 9.0;\n"
+    "float shadow = currentDepth > closestDepth  ? 1.0 : 0.0;\n"
     "return shadow;\n"
-    "}\n"
+    "}  \n"
 
     "void main() {\n"
 
@@ -638,9 +608,6 @@ static const char *const c_fragmentShaderSource =
 
     "vec4 color = texture(diffuseTexture, fs_in.TexCoords).rgba;\n"
     "vec3 normal = normalize(fs_in.Normal);\n"
-    //"vec3 normal = texture(normalMap, fs_in.TexCoords).rgb;"
-    // transform normal vector to range [-1,1]
-    //"normal = normalize(normal * 2.0 - 1.0); "
     "vec3 lightColor = vec3(0.5);\n"
     "vec3 ambient = vec3(0.3);\n"
     "float diff = max(dot(lightDir, normal), 0.0);\n"
@@ -651,10 +618,9 @@ static const char *const c_fragmentShaderSource =
     "vec3 halfwayDir = normalize(lightDir + viewDir);  \n"
     "spec = pow(max(dot(normal, halfwayDir), 0.0), 64.0);\n"
     "vec3 specular = spec * lightColor; \n"
-    "float shadow = ShadowCalculation(fs_in.FragPos);\n"
-   // "float shadow = 1.0;\n"
+    "float shadow = ShadowCalculation(fs_in.FragPosLightSpace);\n"
     "vec3 lighting = (ambient + (1.0 - shadow) * (diffuse)) * vec3(color);\n"
-    "FragColor = vec4(lighting, color.a);\n"
+    "FragColor = vec4(uFactor * lighting, color.a);\n"
     "}";
 #endif
 static GLuint CompileRenderShader(GLenum type, const char *source) {
@@ -775,23 +741,20 @@ static bool EnsureRenderObjects() {
   #ifdef SUMO_CSM
       glGenFramebuffers(1, &lightFBO);
 
-  glGenTextures(1, &lightDepthMaps);
-  glBindTexture(GL_TEXTURE_2D_ARRAY, lightDepthMaps);
-  glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT32F,
-               depthMapResolution, depthMapResolution,
-               (sizeof(shadowCascadeLevels) / sizeof(float))+ 1, 0, GL_DEPTH_COMPONENT,
-               GL_FLOAT, nullptr);
-
-      glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-  glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+  glGenTextures(1, &depthMap);
+      glBindTexture(GL_TEXTURE_2D, depthMap);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, depthMapResolution, depthMapResolution,
+              0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+  //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT); 
 
   constexpr float bordercolor[] = {1.0f, 1.0f, 1.0f, 1.0f};
   glTexParameterfv(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_BORDER_COLOR, bordercolor);
 
-  glBindFramebuffer(GL_FRAMEBUFFER, lightFBO);
-  glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, lightDepthMaps, 0);
+glBindFramebuffer(GL_FRAMEBUFFER, lightFBO);
+  glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap, 0);
   glDrawBuffer(GL_NONE);
   glReadBuffer(GL_NONE);
 
@@ -825,7 +788,7 @@ HRESULT SetGameTransform(SumoU32 state, const SumoF32 *matrix) {
     glUniformMatrix4fv(s_uniformView, 1, GL_FALSE, s_viewTransform);
     glUniformMatrix4fv(s_uniformProjection, 1, GL_FALSE, s_projectionTransform);
     #ifdef SUMO_CSM
-    glUniform3f(s_uniformLightDir, 0.f, -1.f, 0.f);
+    glUniform3f(s_uniformLightDir, 0.30000001f, -1.0f, 0.5f);
     glUniform3f(s_uniformViewPos, 
         g_gameCameraPosition.x,
                 g_gameCameraPosition.y, 
@@ -1109,6 +1072,7 @@ HRESULT RenderGameScene() {
   SumoS16 *triangleCounts = (SumoS16 *)g_gameBoxTextureTriangleCounts;
   if (passCount > 0) {
     do {
+        #ifndef SUMO_CSM
       g_gameBoxLightDirection = MakeGameRenderVector3(0.30000001f, 1.0f, 0.5f);
       Vector3 lightRotation = MakeGameRenderVector3(
           0.0f,
@@ -1117,7 +1081,7 @@ HRESULT RenderGameScene() {
       SumoU32 textureFactor = 526086u * ((288 / (passCount + 1) + 8) / 16);
       g_gameBoxLightDirection.Rotate(lightRotation);
       g_gameBoxLightDirection.Normalize();
-
+      #endif
       SumoU32 *triangleCountWords = (SumoU32 *)triangleCounts;
       for (SumoS32 word = 0; word < 64; ++word)
         triangleCountWords[word] = 0;
@@ -1179,12 +1143,12 @@ HRESULT RenderGameScene() {
         glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
       }
       #endif
-      if (firstLightPass) {
-        SetRenderFactor(0x00203040);
-      } else {
+     // if (firstLightPass) {
+       // SetRenderFactor(0x00203040);
+     // } else {
         SetRenderFactor(0);
-        glDepthMask(GL_FALSE);
-      }
+        //glDepthMask(GL_FALSE);
+     // }
       glUniform1i(s_uniformMode, c_renderModeFlat);
       if (g_gameRenderQualityEnabled || firstLightPass) {
         glDrawArrays(GL_TRIANGLES, 0, triangleCount * 3);
@@ -1226,7 +1190,7 @@ HRESULT RenderGameScene() {
       }
 #endif
       glUniform1i(s_uniformMode, c_renderModeAlbedo);
-      SetRenderFactor(textureFactor);
+      SetRenderFactor(g_screenTintColor);
       for (SumoS32 texture = 0; texture < 128; ++texture) {
         if (triangleCounts[texture] != 0) {
             #ifndef SUMO_CSM
@@ -1234,7 +1198,7 @@ HRESULT RenderGameScene() {
           #else
           SetGameTexture(0, g_gameTextures[texture * 2] + 1);
           glActiveTexture(GL_TEXTURE1);
-          glBindTexture(GL_TEXTURE_2D_ARRAY, lightDepthMaps);
+          glBindTexture(GL_TEXTURE_2D, depthMap);
           SetGameTexture(2, g_gameTextures[texture * 2]);
           #endif
           glDrawArrays(GL_TRIANGLES,
