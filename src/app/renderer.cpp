@@ -1,6 +1,9 @@
 #include "boundary.h"
 
 #include <glad/gl.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #include <stdio.h>
 
@@ -479,7 +482,7 @@ unsigned int lightFBO;
 unsigned int depthMap;
 static GLint s_uniformLightDir;
 static GLint s_uniformViewPos;
-constexpr unsigned int depthMapResolution = 1024;
+constexpr unsigned int depthMapResolution = 8192;
 unsigned int matricesUBO;
 #endif
 static GLint s_uniformFactor;
@@ -552,6 +555,7 @@ static const char *const c_vertexShaderSource =
     "layout(location = 2) in vec2 aTexCoord;\n"
     "uniform mat4 view;\n"
     "uniform mat4 projection;\n" 
+    "uniform mat4 lightSpaceMatrix;"
     "out VS_OUT {\n" 
      "vec3 FragPos;\n" 
     "vec3 Normal;\n" 
@@ -565,6 +569,7 @@ static const char *const c_vertexShaderSource =
     "  vs_out.FragPos = aPosition;\n"
     "  vs_out.Normal = aNormal;\n"
     "  gl_Position = vec4(clip.x, clip.y, clip.z * 2.0 - clip.w, clip.w);\n"
+    "vs_out.FragPosLightSpace = lightSpaceMatrix * vec4(vs_out.FragPos, 1.0);\n"
     "  vs_out.TexCoords = aTexCoord;\n"
     "}\n";
 
@@ -622,6 +627,14 @@ static const char *const c_fragmentShaderSource =
     "vec3 lighting = (ambient + (1.0 - shadow) * (diffuse)) * vec3(color);\n"
     "FragColor = vec4(uFactor * lighting, color.a);\n"
     "}";
+
+static const char *const c_lightDepthVertex =
+"#version 330 core \nlayout(location = 0) in vec3 aPos;"
+"uniform mat4 lightSpaceMatrix;\n"
+"void main() { gl_Position = lightSpaceMatrix * vec4(aPos, 1.0); }";
+
+static const char *const c_lightDepthPixel = "#version 330 core\n void main() { gl_FragDepth = gl_FragCoord.z; }";
+
 #endif
 static GLuint CompileRenderShader(GLenum type, const char *source) {
   GLuint shader = glCreateShader(type);
@@ -649,6 +662,14 @@ static bool EnsureRenderObjects() {
       CompileRenderShader(GL_VERTEX_SHADER, c_vertexShaderSource);
   GLuint fragmentShader =
       CompileRenderShader(GL_FRAGMENT_SHADER, c_fragmentShaderSource);
+
+  #ifdef SUMO_CSM
+  GLuint shadowVertexShader =
+      CompileRenderShader(GL_VERTEX_SHADER, c_lightDepthVertex);
+  GLuint shadowFragmentShader =
+      CompileRenderShader(GL_FRAGMENT_SHADER, c_lightDepthPixel);
+  #endif
+
   s_program = glCreateProgram();
   glAttachShader(s_program, vertexShader);
   glAttachShader(s_program, fragmentShader);
@@ -739,34 +760,39 @@ static bool EnsureRenderObjects() {
 
   glBindVertexArray(0);
   #ifdef SUMO_CSM
-      glGenFramebuffers(1, &lightFBO);
+
+  s_CSMprogram = glCreateProgram();
+  glAttachShader(s_CSMprogram, shadowVertexShader);
+  glAttachShader(s_CSMprogram, shadowFragmentShader);
+  glLinkProgram(s_CSMprogram);
+  status = 0;
+  glGetProgramiv(s_CSMprogram, GL_LINK_STATUS, &status);
+  if (status == GL_FALSE) {
+    char log[1024];
+    glGetProgramInfoLog(s_CSMprogram, sizeof(log), NULL, log);
+    fprintf(stderr, "sumotori: shader link failed: %s\n", log);
+  }
+  glDeleteShader(shadowVertexShader);
+  glDeleteShader(shadowFragmentShader);
+
+  glGenFramebuffers(1, &lightFBO);
 
   glGenTextures(1, &depthMap);
-      glBindTexture(GL_TEXTURE_2D, depthMap);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, depthMapResolution, depthMapResolution,
-              0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-  //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glBindTexture(GL_TEXTURE_2D, depthMap);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, depthMapResolution, depthMapResolution, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT); 
 
   constexpr float bordercolor[] = {1.0f, 1.0f, 1.0f, 1.0f};
-  glTexParameterfv(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_BORDER_COLOR, bordercolor);
+  glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, bordercolor);
 
-glBindFramebuffer(GL_FRAMEBUFFER, lightFBO);
+  glBindFramebuffer(GL_FRAMEBUFFER, lightFBO);
   glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap, 0);
   glDrawBuffer(GL_NONE);
   glReadBuffer(GL_NONE);
-
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-
-  glGenBuffers(1, &matricesUBO);
-  glBindBuffer(GL_UNIFORM_BUFFER, matricesUBO);
-  glBufferData(GL_UNIFORM_BUFFER, sizeof(glUniformMatrix4fv) * 16, nullptr,
-               GL_STATIC_DRAW);
-  glBindBufferBase(GL_UNIFORM_BUFFER, 0, matricesUBO);
-  glBindBuffer(GL_UNIFORM_BUFFER, 0);
   #endif
   return true;
 }
@@ -1028,8 +1054,8 @@ HRESULT RenderGameScene() {
 
   glDisable(GL_BLEND);
   glEnable(GL_DEPTH_TEST);
-  glDepthFunc(GL_LEQUAL);
-  glDepthMask(GL_TRUE);
+  //glDepthFunc(GL_LEQUAL);
+  //glDepthMask(GL_TRUE);
   glFrontFace(GL_CW);
   glEnable(GL_CULL_FACE);
   glCullFace(GL_BACK);
@@ -1052,21 +1078,36 @@ HRESULT RenderGameScene() {
 
   
 #ifdef SUMO_CSM
-  glBindFramebuffer(GL_FRAMEBUFFER, lightFBO);
-  glViewport(0, 0, depthMapResolution, depthMapResolution);
-  glClear(GL_DEPTH_BUFFER_BIT);
-  glCullFace(GL_FRONT); // peter panning
+
+          glm::mat4 lightProjection, lightView;
+  glm::mat4 lightSpaceMatrix;
+          glm::vec3 lightDir = glm::vec3(0.30000001f, -1.0f, 0.5f);
+  float near_plane = 5500.0f, far_plane = 1.5f;
+
+  lightProjection =
+      glm::ortho(-512.0f, 512.0f, -512.0f, 512.0f, near_plane, far_plane);
+  lightView = glm::lookAt(lightDir * 250.f, glm::vec3(0.0), glm::vec3(0.0, 1.0, 0.0));
+  lightView = glm::translate(lightView, glm::vec3(0,-g_gameCameraWorldPosition.y / 2,0));
+  lightSpaceMatrix = lightProjection * lightView;
+
+  glUniform3fv(glGetUniformLocation(s_program, "lightDir"), 1, &lightDir[0]); 
+
+  glUniformMatrix4fv(glGetUniformLocation(s_program, "lightSpaceMatrix"), 1, GL_FALSE, &lightSpaceMatrix[0][0]); 
+  glUseProgram(s_CSMprogram);
+  glUniformMatrix4fv(glGetUniformLocation(s_CSMprogram, "lightSpaceMatrix"), 1,GL_FALSE, &lightSpaceMatrix[0][0]); 
+
+  //glUniformMatrix4fv(s_uniformView, 1, GL_FALSE, &lightView[0][0]);
+  //glUniformMatrix4fv(s_uniformProjection, 1, GL_FALSE, &lightProjection[0][0]);
+
+
  // renderScene(simpleDepthShader);
-  glCullFace(GL_BACK);
-  glBindFramebuffer(GL_FRAMEBUFFER, 0);
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-  glViewport(0, 0, g_gameRenderWidth, g_gameRenderHeight);
+
   #endif
   bool firstLightPass = true;
   #ifndef SUMO_CSM
   SumoS32 passCount = g_gameRenderQualityCode;
   #else
-  SumoS32 passCount = 1;
+  SumoS32 passCount = 2;
   #endif
   SumoS32 pass = 0;
   SumoS16 *triangleCounts = (SumoS16 *)g_gameBoxTextureTriangleCounts;
@@ -1081,7 +1122,16 @@ HRESULT RenderGameScene() {
       SumoU32 textureFactor = 526086u * ((288 / (passCount + 1) + 8) / 16);
       g_gameBoxLightDirection.Rotate(lightRotation);
       g_gameBoxLightDirection.Normalize();
-      #endif
+      #else
+      if (firstLightPass)
+        {
+        glUseProgram(s_CSMprogram);
+        glBindFramebuffer(GL_FRAMEBUFFER, lightFBO);
+        glViewport(0, 0, depthMapResolution, depthMapResolution);
+        glClear(GL_DEPTH_BUFFER_BIT);
+        glCullFace(GL_FRONT); // peter panning
+        }
+        #endif
       SumoU32 *triangleCountWords = (SumoU32 *)triangleCounts;
       for (SumoS32 word = 0; word < 64; ++word)
         triangleCountWords[word] = 0;
@@ -1149,11 +1199,12 @@ HRESULT RenderGameScene() {
         SetRenderFactor(0);
         //glDepthMask(GL_FALSE);
      // }
+#ifndef SUMO_CSM
       glUniform1i(s_uniformMode, c_renderModeFlat);
       if (g_gameRenderQualityEnabled || firstLightPass) {
         glDrawArrays(GL_TRIANGLES, 0, triangleCount * 3);
       }
-#ifndef SUMO_CSM
+
       glDepthMask(GL_FALSE);
       glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
       glEnable(GL_STENCIL_TEST);
@@ -1177,8 +1228,7 @@ HRESULT RenderGameScene() {
         firstLightPass = false;
       }
       #else
-      //glEnable(GL_BLEND);
-      //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
       #endif
 
       glBindVertexArray(s_mainVertexArray);
@@ -1206,8 +1256,21 @@ HRESULT RenderGameScene() {
                        triangleCounts[texture] * 3);
         }
       }
-      glDepthMask(GL_TRUE);
-      glDisable(GL_STENCIL_TEST);
+      //glDepthMask(GL_TRUE);
+     // glDisable(GL_STENCIL_TEST);
+      #ifdef SUMO_CSM
+      if (firstLightPass) 
+      {
+        glUseProgram(s_program);
+        glCullFace(GL_BACK);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT |
+                GL_STENCIL_BUFFER_BIT);
+        glViewport(0, 0, g_gameRenderWidth, g_gameRenderHeight);
+          firstLightPass = false;
+      }
+      #endif
+
     } while (++pass < passCount);
   }
   #ifndef SUMO_CSM
