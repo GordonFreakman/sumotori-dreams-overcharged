@@ -2179,6 +2179,7 @@ SumoIntPtr CreateGameTextureFromPixels(void *pixels, SumoS32 width,
 
 SumoIntPtr CreateGameNormalMapTexture(SumoU8 *heightMap, SumoS32 width,
                                       SumoS32 height, SumoS32 depth) {
+  #if 0
   SumoU8 *pixels = new SumoU8[width * height * 4];
   SumoU8 *cursor = pixels;
   SumoU8 *row = heightMap;
@@ -2217,7 +2218,10 @@ SumoIntPtr CreateGameNormalMapTexture(SumoU8 *heightMap, SumoS32 width,
   }
 
   SumoIntPtr texture = CreateGameTextureFromPixels(pixels, width, height, 0);
-  delete[] pixels;
+  #else
+  SumoIntPtr texture = CreateGameTextureFromPixels(heightMap, width, height, 0);
+  #endif
+  //delete[] pixels;
   return texture;
 }
 

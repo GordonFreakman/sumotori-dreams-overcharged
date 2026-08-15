@@ -183,19 +183,19 @@ void SumoOverlayDraw() {
 #include <string.h>
 
 extern SumoU8 g_gameAudioEnabled;
-extern SumoS32 g_gameRenderQualityCode;
+extern float g_gameRenderQualityCode;
 
-static const SumoS32 c_qualityCodes[4] = {1, 2, 4, 12};
-static const char *c_qualityLabels[4] = {
-    "LOW (1 light pass)", "MEDIUM (2 light passes)", "HIGH (4 light passes)",
-    "ULTRA (12 light passes)"};
+static const float c_qualityCodes[5] = {0.25, 0.5, 1, 1.5, 2};
+static const char *c_qualityLabels[5] = {
+    "LOW (25%)", "MEDIUM (50%)", "HIGH (100%)",
+    "ULTRA (150%)", "OVERCHARGED (200%)"};
 
 static const char *c_audioBackendLabels[2] = {"SDL", "miniaudio"};
 
 static char *SettingsPath() {
   static char path[1024];
   if (path[0] == 0) {
-    char *pref = SDL_GetPrefPath("Archee", "Sumotori");
+    char *pref = SDL_GetPrefPath("Archee", "SumotoriOvercharged");
     SDL_snprintf(path, sizeof(path), "%ssettings.ini", pref ? pref : "");
 #if SUMO_SDL_VERSION == 2
     SDL_free(pref);
@@ -208,7 +208,7 @@ void SumoLoadStartupConfig(SumoStartupConfig *config) {
   config->width = 1024;
   config->height = 768;
   config->fullscreen = false;
-  config->quality = 2;
+  config->quality = 1;
   config->soundEnabled = true;
   config->audioBackend = SumoAudioGetBackend();
   config->editorRequested = false;
@@ -317,11 +317,7 @@ bool SumoRunStartupUI(SumoStartupConfig *config)
 {
   EnsureImGui();
 
-  int qualityIndex = 1;
-  for (int index = 0; index < 4; ++index) {
-    if (c_qualityCodes[index] == config->quality)
-      qualityIndex = index;
-  }
+  int qualityIndex = config->quality;
   bool sound = config->soundEnabled;
   bool audioIndex = config->audioBackend == c_sumoAudioBackendMiniaudio ? 1 : 0;
   bool fullscreen = config->fullscreen;
@@ -364,7 +360,7 @@ bool SumoRunStartupUI(SumoStartupConfig *config)
                  ImGuiWindowFlags_AlwaysAutoResize |
                      ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoMove);
 
-    ImGui::Combo("Quality", &qualityIndex, c_qualityLabels, 4);
+    ImGui::Combo("Shadow mode", &qualityIndex, c_qualityLabels, 5);
     ImGui::Combo("Display mode", &modeIndex, s_modeLabelPointers, s_modeCount);
     ImGui::Checkbox("Sound", &sound);
     ImGui::Checkbox("Sound randomization", &audioIndex);
@@ -424,7 +420,7 @@ bool SumoRunStartupUI(SumoStartupConfig *config)
   }
 
 
-  config->quality = c_qualityCodes[qualityIndex];
+  config->quality = qualityIndex;
   config->soundEnabled = sound;
   config->audioBackend = audioIndex;
   config->fullscreen = fullscreen;
@@ -597,12 +593,12 @@ const char *SumoEditorStatus() { return s_editorStatus.c_str(); }
 
 SumoU8 g_gameAudioEnabled = 1;
 
-extern SumoS32 g_gameRenderQualityCode;
+extern float g_gameRenderQualityCode;
 extern SumoS32 g_gameRenderQualityEnabled;
 
-void ApplyGameQuality(SumoS32 qualityCode) {
-  g_gameRenderQualityCode = qualityCode;
-  g_gameRenderQualityEnabled = qualityCode != 1;
+void ApplyGameQuality(int qualityCode) {
+  g_gameRenderQualityCode = c_qualityCodes[qualityCode];
+ // g_gameRenderQualityEnabled = qualityCode != 1;
 }
 
 SumoS32 CheckStoredGameSettings() { return 1; }

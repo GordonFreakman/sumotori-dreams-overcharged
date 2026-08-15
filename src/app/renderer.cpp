@@ -482,7 +482,7 @@ unsigned int lightFBO;
 unsigned int depthMap;
 static GLint s_uniformLightDir;
 static GLint s_uniformViewPos;
-constexpr unsigned int depthMapResolution = 8192 * 2;
+constexpr unsigned int depthMapResolution = 16384;
 unsigned int matricesUBO;
 #endif
 static GLint s_uniformFactor;
@@ -505,49 +505,9 @@ enum {
   c_renderModeText = 3,
   c_renderModeLine = 4
 };
-#ifndef SUMO_CSM
-static const char *const c_vertexShaderSource =
-    "#version 330 core\n"
-    "layout(location = 0) in vec3 aPosition;\n"
-    "layout(location = 1) in vec4 aColor;\n"
-    "layout(location = 2) in vec2 aTexCoord;\n"
-    "uniform mat4 uView;\n"
-    "uniform mat4 uProjection;\n"
-    "out vec4 vColor;\n"
-    "out vec2 vTexCoord;\n"
-    "void main() {\n"
-    "  vec4 clip = uProjection * (uView * vec4(aPosition, 1.0));\n"
-    "  gl_Position = vec4(clip.x, clip.y, clip.z * 2.0 - clip.w, clip.w);\n"
-    "  vColor = aColor.zyxw;\n"
-    "  vTexCoord = aTexCoord;\n"
-    "}\n";
 
-static const char *const c_fragmentShaderSource =
-    "#version 330 core\n"
-    "in vec4 vColor;\n"
-    "in vec2 vTexCoord;\n"
-    "uniform sampler2D uTexture;\n"
-    "uniform vec3 uFactor;\n"
-    "uniform int uMode;\n"
-    "out vec4 oColor;\n"
-    "void main() {\n"
-    "  if (uMode == 0) {\n"
-    "    oColor = vec4(uFactor, 1.0);\n"
-    "  } else if (uMode == 1) {\n"
-    "    vec3 t = texture(uTexture, vTexCoord).rgb;\n"
-    "    float d = clamp(dot(vColor.rgb * 2.0 - 1.0, t * 2.0 - 1.0),\n"
-    "                    0.0, 1.0);\n"
-    "    oColor = vec4(d * uFactor, 1.0);\n"
-    "  } else if (uMode == 2) {\n"
-    "    oColor = vec4(uFactor * texture(uTexture, vTexCoord).rgb, 1.0);\n"
-    "  } else if (uMode == 3) {\n"
-    "    oColor = vec4(vColor.rgb, texture(uTexture, vTexCoord).a * "
-    "vColor.a);\n"
-    "  } else {\n"
-    "    oColor = vec4(vColor.rgb, 1.0);\n"
-    "  }\n"
-    "}\n";
-#else
+float g_gameRenderQualityCode = 1.0f;
+
 static const char *const c_vertexShaderSource =
     "#version 330 core\n"
     "layout(location = 0) in vec3 aPosition;\n"
@@ -601,9 +561,7 @@ static const char *const c_fragmentShaderSource =
     "{\n"
     "vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;\n"
     "projCoords = projCoords * 0.5 + 0.5;\n"
-    //"float closestDepth = texture(shadowMap, projCoords.xy).r; \n"
     "float currentDepth = projCoords.z;\n"
-    //"float shadow = currentDepth > closestDepth  ? 1.0 : 0.0;\n"
     "float shadow = 0.0;\n"
     "int HalfFilterSize = lightmapFilter / 2;"
     "for (int y = -HalfFilterSize ; y < HalfFilterSize ; y++) {\n"
@@ -634,10 +592,10 @@ static const char *const c_fragmentShaderSource =
     "vec3 reflectDir = reflect(-lightDir, normal);\n"
     "float spec = 0.0;\n"
     "vec3 halfwayDir = normalize(lightDir + viewDir);  \n"
-    "spec = pow(max(dot(normal, halfwayDir), 0.0), 64.0);\n"
-    "vec3 specular = spec * lightColor; \n"
+    "spec = pow(max(dot(normal, halfwayDir), 0.0), 2.0);\n"
+    "vec3 specular = spec * lightColor  * (texture(normalMap, fs_in.TexCoords).r * 0.5f); \n"
     "float shadow = ShadowCalculation(fs_in.FragPosLightSpace);\n"
-    "vec3 lighting = ((ambient + diffuse * 0.05)  + (1.0 - shadow) * (diffuse)) * vec3(color);\n"
+    "vec3 lighting = ((ambient + diffuse * 0.05)  + (1.0 - shadow) * (diffuse + specular)) * vec3(color);\n"
     "FragColor = vec4(uFactor * lighting, color.a);\n"
     "}";
 
@@ -648,7 +606,6 @@ static const char *const c_lightDepthVertex =
 
 static const char *const c_lightDepthPixel = "#version 330 core\n void main() { gl_FragDepth = gl_FragCoord.z; }";
 
-#endif
 static GLuint CompileRenderShader(GLenum type, const char *source) {
   GLuint shader = glCreateShader(type);
   glShaderSource(shader, 1, &source, NULL);
@@ -696,25 +653,16 @@ static bool EnsureRenderObjects() {
   }
   glDeleteShader(vertexShader);
   glDeleteShader(fragmentShader);
-  #ifdef SUMO_CSM
   s_uniformView = glGetUniformLocation(s_program, "view");
   s_uniformProjection = glGetUniformLocation(s_program, "projection");
   s_uniformLightDir = glGetUniformLocation(s_program, "lightDir");
   s_uniformViewPos = glGetUniformLocation(s_program, "viewPos");
-  #else
-  s_uniformView = glGetUniformLocation(s_program, "uView");
-  s_uniformProjection = glGetUniformLocation(s_program, "uProjection");
-#endif
   s_uniformFactor = glGetUniformLocation(s_program, "uFactor");
   s_uniformMode = glGetUniformLocation(s_program, "uMode");
   glUseProgram(s_program);
-  #ifdef SUMO_CSM
   glUniform1i(glGetUniformLocation(s_program, "diffuseTexture"), 0);
   glUniform1i(glGetUniformLocation(s_program, "shadowMap"), 1);
   glUniform1i(glGetUniformLocation(s_program, "normalMap"), 2);
-  #else
-  glUniform1i(glGetUniformLocation(s_program, "uTexture"), 0);
-#endif
   if (!s_transformsStored) {
     for (SumoS32 index = 0; index < 16; ++index) {
       s_viewTransform[index] = (index % 5) == 0 ? 1.0f : 0.0f;
@@ -737,17 +685,11 @@ static bool EnsureRenderObjects() {
   glEnableVertexAttribArray(0);
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(GameBoxLitVertex), (const void *)0);
   glEnableVertexAttribArray(1);
-  #ifdef SUMO_CSM
   glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(GameBoxLitVertex),
                         (const void *)(3 * sizeof(float)));
   glEnableVertexAttribArray(2);
   glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(GameBoxLitVertex),
                         (const void *)(6 * sizeof(float)));
-  #else
-  glVertexAttribPointer(1, 4, GL_UNSIGNED_BYTE, GL_TRUE, 24, (const void *)12);
-  glEnableVertexAttribArray(2);
-  glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 24, (const void *)16);
-#endif
   glBindVertexArray(s_positionVertexArray);
   glBindBuffer(GL_ARRAY_BUFFER, s_positionVertexBuffer);
   glBufferData(GL_ARRAY_BUFFER, 0x120000, NULL, GL_STREAM_DRAW);
@@ -772,7 +714,6 @@ static bool EnsureRenderObjects() {
   glVertexAttribPointer(1, 4, GL_UNSIGNED_BYTE, GL_TRUE, 16, (const void *)12);
 
   glBindVertexArray(0);
-  #ifdef SUMO_CSM
 
   s_CSMprogram = glCreateProgram();
   glAttachShader(s_CSMprogram, shadowVertexShader);
@@ -792,7 +733,10 @@ static bool EnsureRenderObjects() {
 
   glGenTextures(1, &depthMap);
   glBindTexture(GL_TEXTURE_2D, depthMap);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, depthMapResolution, depthMapResolution, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT,
+               depthMapResolution * g_gameRenderQualityCode,
+               depthMapResolution * g_gameRenderQualityCode,
+               0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -806,7 +750,7 @@ static bool EnsureRenderObjects() {
   glDrawBuffer(GL_NONE);
   glReadBuffer(GL_NONE);
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
-  #endif
+
   return true;
 }
 
@@ -826,13 +770,11 @@ HRESULT SetGameTransform(SumoU32 state, const SumoF32 *matrix) {
     glUseProgram(s_program);
     glUniformMatrix4fv(s_uniformView, 1, GL_FALSE, s_viewTransform);
     glUniformMatrix4fv(s_uniformProjection, 1, GL_FALSE, s_projectionTransform);
-    #ifdef SUMO_CSM
     glUniform3f(s_uniformLightDir, 0.30000001f, -1.0f, 0.5f);
     glUniform3f(s_uniformViewPos, 
         g_gameCameraPosition.x,
                 g_gameCameraPosition.y, 
         g_gameCameraPosition.z);
-    #endif
   }
   return 0;
 }
@@ -1016,8 +958,6 @@ extern SumoIntPtr g_gameTextures[256];
 extern SumoU8 g_waterFieldActive;
 extern SumoU32 g_screenTintColor;
 void RenderGameBoxes(SumoS32);
-
-SumoS32 g_gameRenderQualityCode = 12;
 SumoS32 g_gameRenderQualityEnabled = 1;
 SumoS32 g_waterGridWidth = 512 * 2;
 SumoS32 g_waterGridHeight = 512 * 2;
@@ -1067,8 +1007,6 @@ HRESULT RenderGameScene() {
 
   glDisable(GL_BLEND);
   glEnable(GL_DEPTH_TEST);
-  //glDepthFunc(GL_LEQUAL);
-  //glDepthMask(GL_TRUE);
   glFrontFace(GL_CW);
   glEnable(GL_CULL_FACE);
   glCullFace(GL_BACK);
@@ -1089,9 +1027,6 @@ HRESULT RenderGameScene() {
   glClearStencil(0);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-  
-#ifdef SUMO_CSM
-
           glm::mat4 lightProjection, lightView;
   glm::mat4 lightSpaceMatrix;
           glm::vec3 lightDir = glm::vec3(0.30000001f, -1.0f, 0.5f);
@@ -1108,43 +1043,28 @@ HRESULT RenderGameScene() {
 
   glUniform3fv(glGetUniformLocation(s_program, "lightDir"), 1, &lightDir[0]); 
     glUniform1i(glGetUniformLocation(s_program, "lightmapSize"),
-              depthMapResolution);
+              depthMapResolution * g_gameRenderQualityCode);
   glUniform1i(glGetUniformLocation(s_program, "lightmapFilter"), 4);
   glUniformMatrix4fv(glGetUniformLocation(s_program, "lightSpaceMatrix"), 1, GL_FALSE, &lightSpaceMatrix[0][0]); 
   glUseProgram(s_CSMprogram);
   glUniformMatrix4fv(glGetUniformLocation(s_CSMprogram, "lightSpaceMatrix"), 1,GL_FALSE, &lightSpaceMatrix[0][0]); 
 
-
-  #endif
   bool firstLightPass = true;
-  #ifndef SUMO_CSM
-  SumoS32 passCount = g_gameRenderQualityCode;
-  #else
   SumoS32 passCount = 2;
-  #endif
+
   SumoS32 pass = 0;
   SumoS16 *triangleCounts = (SumoS16 *)g_gameBoxTextureTriangleCounts;
   if (passCount > 0) {
     do {
-        #ifndef SUMO_CSM
-      g_gameBoxLightDirection = MakeGameRenderVector3(0.30000001f, 1.0f, 0.5f);
-      Vector3 lightRotation = MakeGameRenderVector3(
-          0.0f,
-          (SumoF32)pass * g_gameLightPassRotationStep / (SumoF32)passCount,
-          0.0f);
-      SumoU32 textureFactor = 526086u * ((288 / (passCount + 1) + 8) / 16);
-      g_gameBoxLightDirection.Rotate(lightRotation);
-      g_gameBoxLightDirection.Normalize();
-      #else
       if (firstLightPass)
         {
         glUseProgram(s_CSMprogram);
         glBindFramebuffer(GL_FRAMEBUFFER, lightFBO);
-        glViewport(0, 0, depthMapResolution, depthMapResolution);
+        glViewport(0, 0, depthMapResolution * g_gameRenderQualityCode,
+                   depthMapResolution * g_gameRenderQualityCode);
         glClear(GL_DEPTH_BUFFER_BIT);
         glCullFace(GL_FRONT); // peter panning
         }
-        #endif
       SumoU32 *triangleCountWords = (SumoU32 *)triangleCounts;
       for (SumoS32 word = 0; word < 64; ++word)
         triangleCountWords[word] = 0;
@@ -1152,17 +1072,7 @@ HRESULT RenderGameScene() {
       g_gameBoxLitVertexCursor = g_gameBoxLitVertexStorage;
       g_gameBoxShadowPositionCursor = g_gameBoxShadowPositionStorage;
       RenderGameBoxes(0);
-      #ifndef SUMO_CSM
-      SumoS32 shadowTriangleCount =
-          (SumoS32)((Vector3 *)g_gameBoxShadowPositionCursor -
-                    (Vector3 *)g_gameBoxShadowPositionStorage) /
-          3;
-      glBindBuffer(GL_ARRAY_BUFFER, s_positionVertexBuffer);
-      glBufferData(GL_ARRAY_BUFFER, 0x120000, NULL, GL_STREAM_DRAW);
-      glBufferSubData(GL_ARRAY_BUFFER, 0,
-                      shadowTriangleCount * 3 * (SumoS32)sizeof(Vector3),
-                      g_gameBoxShadowPositionStorage);
-      #endif
+
       SumoS32 triangleCount = 0;
       for (SumoS32 texture = 0; texture < 128; ++texture) {
         g_gameBoxTextureTriangleOffsets[texture] = (SumoS16)triangleCount;
@@ -1198,60 +1108,10 @@ HRESULT RenderGameScene() {
                       emittedTriangleCount * 3 *
                           (SumoS32)sizeof(GameBoxLitVertex),
                       s_mainVertexStaging);
-      glBindVertexArray(s_mainVertexArray);
-      #ifndef SUMO_CSM
-      if (g_gameRenderQualityEnabled) {
-        glEnable(GL_STENCIL_TEST);
-        glStencilFunc(GL_ALWAYS, 8, 0xffu);
-        glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
-      }
-      #endif
-     // if (firstLightPass) {
-       // SetRenderFactor(0x00203040);
-     // } else {
-        SetRenderFactor(0);
-        //glDepthMask(GL_FALSE);
-     // }
-#ifndef SUMO_CSM
-      glUniform1i(s_uniformMode, c_renderModeFlat);
-      if (g_gameRenderQualityEnabled || firstLightPass) {
-        glDrawArrays(GL_TRIANGLES, 0, triangleCount * 3);
-      }
 
-      glDepthMask(GL_FALSE);
-      glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-      glEnable(GL_STENCIL_TEST);
-      glStencilFunc(GL_ALWAYS, 8, 0xffu);
-      glStencilOp(GL_INCR_WRAP, GL_KEEP, GL_INCR_WRAP);
-      
-      if (g_gameRenderQualityEnabled) {
-        glBindVertexArray(s_positionVertexArray);
-        glCullFace(GL_FRONT);
-        glDrawArrays(GL_TRIANGLES, 0, shadowTriangleCount * 3);
-        glCullFace(GL_BACK);
-        glStencilOp(GL_DECR_WRAP, GL_KEEP, GL_DECR_WRAP);
-        glDrawArrays(GL_TRIANGLES, 0, shadowTriangleCount * 3);
-      }
-      #endif
+      glBindVertexArray(s_mainVertexArray);
       glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-#ifndef SUMO_CSM
-      if (firstLightPass) {
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_ONE, GL_ONE);
-        firstLightPass = false;
-      }
-      #else
-
-      #endif
-
       glBindVertexArray(s_mainVertexArray);
-#ifndef SUMO_CSM
-      if (g_gameRenderQualityEnabled) {
-        glEnable(GL_STENCIL_TEST);
-        glStencilFunc(GL_GEQUAL, 8, 0xffu);
-        glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
-      }
-#endif
       glUniform1i(s_uniformMode, c_renderModeAlbedo);
       SetRenderFactor(g_screenTintColor);
       for (SumoS32 texture = 0; texture < 128; ++texture) {
@@ -1269,9 +1129,7 @@ HRESULT RenderGameScene() {
                        triangleCounts[texture] * 3);
         }
       }
-      //glDepthMask(GL_TRUE);
-     // glDisable(GL_STENCIL_TEST);
-      #ifdef SUMO_CSM
+
       if (firstLightPass) 
       {
         glUseProgram(s_program);
@@ -1287,7 +1145,6 @@ HRESULT RenderGameScene() {
 
           firstLightPass = false;
       }
-      #endif
 
     } while (++pass < passCount);
   }

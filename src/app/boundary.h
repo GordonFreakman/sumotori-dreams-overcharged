@@ -89,7 +89,7 @@ struct SumoStartupConfig {
   SumoS32 width;
   SumoS32 height;
   bool fullscreen;
-  SumoS32 quality;
+  int quality;
   bool soundEnabled;
   bool soundRandomized;
   SumoS32 audioBackend;
@@ -97,7 +97,7 @@ struct SumoStartupConfig {
   char modPath[1024];
 };
 void SumoLoadStartupConfig(SumoStartupConfig *config);
-void ApplyGameQuality(SumoS32 qualityCode);
+void ApplyGameQuality(int qualityCode);
 void SumoSaveStartupConfig(const SumoStartupConfig *config);
 bool SumoRunStartupUI(SumoStartupConfig *config);
 

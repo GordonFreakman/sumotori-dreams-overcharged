@@ -461,7 +461,14 @@ void UpdateGameMenuScreen(SumoU8 drawOverlay) {
   }
 
   if (g_gamePrimaryInputPressed) {
+      if (g_gameMenuPage == 0)
     g_gameLevelEditorCloseRequested = 1;
+     else
+     {
+        g_gameMenuPage = 0;
+        InitializeGameRuntimeState();
+     }
+     g_gamePrimaryInputPressed = 0;
   }
 
   if (drawOverlay) {
@@ -5334,8 +5341,8 @@ void RunGameFrame(SumoU8 renderFrame) {
   if (g_gameKeyPressed[c_gameScreenshotInput]) {
     g_gameKeyPressed[c_gameScreenshotInput] = 0;
     screenshotRequested = 1;
-    g_gameRenderQualityCode = 12;
-    g_gameRenderQualityEnabled = 1;
+    //g_gameRenderQualityCode = 12;
+    //g_gameRenderQualityEnabled = 1;
   }
 
   if (g_gameMode <= 0) {
