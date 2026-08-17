@@ -21,7 +21,7 @@ GameBox g_cutPlaneBox;
 
 GameBox g_clipScratchBox;
 
-GameCollisionPointRecord g_gameCollisionPoints[8192];
+GameCollisionPointRecord g_gameCollisionPoints[16384];
 
 GameCollisionFeatureLink *g_gameCollisionFeatureLinksEnd;
 
@@ -952,7 +952,7 @@ void GameBox::Render() {
   g_gameBoxTransformedPoints.Resize((SumoS32)(pointsEnd - pointsBegin) + 1);
   Vector3 *transformed = &g_gameBoxTransformedPoints[0];
   for (GameBoxPoint *point = pointsBegin; point < pointsEnd; ++point) {
-    *transformed = point->position.Transform(orientation) + position;
+    *transformed = point->position;//.Transform(orientation) + position;
     ++transformed;
   }
 
@@ -1044,7 +1044,9 @@ void GameBox::Render() {
           #ifndef SUMO_CSM
           vertex->color = color;
           #else
-          vertex->normals = orientation.Inverted().Transposed().Transform(face->normal);
+          vertex->worldPosition = position;
+          vertex->orientation = orientation;
+          vertex->normals = face->normal;
           vertex->normals.Normalize();
           #endif
           g_gameBoxLitVertexCursor ++;
@@ -1931,10 +1933,25 @@ void ResolveGameCollisions() {
     g_gameCollisionPointScratchFlag = 0;
     record->inverseResponse = responseSum.Inverted();
   }
+  int iterationCount = 40;
+  if (g_gameBoxesEnd > g_gameBoxes + 256)
+  {
+      iterationCount = 20;
+  }
 
-  for (SumoS32 iteration = 0; iteration < 40; ++iteration) {
+  if (g_gameBoxesEnd > g_gameBoxes + 400) 
+  {
+    iterationCount = 2;
+  }
+
+  for (SumoS32 iteration = 0; iteration < iterationCount; ++iteration) {
+    int time = 0;
     for (GameCollisionPointRecord *record = g_gameCollisionPoints;
          record < g_gameCollisionPointsEnd; ++record) {
+      time++;
+
+      if (time > 16300)
+        continue;
       SumoS32 remaining = record->iterationCount;
       if (remaining == 0)
         continue;

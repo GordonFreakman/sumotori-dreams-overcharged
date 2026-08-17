@@ -144,6 +144,8 @@ struct GameBoxLitVertex {
   SumoS32 color;
 #else
   Vector3 normals;
+  Vector3 worldPosition;
+  Matrix3 orientation;
 #endif
   SumoF32 u;
   SumoF32 v;

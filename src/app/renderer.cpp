@@ -512,12 +512,15 @@ static const char *const c_vertexShaderSource =
     "#version 330 core\n"
     "layout(location = 0) in vec3 aPosition;\n"
     "layout(location = 1) in vec3 aNormal;\n"
-    "layout(location = 2) in vec2 aTexCoord;\n"
+    "layout(location = 2) in vec3 aWorldPosition;\n"
+    "layout(location = 3) in mat3 aOrientation;\n"
+    "layout(location = 6) in vec2 aTexCoord;\n"
     "uniform mat4 view;\n"
     "uniform mat4 projection;\n" 
+    "uniform int uMode;\n"
     "uniform mat4 lightSpaceMatrix;"
     "out VS_OUT {\n" 
-     "vec3 FragPos;\n" 
+    "vec3 FragPos;\n" 
     "vec3 Normal;\n" 
     "vec2 TexCoords;\n" 
     "vec4 FragPosLightSpace;\n"
@@ -525,9 +528,16 @@ static const char *const c_vertexShaderSource =
     "vs_out;\n"
 
     "void main() {\n"
-    "  vec4 clip = projection * (view * vec4(aPosition, 1.0));\n"
+    "if (uMode == 2){\n"
+    "  vs_out.FragPos = (aPosition * transpose(aOrientation)) + aWorldPosition;\n"
+    "  vs_out.Normal = transpose(inverse(aOrientation))*aNormal;\n"
+    "}"
+    "else {\n"
     "  vs_out.FragPos = aPosition;\n"
     "  vs_out.Normal = aNormal;\n"
+    "}\n"
+    "  vec4 clip = projection * (view * vec4(vs_out.FragPos, 1.0));\n"
+    
     "  gl_Position = vec4(clip.x, clip.y, clip.z * 2.0 - clip.w, clip.w);\n"
     "vs_out.FragPosLightSpace = lightSpaceMatrix * vec4(vs_out.FragPos, 1.0);\n"
     "  vs_out.TexCoords = aTexCoord;\n"
@@ -600,9 +610,14 @@ static const char *const c_fragmentShaderSource =
     "}";
 
 static const char *const c_lightDepthVertex =
-"#version 330 core \nlayout(location = 0) in vec3 aPos;"
-"uniform mat4 lightSpaceMatrix;\n"
-"void main() { gl_Position = lightSpaceMatrix * vec4(aPos, 1.0); }";
+"#version 330 core \n"
+    "layout(location = 0) in vec3 aPosition;\n"
+    "layout(location = 1) in vec3 aNormal;\n"
+    "layout(location = 2) in vec3 aWorldPosition;\n"
+    "layout(location = 3) in mat3 aOrientation;\n"
+    "layout(location = 6) in vec2 aTexCoord;\n"
+    "uniform mat4 lightSpaceMatrix;\n"
+"void main() { gl_Position = lightSpaceMatrix * vec4((aPosition * transpose(aOrientation)) + aWorldPosition, 1.0); }";
 
 static const char *const c_lightDepthPixel = "#version 330 core\n void main() { gl_FragDepth = gl_FragCoord.z; }";
 
@@ -686,10 +701,24 @@ static bool EnsureRenderObjects() {
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(GameBoxLitVertex), (const void *)0);
   glEnableVertexAttribArray(1);
   glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(GameBoxLitVertex),
-                        (const void *)(3 * sizeof(float)));
+                        (const void *)(offsetof(GameBoxLitVertex,normals)));
   glEnableVertexAttribArray(2);
-  glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(GameBoxLitVertex),
-                        (const void *)(6 * sizeof(float)));
+  glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(GameBoxLitVertex),
+                        (const void *)(offsetof(GameBoxLitVertex, worldPosition)));
+
+  glEnableVertexAttribArray(3);
+  glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(GameBoxLitVertex),
+                        (const void *)(offsetof(GameBoxLitVertex, orientation.m00)));
+  glEnableVertexAttribArray(4);
+  glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeof(GameBoxLitVertex),
+      (const void *)(offsetof(GameBoxLitVertex, orientation.m10)));
+  glEnableVertexAttribArray(5);
+  glVertexAttribPointer(5, 3, GL_FLOAT, GL_FALSE, sizeof(GameBoxLitVertex),
+      (const void *)(offsetof(GameBoxLitVertex, orientation.m20)));
+
+  glEnableVertexAttribArray(6);
+  glVertexAttribPointer(6, 2, GL_FLOAT, GL_FALSE, sizeof(GameBoxLitVertex),
+      (const void *)(offsetof(GameBoxLitVertex, u)));
   glBindVertexArray(s_positionVertexArray);
   glBindBuffer(GL_ARRAY_BUFFER, s_positionVertexBuffer);
   glBufferData(GL_ARRAY_BUFFER, 0x120000, NULL, GL_STREAM_DRAW);
@@ -703,8 +732,8 @@ static bool EnsureRenderObjects() {
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 24, (const void *)0);
   glEnableVertexAttribArray(1);
   glVertexAttribPointer(1, 4, GL_UNSIGNED_BYTE, GL_TRUE, 24, (const void *)12);
-  glEnableVertexAttribArray(2);
-  glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 24, (const void *)16);
+  glEnableVertexAttribArray(6);
+  glVertexAttribPointer(6, 2, GL_FLOAT, GL_FALSE, 24, (const void *)16);
 
   glBindVertexArray(s_streamLineVertexArray);
   glBindBuffer(GL_ARRAY_BUFFER, s_streamVertexBuffer);
