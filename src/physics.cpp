@@ -21,7 +21,7 @@ GameBox g_cutPlaneBox;
 
 GameBox g_clipScratchBox;
 
-GameCollisionPointRecord g_gameCollisionPoints[8192];
+GameCollisionPointRecord g_gameCollisionPoints[16384];
 
 GameCollisionFeatureLink *g_gameCollisionFeatureLinksEnd;
 
@@ -42,7 +42,7 @@ GameCollisionPointRecord *g_gameCollisionPointsEnd;
 SumoU8 g_gameCollisionGroupSentinel;
 
 SumoU8 g_gameBoxTextureTriangleCounts[0x100];
-SumoU8 g_gameBoxLitVertexStorage[0x240000];
+GameBoxLitVertex g_gameBoxLitVertexStorage[98304];
 SumoU8 g_gameBoxShadowPositionStorage[0x120000];
 SumoU8 g_gameBoxIndexPairStorage[0x20000];
 
@@ -50,7 +50,7 @@ SumoS16 g_gameBoxTriangleOrder[0x8000];
 
 // GLOBAL: SUMO 0x00775dd8
 // GLOBAL: EDITOR 0x007765f8
-SumoU8 *g_gameBoxLitVertexCursor;
+GameBoxLitVertex *g_gameBoxLitVertexCursor;
 
 // GLOBAL: SUMO 0x00775ddc
 // GLOBAL: EDITOR 0x007765fc
@@ -937,21 +937,13 @@ extern SumoF32 g_gameArenaExtent;
 extern SumoU8 *g_gameBoxIndexPairCursor;
 extern Vector3 g_gameBoxLightDirection;
 extern const SumoF32 g_gameBoxLightScale;
-extern SumoU8 *g_gameBoxLitVertexCursor;
 extern const SumoF32 g_gameBoxNegativeLightScale;
 extern SumoU8 *g_gameBoxShadowPositionCursor;
 extern SumoU8 g_gameBoxTextureTriangleCounts[0x100];
 extern RuntimeVector3Vector g_gameBoxTransformedPoints;
 extern const SumoF32 g_textureCenterFloat;
 
-struct GameBoxLitVertex {
-  Vector3 position;
-  SumoS32 color;
-  SumoF32 u;
-  SumoF32 v;
-};
-
-DECOMP_SIZE_ASSERT(GameBoxLitVertex, 0x18);
+//DECOMP_SIZE_ASSERT(GameBoxLitVertex, 0x18);
 
 void GameBox::Render() {
   if (flag58 != 0)
@@ -960,7 +952,7 @@ void GameBox::Render() {
   g_gameBoxTransformedPoints.Resize((SumoS32)(pointsEnd - pointsBegin) + 1);
   Vector3 *transformed = &g_gameBoxTransformedPoints[0];
   for (GameBoxPoint *point = pointsBegin; point < pointsEnd; ++point) {
-    *transformed = point->position.Transform(orientation) + position;
+    *transformed = point->position;//.Transform(orientation) + position;
     ++transformed;
   }
 
@@ -997,7 +989,7 @@ void GameBox::Render() {
     Vector3 uAxis = axis.Cross(normal);
     uAxis.Normalize();
     Vector3 vAxis = uAxis.Cross(normal);
-
+    #ifndef SUMO_CSM
     SumoS32 red = (SumoS32)((lightLocal.z * normal.z + lightLocal.y * normal.y +
                              lightLocal.x * normal.x) *
                                 g_gameBoxNegativeLightScale +
@@ -1011,7 +1003,7 @@ void GameBox::Render() {
                               uAxis.x * lightLocal.x) *
                                  g_gameBoxLightScale);
     SumoS32 color = blue - (((-red << 8) + green) << 8);
-
+    #endif
     uAxis.x = uAxis.x * defaultValue;
     uAxis.y = uAxis.y * defaultValue;
     uAxis.z = uAxis.z * defaultValue;
@@ -1033,8 +1025,7 @@ void GameBox::Render() {
 
         for (SumoS32 corner = 0; corner < 3; ++corner) {
           SumoS32 referenceIndex = corners[corner];
-          GameBoxLitVertex *vertex =
-              (GameBoxLitVertex *)g_gameBoxLitVertexCursor;
+          GameBoxLitVertex *vertex = g_gameBoxLitVertexCursor;
           vertex->position =
               g_gameBoxTransformedPoints[face->pointReferences[referenceIndex]
                                              .index];
@@ -1050,15 +1041,22 @@ void GameBox::Render() {
                     accumulatedForce;
           vertex->v =
               vAxis.z * shifted.z + vAxis.y * shifted.y + vAxis.x * shifted.x;
-
+          #ifndef SUMO_CSM
           vertex->color = color;
-          g_gameBoxLitVertexCursor += sizeof(GameBoxLitVertex);
+          #else
+          vertex->worldPosition = position;
+          vertex->orientation = orientation;
+          vertex->normals = face->normal;
+          vertex->normals.Normalize();
+          #endif
+          g_gameBoxLitVertexCursor ++;
         }
       }
     }
   }
 
   SumoF32 negatedExtent = -g_gameArenaExtent;
+  #ifndef SUMO_CSM
   Vector3 shadowOffset = g_gameBoxLightDirection.Scale(negatedExtent);
 
   for (GameBoxEdge *edge = edgesBegin; edge < edgesEnd; ++edge) {
@@ -1093,6 +1091,7 @@ void GameBox::Render() {
     *(Vector3 *)g_gameBoxShadowPositionCursor = corners[3];
     g_gameBoxShadowPositionCursor += sizeof(Vector3);
   }
+  #endif
 }
 
 extern const SumoF32 g_randomHalf = 0.5f;
@@ -1755,10 +1754,12 @@ SumoF64 ParserAtan2(SumoF32 y, SumoF32 x);
 void ResolveGameCollisions() {
   g_gameCollisionPointsEnd = g_gameCollisionPoints;
   g_gameCollisionCorrectionsEnd = g_gameCollisionCorrections;
-
+  int activeGameBoxes = 0;
   for (GameBox *outer = g_gameBoxes; outer < g_gameBoxesEnd; ++outer) {
     if (outer->flag58)
       continue;
+    activeGameBoxes++;
+
     if (outer->immovable == 0 && outer->sleeping == 0) {
       if (outer <= g_gameBoxes)
         continue;
@@ -1934,10 +1935,25 @@ void ResolveGameCollisions() {
     g_gameCollisionPointScratchFlag = 0;
     record->inverseResponse = responseSum.Inverted();
   }
+  int iterationCount = 40;
+  if (activeGameBoxes > 256)
+  {
+      iterationCount = 30;
+  }
 
-  for (SumoS32 iteration = 0; iteration < 40; ++iteration) {
+  if (activeGameBoxes > 400) 
+  {
+    iterationCount = 2;
+  }
+
+  for (SumoS32 iteration = 0; iteration < iterationCount; ++iteration) {
+    int time = 0;
     for (GameCollisionPointRecord *record = g_gameCollisionPoints;
          record < g_gameCollisionPointsEnd; ++record) {
+      time++;
+
+      if (time > 16300)
+        continue;
       SumoS32 remaining = record->iterationCount;
       if (remaining == 0)
         continue;
