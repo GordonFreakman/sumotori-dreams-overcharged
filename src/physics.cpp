@@ -1754,10 +1754,12 @@ SumoF64 ParserAtan2(SumoF32 y, SumoF32 x);
 void ResolveGameCollisions() {
   g_gameCollisionPointsEnd = g_gameCollisionPoints;
   g_gameCollisionCorrectionsEnd = g_gameCollisionCorrections;
-
+  int activeGameBoxes = 0;
   for (GameBox *outer = g_gameBoxes; outer < g_gameBoxesEnd; ++outer) {
     if (outer->flag58)
       continue;
+    activeGameBoxes++;
+
     if (outer->immovable == 0 && outer->sleeping == 0) {
       if (outer <= g_gameBoxes)
         continue;
@@ -1934,12 +1936,12 @@ void ResolveGameCollisions() {
     record->inverseResponse = responseSum.Inverted();
   }
   int iterationCount = 40;
-  if (g_gameBoxesEnd > g_gameBoxes + 256)
+  if (activeGameBoxes > 256)
   {
-      iterationCount = 20;
+      iterationCount = 30;
   }
 
-  if (g_gameBoxesEnd > g_gameBoxes + 400) 
+  if (activeGameBoxes > 400) 
   {
     iterationCount = 2;
   }

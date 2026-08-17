@@ -603,7 +603,7 @@ static const char *const c_fragmentShaderSource =
     "float spec = 0.0;\n"
     "vec3 halfwayDir = normalize(lightDir + viewDir);  \n"
     "spec = pow(max(dot(normal, halfwayDir), 0.0), 2.0);\n"
-    "vec3 specular = spec * lightColor  * (texture(normalMap, fs_in.TexCoords).r * 0.5f); \n"
+    "vec3 specular = spec * lightColor  * (texture(normalMap, fs_in.TexCoords).a * 0.5f); \n"
     "float shadow = ShadowCalculation(fs_in.FragPosLightSpace);\n"
     "vec3 lighting = ((ambient + diffuse * 0.05)  + (1.0 - shadow) * (diffuse + specular)) * vec3(color);\n"
     "FragColor = vec4(uFactor * lighting, color.a);\n"
@@ -1023,7 +1023,7 @@ SumoS16 g_gameBoxTextureTriangleOffsets[128];
 
 extern SumoS16 g_gameBoxTriangleOrder[];
 
-static SumoU8 s_mainVertexStaging[0x240000];
+static GameBoxLitVertex s_mainVertexStaging[98304];
 
 HRESULT RenderGameScene() {
   if (!EnsureRenderObjects())
@@ -1121,7 +1121,7 @@ HRESULT RenderGameScene() {
         } while ((SumoU8 *)pair < g_gameBoxIndexPairCursor);
       }
 
-      GameBoxLitVertex *lockedVertices = (GameBoxLitVertex *)s_mainVertexStaging;
+      GameBoxLitVertex *lockedVertices = s_mainVertexStaging;
       GameBoxLitVertex *sourceVertices = g_gameBoxLitVertexStorage;
       for (SumoS32 triangle = 0; triangle < emittedTriangleCount; ++triangle) {
         *lockedVertices++ =

@@ -227,10 +227,14 @@ char g_gameMenuWarningText[] =
     "trained professionals!!! Do not try this at home!!!\n \n"
     "Rules: When you hit the ground, you lose\n"
     "winner is the one, who stays on feet for the longest\n \n"
+    "Original game created by Peter Soltesz.\n"
+    "Please purchase the original version of the game if you haven't already.\n \n"
     "Original decompile & portable version created by siohaza\n"
     "https://github.com/siohaza/sumotori-dreams-re\n"
     "Sumotori Dreams: Overcharged by Gordon Freakman\n \n"
-    "Features:\n - Directional audio\n - More wacky gamemodes\n - Engine enhancements\n - Cross platform\n - Optional randomized sound";
+    "Features:\n - Directional audio\n - Increased engine limits\n - More textures to work with\n - Extra gamemodes \n \n"
+    
+    "OpenGL shadow map impelmentation taken from \nJoey de Vries' LearnOpenGL article.\n";
 
 // GLOBAL: SUMO 0x004ea480
 SumoS32 g_gameHumanPlayerCount;
