@@ -2203,9 +2203,9 @@ SumoIntPtr CreateGameNormalMapTexture(SumoU8 *heightMap, SumoS32 width,
       SumoS32 lengthSquared = deltaY * deltaY + depthSquared + deltaX * deltaX;
       SumoS32 length = (SumoS32)(sqrt((double)lengthSquared) * lengthSignFloat);
 
-      cursor[0] = (SumoU8)((SumoU8)((deltaX << 8) / length) + 0x7f);
+      cursor[2] = (SumoU8)((SumoU8)((deltaX << 8) / length) + 0x7f);
       cursor[1] = (SumoU8)((SumoU8)((deltaY << 8) / length) + 0x7f);
-      cursor[2] = (SumoU8)((SumoU8)(depthScaled / length) + 0x7f);
+      cursor[0] = (SumoU8)((SumoU8)(depthScaled / length) + 0x7f);
       cursor[3] = current[0];
       cursor += 4;
 

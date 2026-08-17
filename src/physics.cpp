@@ -956,16 +956,8 @@ void GameBox::Render() {
     ++transformed;
   }
 
-  Vector3 lightLocal = orientation.Transform(g_gameBoxLightDirection);
-
   SumoS16 *triangleCounts = (SumoS16 *)&g_gameBoxTextureTriangleCounts;
   for (GameBoxFace *face = facesBegin; face < facesEnd; ++face) {
-    if (lightLocal.y * face->normal.y + lightLocal.z * face->normal.z +
-            lightLocal.x * face->normal.x >
-        g_vectorZero)
-      face->visible20 = 1;
-    else
-      face->visible20 = 0;
 
     Vector3 normal = face->normal;
     normal.Normalize();
@@ -989,21 +981,7 @@ void GameBox::Render() {
     Vector3 uAxis = axis.Cross(normal);
     uAxis.Normalize();
     Vector3 vAxis = uAxis.Cross(normal);
-    #ifndef SUMO_CSM
-    SumoS32 red = (SumoS32)((lightLocal.z * normal.z + lightLocal.y * normal.y +
-                             lightLocal.x * normal.x) *
-                                g_gameBoxNegativeLightScale +
-                            g_textureCenterFloat);
-    SumoS32 green = (SumoS32)((vAxis.y * lightLocal.y + vAxis.z * lightLocal.z +
-                               lightLocal.x * vAxis.x) *
-                                  g_gameBoxLightScale -
-                              g_textureCenterFloat);
-    SumoS32 blue = (SumoS32)(g_textureCenterFloat -
-                             (uAxis.y * lightLocal.y + uAxis.z * lightLocal.z +
-                              uAxis.x * lightLocal.x) *
-                                 g_gameBoxLightScale);
-    SumoS32 color = blue - (((-red << 8) + green) << 8);
-    #endif
+
     uAxis.x = uAxis.x * defaultValue;
     uAxis.y = uAxis.y * defaultValue;
     uAxis.z = uAxis.z * defaultValue;
@@ -1022,7 +1000,7 @@ void GameBox::Render() {
         ++triangleCounts[type];
         *(SumoS16 *)(g_gameBoxIndexPairCursor + 2) = (SumoS16)type;
         g_gameBoxIndexPairCursor += 4;
-
+        GameBoxLitVertex *initalVertex[3];
         for (SumoS32 corner = 0; corner < 3; ++corner) {
           SumoS32 referenceIndex = corners[corner];
           GameBoxLitVertex *vertex = g_gameBoxLitVertexCursor;
@@ -1041,57 +1019,37 @@ void GameBox::Render() {
                     accumulatedForce;
           vertex->v =
               vAxis.z * shifted.z + vAxis.y * shifted.y + vAxis.x * shifted.x;
-          #ifndef SUMO_CSM
-          vertex->color = color;
-          #else
+
           vertex->worldPosition = position;
           vertex->orientation = orientation;
           vertex->normals = face->normal;
           vertex->normals.Normalize();
-          #endif
+          initalVertex[corner] = g_gameBoxLitVertexCursor;
           g_gameBoxLitVertexCursor ++;
         }
+
+        Vector3 uv0 = MakeVector3(initalVertex[0]->u, initalVertex[0]->v, 0.0f);
+        Vector3 uv1 = MakeVector3(initalVertex[1]->u, initalVertex[1]->v, 0.0f);
+        Vector3 uv2 = MakeVector3(initalVertex[2]->u, initalVertex[2]->v, 0.0f);
+
+        Vector3 deltaPos1 = initalVertex[1]->position - initalVertex[0]->position;
+        Vector3 deltaPos2 = initalVertex[2]->position - initalVertex[0]->position;
+
+        Vector3 deltaUV1 = uv1 - uv0;
+        Vector3 deltaUV2 = uv2 - uv0;
+
+        float r = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV1.y * deltaUV2.x);
+
+        Vector3 tangent = (deltaPos1.Scale(deltaUV2.y) - deltaPos2.Scale(deltaUV1.y)).Scale(r);
+
+        initalVertex[0]->tangent = tangent;
+        initalVertex[1]->tangent = tangent;
+        initalVertex[2]->tangent = tangent;
       }
     }
   }
 
   SumoF32 negatedExtent = -g_gameArenaExtent;
-  #ifndef SUMO_CSM
-  Vector3 shadowOffset = g_gameBoxLightDirection.Scale(negatedExtent);
-
-  for (GameBoxEdge *edge = edgesBegin; edge < edgesEnd; ++edge) {
-    SumoU8 firstLit = edge->firstFace->visible20;
-    SumoS32 flip;
-    if (firstLit == 0 && edge->secondFace->visible20 == 1) {
-      flip = 0;
-    } else {
-      if (edge->secondFace->visible20 != 0 || firstLit != 1)
-        continue;
-      flip = 1;
-    }
-
-    Vector3 corners[4];
-    corners[flip ^ 1] = g_gameBoxTransformedPoints[edge->firstIndex];
-    corners[flip] = g_gameBoxTransformedPoints[edge->secondIndex];
-    corners[2 + (flip ^ 1)] =
-        g_gameBoxTransformedPoints[edge->secondIndex] + shadowOffset;
-    corners[2 + flip] =
-        g_gameBoxTransformedPoints[edge->firstIndex] + shadowOffset;
-
-    *(Vector3 *)g_gameBoxShadowPositionCursor = corners[0];
-    g_gameBoxShadowPositionCursor += sizeof(Vector3);
-    *(Vector3 *)g_gameBoxShadowPositionCursor = corners[1];
-    g_gameBoxShadowPositionCursor += sizeof(Vector3);
-    *(Vector3 *)g_gameBoxShadowPositionCursor = corners[2];
-    g_gameBoxShadowPositionCursor += sizeof(Vector3);
-    *(Vector3 *)g_gameBoxShadowPositionCursor = corners[0];
-    g_gameBoxShadowPositionCursor += sizeof(Vector3);
-    *(Vector3 *)g_gameBoxShadowPositionCursor = corners[2];
-    g_gameBoxShadowPositionCursor += sizeof(Vector3);
-    *(Vector3 *)g_gameBoxShadowPositionCursor = corners[3];
-    g_gameBoxShadowPositionCursor += sizeof(Vector3);
-  }
-  #endif
 }
 
 extern const SumoF32 g_randomHalf = 0.5f;

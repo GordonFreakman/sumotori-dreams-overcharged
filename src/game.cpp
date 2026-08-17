@@ -483,11 +483,11 @@ void UpdateGameMenuScreen(SumoU8 drawOverlay) {
           (0x007f007f & ((SumoS32)g_screenTintColor / 2)) +
           ((3 * ((SumoS32)g_screenTintColor & 0xff00) / 4) & 0xff00);
     }
-    DrawGameText(-0.4f, 0.56f, "Sumotori Dreams: Overcharged", 0xc08080ff);
+    DrawGameText(-0.4f, 0.56f, "Sumotori Dreams: Overcharged v0.05", 0xc08080ff);
     DrawGameText(0.27000001f, -0.5, "\"Tested on party animals\"",
                  0xc0ffffff);
     DrawGameText(-0.85000002f, -0.5,
-                 "GordonFreakman/sumotori-dreams-overcharged", 0xc0ffffff);
+                 "www.gravitysensation.com/sumotori/", 0xc0ffffff);
   }
 }
 

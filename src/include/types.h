@@ -145,6 +145,7 @@ struct GameBoxLitVertex {
 #else
   Vector3 normals;
   Vector3 worldPosition;
+  Vector3 tangent;
   Matrix3 orientation;
 #endif
   SumoF32 u;

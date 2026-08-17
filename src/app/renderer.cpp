@@ -515,29 +515,43 @@ static const char *const c_vertexShaderSource =
     "layout(location = 2) in vec3 aWorldPosition;\n"
     "layout(location = 3) in mat3 aOrientation;\n"
     "layout(location = 6) in vec2 aTexCoord;\n"
+    "layout(location = 7) in vec3 aTangent;\n"
     "uniform mat4 view;\n"
     "uniform mat4 projection;\n" 
     "uniform int uMode;\n"
     "uniform mat4 lightSpaceMatrix;"
+    "uniform vec3 lightDir;\n"
+    "uniform vec3 viewPos;\n"
     "out VS_OUT {\n" 
     "vec3 FragPos;\n" 
     "vec3 Normal;\n" 
     "vec2 TexCoords;\n" 
     "vec4 FragPosLightSpace;\n"
+    "  vec3 TangentLightPos;\n"
+    "  vec3 TangentViewPos;\n"
+    "  vec3 TangentFragPos;\n"
     "}\n" 
     "vs_out;\n"
 
     "void main() {\n"
     "if (uMode == 2){\n"
-    "  vs_out.FragPos = (aPosition * transpose(aOrientation)) + aWorldPosition;\n"
-    "  vs_out.Normal = transpose(inverse(aOrientation))*aNormal;\n"
+    "vs_out.FragPos = (aPosition * transpose(aOrientation)) + aWorldPosition;\n"
+    "mat3 normalMatrix = transpose(inverse(aOrientation));"
+    "vec3 T = normalize(normalMatrix * aTangent);"
+    "vec3 N = normalize(normalMatrix * aNormal);"
+    "T = normalize(T - dot(T, N) * N);"
+    "vec3 B = cross(N, T);"
+    "mat3 TBN = transpose(mat3(T, B, N));"
+    "vs_out.Normal = transpose(inverse(aOrientation))*aNormal;\n"
+    "vs_out.TangentLightPos = TBN * lightDir;"
+    "vs_out.TangentViewPos = TBN * viewPos;"
+    "vs_out.TangentFragPos = TBN * vs_out.FragPos;"
     "}"
     "else {\n"
     "  vs_out.FragPos = aPosition;\n"
     "  vs_out.Normal = aNormal;\n"
     "}\n"
     "  vec4 clip = projection * (view * vec4(vs_out.FragPos, 1.0));\n"
-    
     "  gl_Position = vec4(clip.x, clip.y, clip.z * 2.0 - clip.w, clip.w);\n"
     "vs_out.FragPosLightSpace = lightSpaceMatrix * vec4(vs_out.FragPos, 1.0);\n"
     "  vs_out.TexCoords = aTexCoord;\n"
@@ -551,6 +565,9 @@ static const char *const c_fragmentShaderSource =
     "  vec3 Normal;\n"
     "  vec2 TexCoords;\n"
     "  vec4 FragPosLightSpace;\n"
+    "  vec3 TangentLightPos;\n"
+    "  vec3 TangentViewPos;\n"
+    "  vec3 TangentFragPos;\n"
     "}\n"
     "fs_in;\n"
     "uniform sampler2D diffuseTexture;\n"
@@ -593,15 +610,18 @@ static const char *const c_fragmentShaderSource =
     "return;\n}"
 
     "vec4 color = texture(diffuseTexture, fs_in.TexCoords).rgba;\n"
-    "vec3 normal = normalize(fs_in.Normal);\n"
-    "vec3 lightColor = vec3(0.5);\n"
-    "vec3 ambient = vec3(0.3);\n"
-    "float diff = max(dot(lightDir, normal), 0.0);\n"
+    "vec3 normal = texture(normalMap, fs_in.TexCoords).rgb * 0.75f;"
+    "normal += 0.25f;"
+    "normal = normalize(normal * 2.0 - 1.0);"
+    "vec3 lightColor = vec3(0.7);\n"
+    "vec3 ambient = vec3(0.3, 0.34, 0.32);\n"
+    "vec3 localLightDir = normalize(fs_in.TangentLightPos - fs_in.TangentFragPos);"
+    "float diff = max(dot(localLightDir, normal), 0.0);\n"
     "vec3 diffuse = diff * lightColor;\n"
-    "vec3 viewDir = normalize(viewPos - fs_in.FragPos);\n"
-    "vec3 reflectDir = reflect(-lightDir, normal);\n"
+    "vec3 viewDir = normalize(fs_in.TangentViewPos - fs_in.TangentFragPos);\n"
+    "vec3 reflectDir = reflect(-localLightDir, normal);\n"
     "float spec = 0.0;\n"
-    "vec3 halfwayDir = normalize(lightDir + viewDir);  \n"
+    "vec3 halfwayDir = normalize(localLightDir + viewDir);  \n"
     "spec = pow(max(dot(normal, halfwayDir), 0.0), 2.0);\n"
     "vec3 specular = spec * lightColor  * (texture(normalMap, fs_in.TexCoords).a * 0.5f); \n"
     "float shadow = ShadowCalculation(fs_in.FragPosLightSpace);\n"
@@ -719,6 +739,12 @@ static bool EnsureRenderObjects() {
   glEnableVertexAttribArray(6);
   glVertexAttribPointer(6, 2, GL_FLOAT, GL_FALSE, sizeof(GameBoxLitVertex),
       (const void *)(offsetof(GameBoxLitVertex, u)));
+
+    glEnableVertexAttribArray(7);
+  glVertexAttribPointer(
+      7, 3, GL_FLOAT, GL_FALSE, sizeof(GameBoxLitVertex),
+      (const void *)(offsetof(GameBoxLitVertex, tangent)));
+
   glBindVertexArray(s_positionVertexArray);
   glBindBuffer(GL_ARRAY_BUFFER, s_positionVertexBuffer);
   glBufferData(GL_ARRAY_BUFFER, 0x120000, NULL, GL_STREAM_DRAW);
@@ -799,7 +825,6 @@ HRESULT SetGameTransform(SumoU32 state, const SumoF32 *matrix) {
     glUseProgram(s_program);
     glUniformMatrix4fv(s_uniformView, 1, GL_FALSE, s_viewTransform);
     glUniformMatrix4fv(s_uniformProjection, 1, GL_FALSE, s_projectionTransform);
-    glUniform3f(s_uniformLightDir, 0.30000001f, -1.0f, 0.5f);
     glUniform3f(s_uniformViewPos, 
         g_gameCameraPosition.x,
                 g_gameCameraPosition.y, 
@@ -1069,7 +1094,8 @@ HRESULT RenderGameScene() {
                                           -g_gameCameraWorldPosition.y / 2,
                                           -g_gameCameraWorldPosition.z));
   lightSpaceMatrix = lightProjection * lightView;
-
+  lightDir = glm::normalize(lightDir);
+  lightDir *= 8192.f;
   glUniform3fv(glGetUniformLocation(s_program, "lightDir"), 1, &lightDir[0]); 
     glUniform1i(glGetUniformLocation(s_program, "lightmapSize"),
               depthMapResolution * g_gameRenderQualityCode);

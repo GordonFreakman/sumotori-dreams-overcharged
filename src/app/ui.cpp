@@ -364,7 +364,6 @@ bool SumoRunStartupUI(SumoStartupConfig *config)
     ImGui::Combo("Display mode", &modeIndex, s_modeLabelPointers, s_modeCount);
     ImGui::Checkbox("Sound", &sound);
     ImGui::Checkbox("Sound randomization", &audioIndex);
-    //ImGui::Combo("Audio backend", &audioIndex, c_audioBackendLabels, 2);
     ImGui::Checkbox("Fullscreen", &fullscreen);
     if (fullscreen != appliedFullscreen) {
       ApplyWindowFullscreen(fullscreen);
