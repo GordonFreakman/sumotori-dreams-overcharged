@@ -325,7 +325,7 @@ char g_gameMenuLabels[7][7][24] = {
     {"Default dojo", "Kitchen party", "Roof dancers", "play seesaw", "", "",
      ""},
     {"Up on the stage", "I go downstairs", "", "", "", "", ""},
-    {"Default mode", "Water mode", "Breakable guys", "Classic mode", "The abyss...", "", ""},
+    {"Default mode", "Water mode", "Breakable guys", "Breakpoint 2007", "The abyss...", "", ""},
     {"Hidden part.", "You and.. uhhhh", " ", " ", " ", "OK", ""},
 };
 
