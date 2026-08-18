@@ -316,17 +316,17 @@ SumoU8 *g_gameTexturePrograms[] =
 
 // GLOBAL: SUMO 0x004538f0
 // GLOBAL: EDITOR 0x004538f0
-char g_gameMenuLabels[7][7][24] = {
+char g_gameMenuLabels[8][7][24] = {
     {"2 players duel", "2 players & 1 comp.", "2 player & 2 comp.",
      "4 computers", "", "", ""},
     {"You vs. Computer", "You and 2 comp.", "You & 3 comp.", "2 Computers", "",
      "", ""},
     {"Arena selection", "AI mode: walk", "AI mode: stand", "Gamemodes", "Documentation", "Quit", ""},
-    {"Default dojo", "Kitchen party", "Roof dancers", "play seesaw", "", "",
-     ""},
-    {"Up on the stage", "I go downstairs", "", "", "", "", ""},
-    {"Default mode", "Water mode", "Breakable guys", "Breakpoint 2007", "The abyss...", "", ""},
+    {"Standard resuringu", "Waterlogged", "Boryoku", "Breakpoint 2007", "Everyone is here!", "", ""},
     {"Hidden part.", "You and.. uhhhh", " ", " ", " ", "OK", ""},
+    {"Default dojo", "Kitchen party", "Roof dancers", "Play seesaw", "Up on the stage", "",""},
+    {"I go downstairs", "Bad trip", "Top rooster", "High fall", "Bridge", ""},
+    {"Slide", "Pole", "Tower", "On Ice", "Planko", "Load mod file", ""},
 };
 
 // GLOBAL: SUMO 0x0042cb50

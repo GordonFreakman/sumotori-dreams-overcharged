@@ -353,7 +353,7 @@ void UpdateGameMenuScreen(SumoU8 drawOverlay) {
         g_externalLevelScriptOverride = 0;
         g_gameMenuPage = 0;
         g_selectedLevelScript =
-            g_gameMenuSelection % 16 + 4 * (g_gameMenuSelection / 16) - 1;
+            g_gameMenuSelection % 16 + 5 * (g_gameMenuSelection / 16) - 1;
         InitializeGameRuntimeState();
         break;
       case 2:
@@ -857,16 +857,151 @@ extern const char g_builtinLevelScript5[] =
     "vec(15,7,1),p+vec(0,8,-29),1,1); breakability(200);man(vec(-11,8,-15)+p,vec(0,0,1),2);man(vec(-11,8,15)+p,vec(0,0,-1),3)"
     ";man(vec(6,8,-15)+p,vec(-1,0,0),0);man(vec(6,8,15)+p,vec(-1,0,0),1);";
 
-// GLOBAL: SUMO 0x00453408
+
+static const char g_builtinLevelScript6[] =
+    "startpos=vec(0,180,250);pos=startpos;angle=0;dir=vec(0,0,-1);addbox(vec(40,1,20),pos-dir*20,0,1);i=0; re"
+    "peat(55){i=i+0.28;addbox(vec(40,1,2),pos+dir*2,0,1);dir=dir*vec(1,-1,1);turnto(dir+vec(0,-0.01,0));dir=d"
+    "ir*vec(1,-1,1);pos=pos+dir*4;dir=normalize(vec(0,-1+cos(i)*0.8,-1));}man(vec(10,4,2)+startpos,vec(-1.2,0"
+    ",-0.7),2);man(vec(-10,4,3)+startpos,vec(1.2,0,-0.2),3);man(vec(10,4,-8)+startpos,vec(-1.2,0,-0.7),2);man"
+    "(vec(-10,4,-9)+startpos,vec(1.2,0,-0.2),3);";
+
+static const char g_builtinLevelScript7[] =
+    "h=14;i=0;repeat(h){l = (h-i+1)*6;addbox( vec(l,3,l),vec(0,i*6-7+200,0),0,1);i=i+1;}l = (h+1)*6-6;addbox("
+    "vec(5,100,5),vec(l,100,0-l),3,1);addbox(vec(5,100,5),vec(l,100,l),3,1);addbox(vec(5,100,5),vec(0-l,100,0"
+    "-l),3,1);addbox(vec(5,100,5),vec(0-l,100,l),3,1); i=-18;l = (h-i+1)*6;addbox( vec(l,3,l),vec(0,i*6-7+200"
+    ",0),4,1);man(vec(7,h*6-7+200,-7),vec(-2,0,1),3); man(vec(-7,h*6-7+200,7),vec(2,0,-1),2);man(vec(-7,h*6-7"
+    "+200,-7),vec(1,0,2),1); man(vec(7,h*6-7+200,7),vec(-1,0,-2),0);";
+
+static const char g_builtinLevelScript8[] =
+    "addbox(vec(4,1,35),vec(1,900,1),0,1);addbox(vec(15.5,1,4),vec(-18.5,900,1),0,1);"
+    "addbox(vec(15.5,1,4),vec(20.5,900,1),0,1);addbox(vec(4,1,4),vec(9,900,-22.5),0,1);"
+    "addbox(vec(4,1,4),vec(-7,900,22.5),0,1);addbox(vec(4,1,4),vec(9,900,22.5),0,1);"
+    "addbox(vec(4,1,4),vec(-7,900,-22.5),0,1);addbox(vec(4,1,4),vec(-22.5,900,9),0,1);"
+    "addbox(vec(4,1,4),vec(22.5,900,9),0,1);addbox(vec(4,1,4),vec(22.5,900,-7),0,1);"
+    "addbox(vec(4,1,4),vec(-22.5,900,-7),0,1);addbox(vec(4,455,1.5),vec(1,445,-22.5),0,1);"
+    "addbox(vec(4,455,1.5),vec(1,445,24.5),0,1);addbox(vec(1.5,455,4),vec(-22.5,445,1),0,1);"
+    "addbox(vec(1.5,455,4),vec(25.5,445,1),0,1);addbox(vec(1,5,100),vec(99,-5,1),0,1);breakability(50);"
+    "addbox(vec(1,5,100),vec(-99,-5,1),0,1);breakability(50);addbox(vec(100,5,1),vec(1,-5,99),0,1);breakability(50);"
+    "addbox(vec(100,5,1),vec(1,-5,-99),0,1);breakability(50);addbox(vec(50,1,50),vec(0,800,1),0,1);breakability(50);"
+    "addbox(vec(50,1,50),vec(0,600,1),0,1);breakability(50);addbox(vec(50,1,50),vec(0,400,1),0,1);breakability(50);"
+    "addbox(vec(50,1,50),vec(0,200,1),0,1);breakability(1);"
+    "man(vec(1,900,-32),vec(0,0,1),2);man(vec(1,900,32),vec(0,0,-1),3);"
+    "man(vec(32,900,1),vec(-1,0,0),0);man(vec(-30,900,1),vec(1,0,0),1);";
+
+static const char g_builtinLevelScript9[] = 
+    "addbox(vec(10,3,45),vec(0,30,0),10,1);breakability(390);addbox(vec(10,60,10),vec(0,0,60),0,1);"
+    "addbox(vec(10,60,10),vec(0,0,-60),0,1);addbox(vec(1,4,45),vec(10,35.5,0),1,1);breakability(10);"
+    "addbox(vec(1,4,45),vec(-10,35.5,0),1,1);breakability(10);man(vec(0,60,-60),vec(0,30,1),2);"
+    "man(vec(0,60,60),vec(0,30,-1),3);man(vec(0,36,-10),vec(0,30,1),0);man(vec(0,36,10),vec(0,30,-1),1);";
+
+static const char g_builtinLevelScript10[] =
+    "addbox(vec(40,1,200),vec(290,336,0),10,1);turnto(vec(1,-1.25,0));"
+    "addbox(vec(1,5,200),vec(290,336,-40),0,1);turnto(vec(1,-1.25,0));"
+    "addbox(vec(1,5,200),vec(290,336,40),0,1);turnto(vec(1,-1.25,0));"
+    "addbox(vec(40,1,125),vec(57.5,82.8,0),10,1);turnto(vec(1,-1.25,0));"
+    "addbox(vec(1,3,125),vec(57.5,82.8,-40),0,1);turnto(vec(1,-1.25,0));"
+    "addbox(vec(1,3,125),vec(57.5,82.8,40),0,1);turnto(vec(1,-1.25,0));"
+    "addbox(vec(15,1,40),vec(429,492,0),0,1);addbox(vec(15,5,1),vec(429,497,40),0,1);"
+    "addbox(vec(15,5,1),vec(429,497,-40),0,1);addbox(vec(1,5,40),vec(445,497,0),0,1);"
+    "addbox(vec(15,1,40),vec(150,180,0),0,1);addbox(vec(13,3,1),vec(148,183,40),0,1);"
+    "addbox(vec(13,3,1),vec(148,183,-40),0,1);addbox(vec(0.5,10,40),vec(-25,0,0),0,1);"
+    "breakability(10);man(vec(420,495,-27),vec(0,0,1),2);man(vec(420,495,27),vec(0,0,-1),3);"
+    "man(vec(420,495,-7),vec(0,0,-1),9);man(vec(420,495,7),vec(0,0,1),1);";
+
+static const char g_builtinLevelScript11[] =
+    "addbox(vec(10,50,5),vec(0,40,40),10,1);addbox(vec(10,50,5),vec(0,40,-40),10,1);"
+    "addbox(vec(5,50,10),vec(40,40,0),10,1);addbox(vec(5,50,10),vec(-40,40,0),10,1);"
+    "addbox(vec(10,1,10),vec(0,89,25),10,1);addbox(vec(10,1,10),vec(0,89,-25),10,1);"
+    "addbox(vec(10,1,10),vec(25,89,0),10,1);addbox(vec(10,1,10),vec(-25,89,0),10,1);"
+    "addbox(vec(15,50,15),vec(0,40,0),0,1);breakability(300);man(vec(0,95,-40),0,2);"
+    "man(vec(0,95,40),-0,3);man(vec(40,95,0),vec(-45,0,0),1);man(vec(-40,95,0),vec(45,0,0),9);";
+    
+static const char g_builtinLevelScript12[] =
+    "addbox(vec(1,30,1),vec(0,20,0),0,1);breakability(400);addbox(vec(1,30,1),vec(13,20,0),0,1);"
+    "breakability(400);addbox(vec(1,30,1),vec(26,20,0),0,1);breakability(400);addbox(vec(1,30,1),vec(39,20,0),0,1);"
+    "breakability(400);addbox(vec(1,30,1),vec(-13,20,0),0,1);breakability(400);addbox(vec(1,30,1),vec(-26,20,0),0,1);"
+    "breakability(400);addbox(vec(1,30,1),vec(-39,20,0),0,1);breakability(400);addbox(vec(1,30,1),vec(0,20,13),0,1);"
+    "breakability(400);addbox(vec(1,30,1),vec(13,20,13),0,1);breakability(400);addbox(vec(1,30,1),vec(26,20,13),0,1);"
+    "breakability(400);addbox(vec(1,30,1),vec(39,20,13),0,1);breakability(400);addbox(vec(1,30,1),vec(-13,20,13),0,1);"
+    "breakability(400);addbox(vec(1,30,1),vec(-26,20,13),0,1);breakability(400);addbox(vec(1,30,1),vec(-39,20,13),0,1);"
+    "breakability(400);addbox(vec(1,30,1),vec(0,20,26),0,1);breakability(400);addbox(vec(1,30,1),vec(13,20,26),0,1);"
+    "breakability(400);addbox(vec(1,30,1),vec(26,20,26),0,1);breakability(400);addbox(vec(1,30,1),vec(39,20,26),0,1);"
+    "breakability(400);addbox(vec(1,30,1),vec(-13,20,26),0,1);breakability(400);addbox(vec(1,30,1),vec(-26,20,26),0,1);"
+    "breakability(400);addbox(vec(1,30,1),vec(-39,20,26),0,1);breakability(400);addbox(vec(1,30,1),vec(0,20,39),0,1);"
+    "breakability(400);addbox(vec(1,30,1),vec(13,20,39),0,1);breakability(400);addbox(vec(1,30,1),vec(26,20,39),0,1);"
+    "breakability(400);addbox(vec(1,30,1),vec(39,20,39),0,1);breakability(400);addbox(vec(1,30,1),vec(-13,20,39),0,1);"
+    "breakability(400);addbox(vec(1,30,1),vec(-26,20,39),0,1);breakability(400);addbox(vec(1,30,1),vec(-39,20,39),0,1);"
+    "breakability(400);addbox(vec(1,30,1),vec(0,20,-13),0,1);breakability(400);addbox(vec(1,30,1),vec(13,20,-13),0,1);"
+    "breakability(400);addbox(vec(1,30,1),vec(26,20,-13),0,1);breakability(400);addbox(vec(1,30,1),vec(39,20,-13),0,1);"
+    "breakability(400);addbox(vec(1,30,1),vec(-13,20,-13),0,1);breakability(400);addbox(vec(1,30,1),vec(-26,20,-13),0,1);"
+    "breakability(400);addbox(vec(1,30,1),vec(-39,20,-13),0,1);breakability(400);addbox(vec(1,30,1),vec(0,20,-26),0,1);"
+    "breakability(400);addbox(vec(1,30,1),vec(13,20,-26),0,1);breakability(400);addbox(vec(1,30,1),vec(26,20,-26),0,1);"
+    "breakability(400);addbox(vec(1,30,1),vec(39,20,-26),0,1);breakability(400);addbox(vec(1,30,1),vec(-13,20,-26),0,1);"
+    "breakability(400);addbox(vec(1,30,1),vec(-26,20,-26),0,1);breakability(400);addbox(vec(1,30,1),vec(-39,20,-26),0,1);"
+    "breakability(400);addbox(vec(1,30,1),vec(0,20,-39),0,1);breakability(400);addbox(vec(1,30,1),vec(13,20,-39),0,1);"
+    "breakability(400);addbox(vec(1,30,1),vec(26,20,-39),0,1);breakability(400);addbox(vec(1,30,1),vec(39,20,-39),0,1);"
+    "breakability(400);addbox(vec(1,30,1),vec(-13,20,-39),0,1);breakability(400);addbox(vec(1,30,1),vec(-26,20,-39),0,1);"
+    "breakability(400);addbox(vec(1,30,1),vec(-39,20,-39),0,1);breakability(400);addbox(vec(20,4,1),vec(62,56,-19),0,1);"
+    "breakability(100);addbox(vec(20,4,1),vec(-62,56,-19),0,1);breakability(100);addbox(vec(20,4,1),vec(62,56,19),0,1);"
+    "breakability(100);addbox(vec(20,4,1),vec(-62,56,19),0,1);breakability(100);addbox(vec(1,4,18),vec(81,56,0),0,1);"
+    "breakability(100);addbox(vec(1,4,18),vec(-81,56,0),0,1);breakability(100);addbox(vec(20,31,20),vec(62,21,0),10,1);"
+    "addbox(vec(20,31,20),vec(-62,21,0),10,1);addbox(vec(42,1,42),vec(0,51,0),0,1);breakability(350);"
+    "man(vec(60.5,52,-8),vec(-15,0,1),2);man(vec(-60.5,52,8),vec(15,0,-1),1);";
+
+static const char g_builtinLevelScript13[] =
+    "addbox(vec(2,2,50),vec(0,0.+20,0),0,1);addbox(vec(2,2,50),vec(25,0.+20,0),0,1);"
+    "addbox(vec(2,2,50),vec(-25,0.+20,0),0,1);addbox(vec(2,2,50),vec(-50,0.+20,0),0,1);"
+    "addbox(vec(2,2,50),vec(50,0.+20,0),0,1);addbox(vec(2,2,50),vec(12,0.+40,0),0,1);"
+    "addbox(vec(2,2,50),vec(37,0.+40,0),0,1);addbox(vec(2,2,50),vec(-13,0.+40,0),0,1);"
+    "addbox(vec(2,2,50),vec(-38,0.+40,0),0,1);addbox(vec(2,2,50),vec(0,0.+60,0),0,1);"
+    "addbox(vec(2,2,50),vec(25,0.+60,0),0,1);addbox(vec(2,2,50),vec(-25,0.+60,0),0,1);"
+    "addbox(vec(2,2,50),vec(-50,0.+60,0),0,1);addbox(vec(2,2,50),vec(50,0.+60,0),0,1);"
+    "addbox(vec(2,2,50),vec(12,0.+80,0),0,1);addbox(vec(2,2,50),vec(37,0.+80,0),0,1);"
+    "addbox(vec(2,2,50),vec(-13,0.+80,0),0,1);addbox(vec(2,2,50),vec(-38,0.+80,0),0,1);"
+    "addbox(vec(2,2,50),vec(0,0.+100,0),0,1);addbox(vec(2,2,50),vec(25,0.+100,0),0,1);"
+    "addbox(vec(2,2,50),vec(-25,0.+100,0),0,1);addbox(vec(2,2,50),vec(-50,0.+100,0),0,1);"
+    "addbox(vec(2,2,50),vec(50,0.+100,0),0,1);addbox(vec(2,2,50),vec(12,0.+120,0),0,1);"
+    "addbox(vec(2,2,50),vec(37,0.+120,0),0,1);addbox(vec(2,2,50),vec(-13,0.+120,0),0,1);"
+    "addbox(vec(2,2,50),vec(-38,0.+120,0),0,1);addbox(vec(2,2,50),vec(0,0.+140,0),0,1);"
+    "addbox(vec(2,2,50),vec(25,0.+140,0),0,1);addbox(vec(2,2,50),vec(-25,0.+140,0),0,1);"
+    "addbox(vec(2,2,50),vec(-50,0.+140,0),0,1);addbox(vec(2,2,50),vec(50,0.+140,0),0,1);"
+    "addbox(vec(2,2,50),vec(12,0.+160,0),0,1);addbox(vec(2,2,50),vec(37,0.+160,0),0,1);"
+    "addbox(vec(2,2,50),vec(-13,0.+160,0),0,1);addbox(vec(2,2,50),vec(-38,0.+160,0),0,1);"
+    "addbox(vec(2,2,50),vec(0,0.+180,0),0,1);addbox(vec(2,2,50),vec(25,0.+180,0),0,1);"
+    "addbox(vec(2,2,50),vec(-25,0.+180,0),0,1);addbox(vec(2,2,50),vec(-50,0.+180,0),0,1);"
+    "addbox(vec(2,2,50),vec(50,0.+180,0),0,1);addbox(vec(2,2,50),vec(12,0.+200,0),0,1);"
+    "addbox(vec(2,2,50),vec(37,0.+200,0),0,1);addbox(vec(2,2,50),vec(-13,0.+200,0),0,1);"
+    "addbox(vec(2,2,50),vec(-38,0.+200,0),0,1);addbox(vec(2,2,50),vec(0,0.+220,0),0,1);"
+    "addbox(vec(2,2,50),vec(25,0.+220,0),0,1);addbox(vec(2,2,50),vec(-25,0.+220,0),0,1);"
+    "addbox(vec(2,2,50),vec(-50,0.+220,0),0,1);addbox(vec(2,2,50),vec(50,0.+220,0),0,1);"
+    "addbox(vec(2,2,50),vec(12,0.+240,0),0,1);addbox(vec(2,2,50),vec(37,0.+240,0),0,1);"
+    "addbox(vec(2,2,50),vec(-13,0.+240,0),0,1);addbox(vec(2,2,50),vec(-38,0.+240,0),0,1);"
+    "addbox(vec(2,2,50),vec(0,0.+260,0),0,1);addbox(vec(2,2,50),vec(25,0.+260,0),0,1);"
+    "addbox(vec(2,2,50),vec(-25,0.+260,0),0,1);addbox(vec(2,2,50),vec(-50,0.+260,0),0,1);"
+    "addbox(vec(2,2,50),vec(50,0.+260,0),0,1);addbox(vec(2,2,50),vec(12,0.+280,0),0,1);"
+    "addbox(vec(2,2,50),vec(37,0.+280,0),0,1);addbox(vec(2,2,50),vec(-13,0.+280,0),0,1);"
+    "addbox(vec(2,2,50),vec(-38,0.+280,0),0,1);addbox(vec(2,2,50),vec(0,0.+300,0),0,1);"
+    "addbox(vec(2,2,50),vec(25,0.+300,0),0,1);addbox(vec(2,2,50),vec(-25,0.+300,0),0,1);"
+    "addbox(vec(2,2,50),vec(-50,0.+300,0),0,1);addbox(vec(2,2,50),vec(50,0.+300,0),0,1);"
+    "addbox(vec(50,2,20),vec(0,0.+310,-40),0,1);man(vec(15,311,-40),vec(-0,0,1),1);"
+    "man(vec(-15,311,-40),vec(-0,0,1),9);man(vec(40,311,-40),vec(-0,0,1),2);"
+    "man(vec(-40,311,-40),vec(-0,0,1),3);";
+    // GLOBAL: SUMO 0x00453408
 // GLOBAL: EDITOR 0x00453408
-char *g_builtinLevelScripts[9] = {0,
+char *g_builtinLevelScripts[15] = {0,
                                   (char *)g_builtinLevelScript1,
                                   (char *)g_builtinLevelScript2,
                                   (char *)g_builtinLevelScript3,
                                   (char *)g_builtinLevelScript4,
                                   (char *)g_builtinLevelScript5,
-                                  0,
-                                  0,
+                                  (char *)g_builtinLevelScript6,
+                                  (char *)g_builtinLevelScript7,
+                                  (char *)g_builtinLevelScript8,
+                                  (char *)g_builtinLevelScript9,
+                                  (char *)g_builtinLevelScript10,
+                                  (char *)g_builtinLevelScript11,
+                                  (char *)g_builtinLevelScript12,
+                                  (char *)g_builtinLevelScript13,
                                   0};
 
 // GLOBAL: SUMO 0x00457340
@@ -4417,7 +4552,7 @@ SumoS32 g_gameArenaPageChainLinks = 3;
 void (*g_gameModFilePickerRequest)();
 extern SumoS32 g_gameFrameClock;
 SumoS32 InitializeGameRuntimeState() {
-  if (g_gameArenaPageRowCount > 2 && g_selectedLevelScript >= 8) {
+  if (g_gameArenaPageRowCount > 2 && g_selectedLevelScript >= 14) {
     g_selectedLevelScript = 0;
     if (g_gameModFilePickerRequest != 0)
       g_gameModFilePickerRequest();
@@ -4487,12 +4622,16 @@ SumoS32 InitializeGameRuntimeState() {
   Vector3 columnOffset = MakeVector3(0.0f, 0.0f, 0.0f);
   switch (page) {
   case 1:
-    columnOffset.z = 10.0f;
-    columnCount = 2;
+    columnOffset.z = 20.0f;
+    columnCount = 3;
+    stackCounts[0] = g_gameArenaPageRowCount;
+    rowCounts[0] = g_gameArenaPageChainLinks;
     stackCounts[1] = g_gameArenaPageRowCount;
     rowCounts[1] = g_gameArenaPageChainLinks;
+    stackCounts[2] = g_gameArenaPageRowCount;
+    rowCounts[2] = g_gameArenaPageChainLinks;
     selectBase = 0;
-    typeBase = 3;
+    typeBase = 5;
     break;
   case 2:
     columnOffset.z = 10.0f;
@@ -4501,7 +4640,7 @@ SumoS32 InitializeGameRuntimeState() {
     rowCounts[0] = 2;
     stackCounts[1] = 2;
     selectBase = 0;
-    typeBase = 5;
+    typeBase = 3;
     break;
   case 3:
     columnCount = 2;
