@@ -2062,8 +2062,7 @@ SumoS32 InitializeGameTextures() {
     }
 
     if ((index & 1) == 0)
-      g_gameTextures[index] =
-          CreateGameNormalMapTexture(pixels, 0x100, 0x100, -0x64);
+      g_gameTextures[index] = CreateGameNormalMapTexture(pixels, 0x100, 0x100, index >= (MENU_START_INDEX * 2) ? -0x64 : 0x64);
     else
       g_gameTextures[index] =
           CreateGameTextureFromPixels(pixels, 0x100, 0x100, 0);

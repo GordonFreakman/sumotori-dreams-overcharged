@@ -60,7 +60,7 @@ Vector3 MakeVector3(SumoF32 x, SumoF32 y, SumoF32 z) {
 }
 
 SumoF32 Vector3::LengthSquared() {
-  return (SumoF32)((SumoF64)x * x + (SumoF64)y * y + (SumoF64)z * z);
+  return x * x + y * y + z * z;
 }
 
 SumoF32 Vector3::Normalize() {

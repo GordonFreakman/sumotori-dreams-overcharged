@@ -43,7 +43,6 @@ SumoU8 g_gameCollisionGroupSentinel;
 
 SumoU8 g_gameBoxTextureTriangleCounts[0x100];
 GameBoxLitVertex g_gameBoxLitVertexStorage[98304];
-SumoU8 g_gameBoxShadowPositionStorage[0x120000];
 SumoU8 g_gameBoxIndexPairStorage[0x20000];
 
 SumoS16 g_gameBoxTriangleOrder[0x8000];
@@ -51,10 +50,6 @@ SumoS16 g_gameBoxTriangleOrder[0x8000];
 // GLOBAL: SUMO 0x00775dd8
 // GLOBAL: EDITOR 0x007765f8
 GameBoxLitVertex *g_gameBoxLitVertexCursor;
-
-// GLOBAL: SUMO 0x00775ddc
-// GLOBAL: EDITOR 0x007765fc
-SumoU8 *g_gameBoxShadowPositionCursor;
 
 // GLOBAL: SUMO 0x00ac5ef0
 // GLOBAL: EDITOR 0x00ac6710
@@ -810,6 +805,10 @@ SumoU8 FractureGameBoxAtPoint(Vector3 &position, GameBox *box) {
   if (g_gameMenuSelection == 0)
     g_gameMenuSelection = box->unknownBC;
 
+  if (box->m_pOwner && box->limb)
+    box->m_pOwner->CalculateLimbFracture(box);
+
+
   Vector3 seeds[5];
   SumoS32 seedCount = 0;
   SumoF32 seedScale = 0.3f;
@@ -878,21 +877,28 @@ SumoU8 FractureGameBoxAtPoint(Vector3 &position, GameBox *box) {
     newBox->unknownC0 = box->unknownC0;
     newBox->unknownC4 = box->unknownC4;
     newBox->m_pOwner = box->m_pOwner;
+    if (newBox->volume < 5)
+    {
+      newBox->modeE0 = 0;
+    }
     if (g_gameBoxesInitialized)
       newBox->breakability = box->breakability * 3.0f;
 
-      if (box->m_pOwner && newBox->volume > 5) {
-      box->m_pOwner->m_bLobotomized++;
-    }
+      if (box->m_pOwner && !box->limb) 
+      {
+              if (newBox->volume > 5)
+          box->m_pOwner->m_bLobotomized++;
 
-   if (!biggestBox || newBox->volume >= biggestBox->volume)
-      biggestBox = newBox;
-
+        if (!biggestBox || newBox->volume >= biggestBox->volume)
+            biggestBox = newBox;
+      }
     for (GameBoxJoint *joint = g_gameContactObjects;
          joint < g_gameContactObjectsEnd; ++joint) {
       for (SumoS32 side = 0; side < 2; ++side) {
-        if (joint->boxes[side] != box)
+        if (joint->boxes[side] != box) 
+        {
           continue;
+        }
         SumoS32 bestSeed = -1;
         SumoF32 bestDistance = 1e36f;
         for (SumoS32 candidate = 0; candidate < 5; ++candidate) {
@@ -903,6 +909,7 @@ SumoU8 FractureGameBoxAtPoint(Vector3 &position, GameBox *box) {
             bestDistance = candidateDistance;
           }
         }
+
         if (bestSeed == fragment) {
           joint->boxes[side] = newBox;
           joint->localAnchors[side].x = joint->localAnchors[side].x - offset.x;
@@ -915,15 +922,15 @@ SumoU8 FractureGameBoxAtPoint(Vector3 &position, GameBox *box) {
     g_gameBoxesEnd = newBox + 1;
   }
 
-  if (box->m_pOwner) 
+  if (box->m_pOwner && !box->limb) 
   {
     for (size_t i = 0; i < 14; i++) 
     {
-    if (box->m_pOwner->bodyParts[i] == box) 
-    {
-        box->m_pOwner->bodyParts[i] = biggestBox;
-        break;
-    }
+        if (box->m_pOwner->bodyParts[i] == box) 
+        {
+            box->m_pOwner->bodyParts[i] = biggestBox;
+            break;
+        }
     }
   }
   box->flag58 = 1;
@@ -938,7 +945,6 @@ extern SumoU8 *g_gameBoxIndexPairCursor;
 extern Vector3 g_gameBoxLightDirection;
 extern const SumoF32 g_gameBoxLightScale;
 extern const SumoF32 g_gameBoxNegativeLightScale;
-extern SumoU8 *g_gameBoxShadowPositionCursor;
 extern SumoU8 g_gameBoxTextureTriangleCounts[0x100];
 extern RuntimeVector3Vector g_gameBoxTransformedPoints;
 extern const SumoF32 g_textureCenterFloat;
@@ -1390,9 +1396,8 @@ struct GameClipEdgeRecord {
 void GameBox::ClipGeometry(GameBox &other, Vector3 &normal, SumoF32 distance) {
   GameClipEdgeRecord edgeScratch[1030];
 
-  if (((SumoS32)((SumoU8 *)other.pointsEnd - (SumoU8 *)other.pointsBegin) &
-       ~0xf) > 0x1000 ||
-      (SumoS32)(other.facesEnd - other.facesBegin) > 0x100) {
+  if ((other.pointsEnd - other.pointsBegin) > 4096 ||
+      (other.facesEnd - other.facesBegin) > 256) {
     facesEnd = facesBegin;
     pointsEnd = pointsBegin;
     return;
@@ -1717,6 +1722,9 @@ void ResolveGameCollisions() {
     if (outer->flag58)
       continue;
 
+    if (outer->modeE0 == 0)
+      continue;
+
     if (outer->immovable == 0 && outer->sleeping == 0) {
         activeGameBoxes++;
       if (outer <= g_gameBoxes)
@@ -1728,7 +1736,7 @@ void ResolveGameCollisions() {
           continue;
         SumoF32 radiusSum = inner->boundingRadius + outer->boundingRadius;
         Vector3 difference = outer->position - inner->position;
-        if ((SumoF64)radiusSum * radiusSum > difference.LengthSquared())
+        if (radiusSum * radiusSum > difference.LengthSquared())
           GenerateGameBoxCollisionContacts(outer, inner);
       }
     } else {

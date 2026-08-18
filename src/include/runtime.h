@@ -131,6 +131,7 @@ struct GameBox {
   SumoF32 unknownC8;
   SumoF32 activityValue;
   bool immovable;
+  bool limb;
   SumoS32 unknownD4;
   SumoS32 unknownD8;
   SumoS32 unknownDC;
@@ -249,7 +250,23 @@ struct GameManPose {
 
   void InitializeJointTransforms(GameMan *p_man);
 };
-
+enum {
+  Pelvis,
+  Chest,
+  Head,
+  UpperLegR,
+  CalfR,
+  FootR,
+  UpperLegL,
+  CalfL,
+  FootL,
+  UpperArmR,
+  ForearmR,
+  HandR,
+  UpperArmL,
+  ForearmL,
+  HandL,
+};
 struct GameMan {
   GameBox *bodyParts[15];
   GameBoxJoint *joints[14];
@@ -316,6 +333,7 @@ struct GameMan {
                                    Vector3 &referenceVelocity);
   GameMan *FindNearestOpponent(Vector3 &facingAxis, Vector3 &lateralAxis);
   SumoU32 ChooseAiInput(GameMan *opponent);
+  void CalculateLimbFracture(GameBox *box);
 };
 
 void SetGameManAudioState(GameMan *man, SumoS32 channel);

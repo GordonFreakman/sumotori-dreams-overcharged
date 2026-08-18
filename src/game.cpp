@@ -1836,9 +1836,7 @@ void GameMan::Initialize(Vector3 &position, SumoF32 angle, SumoS32 type,
     foot->inertia = foot->inertia * g_randomHalf;
     foot->unknownC8 = 400.0f;
     foot->inverseInertia = foot->inverseInertia + foot->inverseInertia;
-    if (g_sumoMode == 2) {
-      //foot->breakability = 550;
-    }
+
     Vector3 shinOffset = MakeVector3(legReach, 2.2f, 0.0f);
     GameBox *shin =
         CreateGameBox(MakeVector3(1.0f, -2.3f, 1.0f), shinOffset + position,
@@ -1847,9 +1845,6 @@ void GameMan::Initialize(Vector3 &position, SumoF32 angle, SumoS32 type,
     shin->modeE0 = 0x28;
     shin->unknownC0 = 4;
     shin->unknownC4 = 0.005f;
-    if (g_sumoMode == 2) {
-      //shin->breakability = 500;
-    }
     Vector3 thighOffset = MakeVector3(facing * 3.0f, 2.2f, 0.0f);
     GameBox *thigh =
         CreateGameBox(MakeVector3(1.2f, -3.0f, 1.2f), thighOffset + position,
@@ -1857,10 +1852,6 @@ void GameMan::Initialize(Vector3 &position, SumoF32 angle, SumoS32 type,
     thigh->modeE0 = 0x28;
     thigh->unknownC0 = 4;
     thigh->unknownC4 = 0.005f;
-
-    if (g_sumoMode == 2) {
-      //thigh->breakability = 750;
-    }
 
     joint = g_gameContactObjectsEnd;
     joint->boxes[0] = thigh;
@@ -1945,6 +1936,16 @@ void GameMan::Initialize(Vector3 &position, SumoF32 angle, SumoS32 type,
     upperArm->unknownC0 = 4;
     hand->ScaleMassProperties(2.0f);
     forearm->ScaleMassProperties(1.5f);
+
+     if (g_sumoMode == 2) 
+    {
+       hand->limb = true;
+       forearm->limb = true;
+       upperArm->limb = true;
+       hand->breakability = 150;
+       forearm->breakability = 200;
+       upperArm->breakability = 200;
+    }
 
     joint = g_gameContactObjectsEnd;
     joint->boxes[1] = chest;
@@ -2034,9 +2035,11 @@ Vector3 GameMan::CalculateCenterOfMassPosition() {
 
   for (SumoS32 index = 0; index < 15; ++index) {
     GameBox *bodyPart = bodyParts[index];
-    totalMass += bodyPart->mass;
-    weightedPosition.AddInline(bodyPart->position.Scale(bodyPart->mass));
-
+    if (bodyPart) 
+    {
+      totalMass += bodyPart->mass;
+      weightedPosition.AddInline(bodyPart->position.Scale(bodyPart->mass));
+    }
     if (m_bLobotomized) break;
   }
 
@@ -2073,8 +2076,12 @@ Vector3 GameMan::CalculateCenterOfMassVelocity() {
 
   for (SumoS32 index = 0; index < 15; ++index) {
     GameBox *bodyPart = bodyParts[index];
-    totalMass += bodyPart->mass;
-    weightedVelocity.AddInline(bodyPart->linearVelocity.Scale(bodyPart->mass));
+    if (bodyPart) 
+    {
+      totalMass += bodyPart->mass;
+      weightedVelocity.AddInline(
+          bodyPart->linearVelocity.Scale(bodyPart->mass));
+    }
   }
 
   SumoF32 inverseMass = 1.0f / totalMass;
@@ -2120,11 +2127,14 @@ SumoF32 GameMan::CalculateKineticEnergy() {
   SumoF32 energy = 0.0f;
   for (SumoS32 index = 0; index < 15; ++index) {
     GameBox *part = bodyParts[index];
-    SumoF32 linearTerm =
-        (SumoF32)((SumoF64)part->linearVelocity.LengthSquared() * part->mass);
-    energy = (SumoF32)((SumoF64)part->angularVelocity.LengthSquared() *
-                           part->inertia +
-                       linearTerm + energy);
+    if (part) 
+    {
+      SumoF32 linearTerm =
+          (SumoF32)((SumoF64)part->linearVelocity.LengthSquared() * part->mass);
+      energy = (SumoF32)((SumoF64)part->angularVelocity.LengthSquared() *
+                             part->inertia +
+                         linearTerm + energy);
+    }
   }
   return energy;
 }
@@ -2137,15 +2147,18 @@ Vector3 GameMan::CalculateAngularMomentum(Vector3 &referencePosition,
   sum.z = 0.0f;
   for (SumoS32 index = 0; index < 15; ++index) {
     GameBox *part = bodyParts[index];
-    Vector3 spinTerm = part->angularVelocity.Scale(part->inertia);
-    Vector3 offset = part->position - referencePosition;
-    Vector3 contribution = (part->linearVelocity - referenceVelocity)
-                               .Cross(offset)
-                               .Scale(part->mass) +
-                           spinTerm;
-    sum.x = sum.x + contribution.x;
-    sum.y = sum.y + contribution.y;
-    sum.z = sum.z + contribution.z;
+    if (part) 
+    {
+      Vector3 spinTerm = part->angularVelocity.Scale(part->inertia);
+      Vector3 offset = part->position - referencePosition;
+      Vector3 contribution = (part->linearVelocity - referenceVelocity)
+                                 .Cross(offset)
+                                 .Scale(part->mass) +
+                             spinTerm;
+      sum.x = sum.x + contribution.x;
+      sum.y = sum.y + contribution.y;
+      sum.z = sum.z + contribution.z;
+    }
   }
   return sum;
 }
@@ -2433,6 +2446,9 @@ void GameMan::Update(SumoIntPtr state) {
   if (g_levelLoadState[6] < g_screenTintLevel - 50) {
     for (SumoS32 part = 0; part < 15; ++part) {
       GameBox *box = bodyParts[part];
+
+      if (!box)
+          continue;
 
       if (g_sumoMode != 2) 
       {
@@ -2939,12 +2955,15 @@ actionIdle:
     actionTick = 0;
     actionMode = 2;
     actionSide = 1;
-    Vector3 handDelta = bodyParts[11]->position - bodyParts[14]->position;
-    SumoF64 handDot = (SumoF64)lateralAxis.y * handDelta.y +
-                      (SumoF64)lateralAxis.z * handDelta.z +
-                      (SumoF64)lateralAxis.x * handDelta.x;
-    if (handDot < g_vectorZero)
-      actionSide = 0;
+    if (bodyParts[11] && bodyParts[14]) 
+    {
+      Vector3 handDelta = bodyParts[11]->position - bodyParts[14]->position;
+      SumoF64 handDot = (SumoF64)lateralAxis.y * handDelta.y +
+                        (SumoF64)lateralAxis.z * handDelta.z +
+                        (SumoF64)lateralAxis.x * handDelta.x;
+      if (handDot < g_vectorZero)
+        actionSide = 0;
+    }
     if (actionCooldown <= 0)
       goto actionUpdateDone;
     actionCooldown = 1000;
@@ -2965,9 +2984,9 @@ actionReach: {
   toward.Normalize();
   (void)toward;
   SumoS32 touchTick = g_screenTintLevel - 10;
-  if (bodyParts[14]->unknownD4 > touchTick)
+  if (bodyParts[14] && bodyParts[14]->unknownD4 > touchTick)
     reachPull = -2.0f;
-  if (bodyParts[11]->unknownD4 > touchTick)
+  if (bodyParts[11] && bodyParts[11]->unknownD4 > touchTick)
     reachPull = (SumoF32)((SumoF64)reachPull - g_gameManPoseImpulseGain);
   Vector3 pull = lateralAxis.Scale(reachPull);
   comPosition.x = comPosition.x + pull.x;
@@ -3388,7 +3407,7 @@ actionUpdateDone:
       volatile SumoF32 propLimit = (SumoF32)((SumoF64)supportPoint.y + 3.0f);
       for (SumoS32 armSide = 0; armSide < 2; ++armSide) {
         GameBox *hand = bodyParts[11 + 3 * armSide];
-        if (hand->position.y < propLimit) {
+        if (hand && hand->position.y < propLimit) {
           primaryPose.joints[8 + 3 * armSide].maximumCorrection =
               0.009999999776482582f;
           primaryPose.joints[9 + 3 * armSide].maximumCorrection =
@@ -4459,15 +4478,6 @@ void GameMan::Render(void *poseState) {
 
 if (m_bLobotomized) 
 {
-    for (SumoS32 index = 0; index < 14; ++index) 
-    {
-      GameBoxJoint *joint = joints[index];
-      if (m_bLobotomized > 7) // severely broken
-      {
-        //joint->boxes[0] = NULL;
-        //joint->boxes[1] = NULL;
-      }
-    }
     return;
  }
 
@@ -4805,7 +4815,7 @@ SumoS32 UpdateHiddenGameScreen() {
       if (g_sumoMode != 2)
       LaunchGameBoxProjectile(start, target, 30.0f, 2);
       else
-        LaunchGameBoxProjectile(start, target, 10.0f, 2);  
+        LaunchGameBoxProjectile(start, target, 20.0f, 2);  
     }
     g_gameMouseX = -1;
   }
@@ -5552,5 +5562,28 @@ void RunGameFrame(SumoU8 renderFrame) {
   if (screenshotRequested) {
     char prefix[] = "sumotori";
     SaveGameScreenshot(prefix, 0);
+  }
+}
+
+void GameMan::CalculateLimbFracture(GameBox *box)
+{
+  size_t i = 0;
+  for (; i < 15; i++) 
+  {
+    if (bodyParts[i] == box) 
+    {
+      bodyParts[i] = NULL;
+      break;
+    }
+  }
+  // limb index
+  switch (i) 
+  {
+  case UpperArmR: bodyParts[ForearmR] = NULL;
+  case ForearmR: bodyParts[HandR] = NULL; break;
+  
+  case UpperArmL: bodyParts[ForearmL] = NULL;
+  case ForearmL: bodyParts[HandL] = NULL; break;
+  default: break;
   }
 }

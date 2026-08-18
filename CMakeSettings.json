@@ -21,7 +21,7 @@
     {
       "name": "x64-Release",
       "generator": "Ninja",
-      "configurationType": "MinSizeRel",
+      "configurationType": "Release",
       "buildRoot": "${projectDir}\\out\\build\\${name}",
       "installRoot": "${projectDir}\\out\\install\\${name}",
       "cmakeCommandArgs": "",
@@ -33,6 +33,16 @@
           "name": "SUMO_WARNINGS_AS_ERRORS",
           "value": "False",
           "type": "BOOL"
+        },
+        {
+          "name": "CMAKE_EXE_LINKER_FLAGS_MINSIZEREL",
+          "value": "/INCREMENTAL:NO",
+          "type": "STRING"
+        },
+        {
+          "name": "CMAKE_EXE_LINKER_FLAGS_RELEASE",
+          "value": "/INCREMENTAL:NO",
+          "type": "STRING"
         }
       ]
     },

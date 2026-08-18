@@ -390,6 +390,7 @@ extern const SumoF32 g_gameTwo = 2.0f;
 extern const SumoF32 g_gameCameraBackDistance = -100.0f;
 
 #ifdef SUMO_CSM
+glm::vec3 lightDir = glm::vec3(0.30000001f, -1.0f, 0.5f);
 float cameraFarPlane = 500.0f;
 float shadowCascadeLevels[]{cameraFarPlane / 50.0f, cameraFarPlane / 25.0f,
                             cameraFarPlane / 10.0f, cameraFarPlane / 2.0f};
@@ -482,6 +483,7 @@ unsigned int lightFBO;
 unsigned int depthMap;
 static GLint s_uniformLightDir;
 static GLint s_uniformViewPos;
+static GLint s_uniformLightMatrix[2];
 constexpr unsigned int depthMapResolution = 16384;
 unsigned int matricesUBO;
 #endif
@@ -623,10 +625,10 @@ static const char *const c_fragmentShaderSource =
     "vec3 reflectDir = reflect(-localLightDir, normal);\n"
     "float spec = 0.0;\n"
     "vec3 halfwayDir = normalize(localLightDir + viewDir);  \n"
-    "spec = pow(max(dot(normal, halfwayDir), 0.0), 2.0);\n"
-    "vec3 specular = spec * lightColor  * (texture(normalMap, fs_in.TexCoords).a * 0.5f); \n"
+    "spec = pow(max(dot(normal, halfwayDir), 0.0), 8.0);\n"
+    "vec3 specular = spec * lightColor  * (texture(normalMap, fs_in.TexCoords).a); \n"
     "float shadow = ShadowCalculation(fs_in.FragPosLightSpace);\n"
-    "vec3 ambient = mix( vec3(0.3,0.4,0.32), vec3(0.5), (1.0 - shadow) * ambinetDiff);\n"
+    "vec3 ambient = mix( vec3(0.3,0.35,0.32), vec3(0.5), (1.0 - shadow) * ambinetDiff);\n"
     "vec3 lighting = ((ambient + diffuse * 0.05)  + (1.0 - shadow) * (diffuse + specular)) * vec3(color);\n"
     "FragColor = vec4(uFactor * lighting, color.a);\n"
     "}";
@@ -696,6 +698,7 @@ static bool EnsureRenderObjects() {
   s_uniformViewPos = glGetUniformLocation(s_program, "viewPos");
   s_uniformFactor = glGetUniformLocation(s_program, "uFactor");
   s_uniformMode = glGetUniformLocation(s_program, "uMode");
+  s_uniformLightMatrix[0] = glGetUniformLocation(s_program, "lightSpaceMatrix");
   glUseProgram(s_program);
   glUniform1i(glGetUniformLocation(s_program, "diffuseTexture"), 0);
   glUniform1i(glGetUniformLocation(s_program, "shadowMap"), 1);
@@ -808,6 +811,16 @@ static bool EnsureRenderObjects() {
   glReadBuffer(GL_NONE);
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+  s_uniformLightMatrix[1] = glGetUniformLocation(s_CSMprogram, "lightSpaceMatrix");
+
+  glm::vec3 localLightDir = lightDir;
+  localLightDir = glm::normalize(localLightDir);
+  localLightDir *= 8192.f;
+  glUniform3fv(glGetUniformLocation(s_program, "lightDir"), 1,
+               &localLightDir[0]);
+  glUniform1i(glGetUniformLocation(s_program, "lightmapSize"), depthMapResolution * g_gameRenderQualityCode);
+  glUniform1i(glGetUniformLocation(s_program, "lightmapFilter"), 4);
+
   return true;
 }
 
@@ -827,6 +840,7 @@ HRESULT SetGameTransform(SumoU32 state, const SumoF32 *matrix) {
     glUseProgram(s_program);
     glUniformMatrix4fv(s_uniformView, 1, GL_FALSE, s_viewTransform);
     glUniformMatrix4fv(s_uniformProjection, 1, GL_FALSE, s_projectionTransform);
+
     glUniform3f(s_uniformViewPos, 
         g_gameCameraPosition.x,
                 g_gameCameraPosition.y, 
@@ -1003,11 +1017,9 @@ void FlushGameTextVertices() {
 }
 
 
-extern SumoU8 g_gameBoxShadowPositionStorage[0x120000];
 extern SumoU8 g_gameBoxIndexPairStorage[0x20000];
 extern SumoU8 g_gameBoxTextureTriangleCounts[0x100];
 extern GameBoxLitVertex *g_gameBoxLitVertexCursor;
-extern SumoU8 *g_gameBoxShadowPositionCursor;
 extern SumoU8 *g_gameBoxIndexPairCursor;
 extern Vector3 g_gameBoxLightDirection;
 extern SumoIntPtr g_gameTextures[256];
@@ -1052,6 +1064,8 @@ extern SumoS16 g_gameBoxTriangleOrder[];
 
 static GameBoxLitVertex s_mainVertexStaging[98304];
 
+
+
 HRESULT RenderGameScene() {
   if (!EnsureRenderObjects())
     return 0;
@@ -1085,7 +1099,7 @@ HRESULT RenderGameScene() {
 
           glm::mat4 lightProjection, lightView;
   glm::mat4 lightSpaceMatrix;
-          glm::vec3 lightDir = glm::vec3(0.30000001f, -1.0f, 0.5f);
+          
   float near_plane = 5500.0f, far_plane = 1.5f;
 
   lightProjection =
@@ -1096,15 +1110,11 @@ HRESULT RenderGameScene() {
                                           -g_gameCameraWorldPosition.y / 2,
                                           -g_gameCameraWorldPosition.z));
   lightSpaceMatrix = lightProjection * lightView;
-  lightDir = glm::normalize(lightDir);
-  lightDir *= 8192.f;
-  glUniform3fv(glGetUniformLocation(s_program, "lightDir"), 1, &lightDir[0]); 
-    glUniform1i(glGetUniformLocation(s_program, "lightmapSize"),
-              depthMapResolution * g_gameRenderQualityCode);
-  glUniform1i(glGetUniformLocation(s_program, "lightmapFilter"), 4);
-  glUniformMatrix4fv(glGetUniformLocation(s_program, "lightSpaceMatrix"), 1, GL_FALSE, &lightSpaceMatrix[0][0]); 
+
+  glUniformMatrix4fv(s_uniformLightMatrix[0], 1, GL_FALSE, &lightSpaceMatrix[0][0]); 
   glUseProgram(s_CSMprogram);
-  glUniformMatrix4fv(glGetUniformLocation(s_CSMprogram, "lightSpaceMatrix"), 1,GL_FALSE, &lightSpaceMatrix[0][0]); 
+  glUniformMatrix4fv(s_uniformLightMatrix[1], 1, GL_FALSE,
+                     &lightSpaceMatrix[0][0]); 
 
   bool firstLightPass = true;
   SumoS32 passCount = 2;
@@ -1127,7 +1137,6 @@ HRESULT RenderGameScene() {
         triangleCountWords[word] = 0;
       g_gameBoxIndexPairCursor = g_gameBoxIndexPairStorage;
       g_gameBoxLitVertexCursor = g_gameBoxLitVertexStorage;
-      g_gameBoxShadowPositionCursor = g_gameBoxShadowPositionStorage;
       RenderGameBoxes(0);
 
       SumoS32 triangleCount = 0;
@@ -1166,8 +1175,9 @@ HRESULT RenderGameScene() {
                       emittedTriangleCount * 3 *
                           (SumoS32)sizeof(GameBoxLitVertex),
                       s_mainVertexStaging);
-      }
       glBindVertexArray(s_mainVertexArray);
+      }
+      
       glUniform1i(s_uniformMode, c_renderModeAlbedo);
       SetRenderFactor(g_screenTintColor);
       for (SumoS32 texture = 0; texture < 128; ++texture) {
@@ -1204,20 +1214,7 @@ HRESULT RenderGameScene() {
 
     } while (++pass < passCount);
   }
-  #ifndef SUMO_CSM
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_DST_COLOR, GL_SRC_COLOR);
-  glUniform1i(s_uniformMode, c_renderModeAlbedo);
-  SetRenderFactor(g_screenTintColor);
-  glBindVertexArray(s_mainVertexArray);
-  for (SumoS32 texture = 0; texture < 128; ++texture) {
-    if (triangleCounts[texture] != 0) {
-      SetGameTexture(0, g_gameTextures[texture * 2 + 1]);
-      glDrawArrays(GL_TRIANGLES, 3 * g_gameBoxTextureTriangleOffsets[texture],
-                   triangleCounts[texture] * 3);
-    }
-  }
-  #endif
+
   if (g_waterFieldActive)
     RenderWaterSurface();
   FlushGameTextVertices();
