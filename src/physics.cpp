@@ -155,8 +155,8 @@ void GameBox::IntegratePhysics() {
         if ((angularVelocity.LengthSquared() + linearSpeedSquared) *
                 g_gameSleepSpeedScale <
             g_gameOne) {
-          if (++sleepCounter > 30)
-            sleeping = true;
+         // if (++sleepCounter > 30)
+            //sleeping = true;
         } else {
           sleepCounter = 0;
         }
@@ -1716,9 +1716,9 @@ void ResolveGameCollisions() {
   for (GameBox *outer = g_gameBoxes; outer < g_gameBoxesEnd; ++outer) {
     if (outer->flag58)
       continue;
-    activeGameBoxes++;
 
     if (outer->immovable == 0 && outer->sleeping == 0) {
+        activeGameBoxes++;
       if (outer <= g_gameBoxes)
         continue;
       for (GameBox *inner = g_gameBoxes; inner < outer; ++inner) {
@@ -1894,14 +1894,10 @@ void ResolveGameCollisions() {
     record->inverseResponse = responseSum.Inverted();
   }
   int iterationCount = 40;
-  if (activeGameBoxes > 256)
-  {
-      iterationCount = 30;
-  }
 
   if (activeGameBoxes > 400) 
   {
-    iterationCount = 2;
+    iterationCount = 20;
   }
 
   for (SumoS32 iteration = 0; iteration < iterationCount; ++iteration) {

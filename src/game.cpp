@@ -707,7 +707,7 @@ GameMan *CreateGameMen() {
   }
 
   g_nextGameMan = next;
-  g_gameTimeScaleNumerator = 120;
+
   return next;
 }
 
@@ -741,6 +741,25 @@ void StartGameRound() {
   } else {
     g_gameUsesScriptedArena = 0;
     BuildDefaultGameArena(0);
+
+  if (g_sumoMode == 3) 
+  {
+      for (int i = 0; i < g_gameScores[0]; i++) 
+      {
+        Vector3 size = MakeVector3(1.2f, -1.2f, 1.2f);
+        Vector3 position = MakeVector3(29.0, i * 2.412 + 6.2f, -29.0);
+        GameBox *box = CreateGameBox(size, position, 2, 0.125f);
+        box->orientation.RotateColumns02(g_gameRandom.Next());
+      }
+
+      for (int i = 0; i < g_gameScores[1]; i++) 
+      {
+        Vector3 size = MakeVector3(1.2f, -1.2f, 1.2f);
+        Vector3 position = MakeVector3(-29.0, i * 2.412 + 6.2f, 29.0);
+        GameBox *box = CreateGameBox(size, position, 3, 0.125f);
+        box->orientation.RotateColumns02(g_gameRandom.Next());
+      }
+    }
   }
   if (g_sumoMode == 1)
     InitializeWaterField();
@@ -2306,12 +2325,15 @@ void GameMan::Update(SumoIntPtr state) {
         eliminated = 1;
         if (g_sumoMode == 3)
         {
+          bool winner = &g_gameMen[0] == this;
           opponent->eliminated = -1;
-          g_gameScores[&g_gameMen[0] == this]++;
+          g_gameScores[winner ]++;
           mode = 2;
           RestartGameMusic(9);
           g_levelLoadState[7] = 0;
           g_levelLoadState[4] = 2;
+
+          LaunchGameBoxProjectile(MakeVector3(-30.0, 16.0, -15.0), centerOfMass, 50.f, winner ? 3 : 2);
         } 
         else 
         {
@@ -4390,10 +4412,10 @@ void RefreshGameContactLists();
 extern SumoS32 g_selectedLevelScript;
 
 SumoS32 g_gameArenaPageRowCount = 2;
-
+SumoU32 GetScaledGameTime();
 SumoS32 g_gameArenaPageChainLinks = 3;
 void (*g_gameModFilePickerRequest)();
-
+extern SumoS32 g_gameFrameClock;
 SumoS32 InitializeGameRuntimeState() {
   if (g_gameArenaPageRowCount > 2 && g_selectedLevelScript >= 8) {
     g_selectedLevelScript = 0;
@@ -4409,6 +4431,18 @@ SumoS32 InitializeGameRuntimeState() {
     StartGameLevelEditor(0);
     return 0;
   }
+
+    if (g_sumoMode == 3) 
+    {
+    if (g_gameTimeScaleNumerator != 100) 
+    {
+        g_gameTimeScaleNumerator = 100;
+        g_gameFrameClock = GetScaledGameTime();
+    }
+ 
+  }
+  else
+    g_gameTimeScaleNumerator = 120;
 
   g_screenTintLevel = 0;
   SetGameCursorVisible(1);

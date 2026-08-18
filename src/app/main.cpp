@@ -119,26 +119,26 @@ int main(int argc, char **argv) {
   //InitializeGameAudio();
   //InitializeGameMusic();
   StartGameRuntime();
-  SumoS32 frameClock = g_gameFrameClock;
+  
   while (!g_gameLevelEditorCloseRequested && !SumoPlatformQuitRequested()) {
     SumoS32 scaledTime = (SumoS32)GetScaledGameTime();
-    if (scaledTime <= frameClock) {
+    if (scaledTime <= g_gameFrameClock) {
       SDL_Delay(0);
     } else {
-      ++frameClock;
+      ++g_gameFrameClock;
       if (g_gameKeyDown[c_gameTripleStepInput]) {
         RunGameFrame(0);
         RunGameFrame(0);
         RunGameFrame(0);
       }
 
-      SumoS32 frameDifference = scaledTime - frameClock;
+      SumoS32 frameDifference = scaledTime - g_gameFrameClock;
       if (frameDifference > 20)
-        frameClock = scaledTime;
-      RunGameFrame((SumoU8)(frameClock == scaledTime));
+        g_gameFrameClock = scaledTime;
+      RunGameFrame((SumoU8)(g_gameFrameClock == scaledTime));
 
       if (g_gameKeyDown[c_gameFastForwardInput])
-        frameClock += 3;
+        g_gameFrameClock += 3;
       if (g_gameKeyPressed[c_gamePauseInput]) {
         g_gameSimulationPaused ^= 1;
         g_gameKeyPressed[c_gamePauseInput] = 0;
