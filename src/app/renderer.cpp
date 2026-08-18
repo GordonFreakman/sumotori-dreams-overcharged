@@ -610,13 +610,14 @@ static const char *const c_fragmentShaderSource =
     "return;\n}"
 
     "vec4 color = texture(diffuseTexture, fs_in.TexCoords).rgba;\n"
-    "vec3 normal = texture(normalMap, fs_in.TexCoords).rgb * 0.75f;"
-    "normal += 0.25f;"
+    "vec3 normal = texture(normalMap, fs_in.TexCoords).rgb;"
+   // "normal += 0.25f;"
     "normal = normalize(normal * 2.0 - 1.0);"
-    "vec3 lightColor = vec3(0.7);\n"
-    "vec3 ambient = vec3(0.3, 0.34, 0.32);\n"
+    "vec3 lightColor = vec3(0.4);\n"
+    //"vec3 ambient = vec3(0.35, 0.44, 0.42);\n"
     "vec3 localLightDir = normalize(fs_in.TangentLightPos - fs_in.TangentFragPos);"
     "float diff = max(dot(localLightDir, normal), 0.0);\n"
+    "float ambinetDiff = max(dot(normalize(lightDir), normalize(fs_in.Normal)), 0.0);\n"
     "vec3 diffuse = diff * lightColor;\n"
     "vec3 viewDir = normalize(fs_in.TangentViewPos - fs_in.TangentFragPos);\n"
     "vec3 reflectDir = reflect(-localLightDir, normal);\n"
@@ -625,6 +626,7 @@ static const char *const c_fragmentShaderSource =
     "spec = pow(max(dot(normal, halfwayDir), 0.0), 2.0);\n"
     "vec3 specular = spec * lightColor  * (texture(normalMap, fs_in.TexCoords).a * 0.5f); \n"
     "float shadow = ShadowCalculation(fs_in.FragPosLightSpace);\n"
+    "vec3 ambient = mix( vec3(0.3,0.4,0.32), vec3(0.5), (1.0 - shadow) * ambinetDiff);\n"
     "vec3 lighting = ((ambient + diffuse * 0.05)  + (1.0 - shadow) * (diffuse + specular)) * vec3(color);\n"
     "FragColor = vec4(uFactor * lighting, color.a);\n"
     "}";
@@ -1119,7 +1121,7 @@ HRESULT RenderGameScene() {
                    depthMapResolution * g_gameRenderQualityCode);
         glClear(GL_DEPTH_BUFFER_BIT);
         glCullFace(GL_FRONT); // peter panning
-        }
+        
       SumoU32 *triangleCountWords = (SumoU32 *)triangleCounts;
       for (SumoS32 word = 0; word < 64; ++word)
         triangleCountWords[word] = 0;
@@ -1157,15 +1159,14 @@ HRESULT RenderGameScene() {
         *lockedVertices++ =
             sourceVertices[g_gameBoxTriangleOrder[triangle] * 3 + 2];
       }
+
       glBindBuffer(GL_ARRAY_BUFFER, s_mainVertexBuffer);
       glBufferData(GL_ARRAY_BUFFER, sizeof(g_gameBoxLitVertexStorage), NULL, GL_STREAM_DRAW);
       glBufferSubData(GL_ARRAY_BUFFER, 0,
                       emittedTriangleCount * 3 *
                           (SumoS32)sizeof(GameBoxLitVertex),
                       s_mainVertexStaging);
-
-      glBindVertexArray(s_mainVertexArray);
-      glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+      }
       glBindVertexArray(s_mainVertexArray);
       glUniform1i(s_uniformMode, c_renderModeAlbedo);
       SetRenderFactor(g_screenTintColor);
