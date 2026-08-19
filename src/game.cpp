@@ -1858,8 +1858,8 @@ void GameMan::Initialize(Vector3 &position, SumoF32 angle, SumoS32 type,
       shin->limb = true;
       thigh->limb = true;
       foot->breakability = 550;
-      shin->breakability = 500;
-      thigh->breakability = 500;
+      shin->breakability = 400;
+      thigh->breakability = 300;
     }
 
     joint = g_gameContactObjectsEnd;

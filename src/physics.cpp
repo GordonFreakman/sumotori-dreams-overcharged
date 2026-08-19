@@ -829,6 +829,7 @@ SumoU8 FractureGameBoxAtPoint(Vector3 &position, GameBox *box) {
   GameBox *biggestBox = NULL;
   for (SumoS32 fragment = 0; fragment < 5; ++fragment) {
     GameBox *newBox = g_gameBoxesEnd;
+    newBox->ResetStorage();
     GameBox *source = box;
     for (SumoS32 other = 0; other < 5; ++other) {
       if (other == fragment)
