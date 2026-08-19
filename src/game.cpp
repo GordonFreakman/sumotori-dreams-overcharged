@@ -476,13 +476,23 @@ void UpdateGameMenuScreen(SumoU8 drawOverlay) {
   }
 
   if (drawOverlay) {
-    if (g_gameMenuPage == 3) {
+    switch (g_gameMenuPage) 
+    {
+    case 3:
       DrawGameText(-0.85000002f, g_inertiaRadiusScale, g_gameMenuWarningText,
                    0xc0ffffff);
       g_screenTintColor =
           (0x007f007f & ((SumoS32)g_screenTintColor / 2)) +
           ((3 * ((SumoS32)g_screenTintColor & 0xff00) / 4) & 0xff00);
+        break;
+
+        case 2:
+      DrawGameText(-0.30f, 0.49f, "Modifiers", 0xc80ff80); 
+       DrawGameText(0.15f, 0.49f, "Gamemodes", 0xc80ff80); 
+      break;
+    default: break;
     }
+
     DrawGameText(-0.4f, 0.56f, "Sumotori Dreams: Overcharged v0.05", 0xc08080ff);
     DrawGameText(0.27000001f, -0.5, "\"Tested on party animals\"",
                  0xc0ffffff);
