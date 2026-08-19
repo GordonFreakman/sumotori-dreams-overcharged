@@ -1853,6 +1853,15 @@ void GameMan::Initialize(Vector3 &position, SumoF32 angle, SumoS32 type,
     thigh->unknownC0 = 4;
     thigh->unknownC4 = 0.005f;
 
+    if (g_sumoMode == 2) {
+      foot->limb = true;
+      shin->limb = true;
+      thigh->limb = true;
+      foot->breakability = 550;
+      shin->breakability = 500;
+      thigh->breakability = 500;
+    }
+
     joint = g_gameContactObjectsEnd;
     joint->boxes[0] = thigh;
     joint->localAnchors[0] = MakeVector3(0.0f, 2.2f, 0.0f);
@@ -3130,13 +3139,18 @@ actionUpdateDone:
           for (GameMan *man = g_gameMen; man < g_nextGameMan; ++man) {
             if (man == this)
               continue;
-            GameBox *manFootRight = man->bodyParts[6];
-            GameBox *manFootLeft = man->bodyParts[3];
-            GameBox *manHead = man->bodyParts[2];
-            SumoF64 footLevel =
-                ((SumoF64)manFootRight->position.y + manFootLeft->position.y) *
-                    g_randomHalf +
-                3.0f;
+            GameBox *manFootRight = man->bodyParts[FootR];
+            GameBox *manFootLeft = man->bodyParts[FootL];
+            GameBox *manHead = man->bodyParts[Head];
+            SumoF64 footLevel = man->bodyParts[Pelvis]->position.y - 3.0f;
+            if (manFootRight && manFootLeft)
+            footLevel = (manFootRight->position.y + manFootLeft->position.y) *
+                    0.5f + 3.0f;
+            else if (manFootRight)
+              footLevel =
+                  (manFootRight->position.y) + 3.0f;
+            else if (manFootLeft)
+              footLevel = (manFootLeft->position.y) + 3.0f;
             if (!(footLevel < manHead->position.y)) {
               if (g_gameIsRunning == 0)
                 continue;
@@ -3186,8 +3200,8 @@ actionUpdateDone:
         goto raiseBalanceFlag;
     }
     SumoS32 contactTick = tintNow - 30;
-    if (!(bodyParts[3]->unknownD4 > contactTick)) {
-      if (bodyParts[6]->unknownD4 <= contactTick)
+    if (bodyParts[3] && !(bodyParts[3]->unknownD4 > contactTick)) {
+      if (bodyParts[6] && bodyParts[6]->unknownD4 <= contactTick)
         goto raiseBalanceFlag;
     }
     SumoF32 leanLimit = g_gameCameraInputDamping;
@@ -3772,8 +3786,8 @@ actionUpdateDone:
         shoulderLift =
             (SumoF32)((SumoF64)2.700000047683716f * lateCurve + shoulderLift);
         shoulderTwist = (SumoF32)(lateCurve * g_gameWallCenterSegment);
-        if (bodyParts[3]->unknownD8 < staleCutoff ||
-            bodyParts[6]->unknownD8 < staleCutoff)
+        if ((bodyParts[3] && bodyParts[3]->unknownD8 < staleCutoff) ||
+            (bodyParts[6] && bodyParts[6]->unknownD8 < staleCutoff))
           giveUp = 1;
         SumoF64 driveTerm =
             ((SumoF64)lateralDrift - recoveryLateral) * g_gameProjectileSpin;
@@ -5579,6 +5593,12 @@ void GameMan::CalculateLimbFracture(GameBox *box)
   // limb index
   switch (i) 
   {
+  case ThighR: bodyParts[CalfR] = NULL;
+  case CalfR: bodyParts[FootR] = NULL; break;
+
+  case ThighL: bodyParts[CalfL] = NULL;
+  case CalfL:bodyParts[FootL] = NULL; break;
+
   case UpperArmR: bodyParts[ForearmR] = NULL;
   case ForearmR: bodyParts[HandR] = NULL; break;
   
