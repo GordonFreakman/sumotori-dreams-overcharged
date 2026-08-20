@@ -321,7 +321,8 @@ struct GameMan {
   SumoS32 alternateBehavior;
   SumoS32 randomHeading;
   SumoS32 randomActionDelay;
-  int m_bLobotomized;
+  bool dead;
+  int fragmentCount;
   void Initialize(Vector3 &position, SumoF32 angle, SumoS32 type,
                   SumoIntPtr flags);
   void Render(void *poseState);
@@ -373,6 +374,7 @@ void RefreshScreenTint();
 Vector3 TransformWavyTextPoint(Vector3 &point);
 void ResetGameContactLists();
 void RefreshGameContactLists();
+bool SumoShouldMoveCamera();
 extern SumoU32 g_pendingManCount;
 extern Vector3 g_pendingManPositions[9];
 extern SumoF32 g_pendingManAngles[9];

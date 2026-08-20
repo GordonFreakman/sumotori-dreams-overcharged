@@ -284,7 +284,7 @@ SumoS32 BlendTextIntoTexture(SumoU8 *p_pixels, const char *p_text, SumoS32 p_x,
                     &extentWidth);
 
   SumoU32 invertedText = (SumoU32)p_textColor ^ 0xffffffu;
-  SumoU32 invertedBackground = (SumoU32)p_backgroundColor ^ 0xffffffu;
+  SumoU32 invertedBackground = (SumoU32)p_backgroundColor ^ 0xfffffff;
   SumoU8 *source = (SumoU8 *)malloc((size_t)(p_width * p_height * 4));
   memset(source, 0, (size_t)(p_width * p_height * 4));
   SumoS32 extentHeight = cellHeight < p_height ? cellHeight : p_height;
@@ -324,7 +324,7 @@ SumoS32 BlendTextIntoTexture(SumoU8 *p_pixels, const char *p_text, SumoS32 p_x,
               (SumoU8)(((SumoU32)destination[2] * (255 - sourceCursor[2])) >>
                        8);
           destination[3] =
-              (SumoU8)(((SumoU32)destination[2] * (255 - sourceCursor[2])) >>
+              (SumoU8)(((SumoU32)destination[3] * (255 - sourceCursor[2])) >>
                        8);
           sourceCursor += sizeof(SumoU32);
           destination += sizeof(SumoU32);

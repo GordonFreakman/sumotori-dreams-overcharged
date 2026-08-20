@@ -76,6 +76,7 @@ SumoU8 SumoTranslateScancode(SumoS32 sdlScancode);
 void SumoHandleKeyDown(SumoS32 sdlScancode);
 void SumoHandleKeyUp(SumoS32 sdlScancode);
 void SumoHandleLeftMouseDown(SumoS32 x, SumoS32 y);
+void SumoHandleMouseMove(SumoS32 x, SumoS32 y);
 
 void SumoRenderRequestGLAttributes();
 bool SumoRenderCreateContext();
@@ -84,6 +85,7 @@ void SumoRenderUpdateTargetSize();
 void SumoRenderAdoptTargetSize(SumoS32 width, SumoS32 height);
 void SumoRenderMarkProjectionLive();
 bool SumoRenderContextReady();
+bool SumoShouldMoveCamera();
 
 struct SumoStartupConfig {
   SumoS32 width;

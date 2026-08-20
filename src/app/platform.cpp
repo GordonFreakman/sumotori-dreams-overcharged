@@ -33,6 +33,8 @@ SumoS32 g_gameMouseX = -1;
 
 SumoS32 g_gameMouseY;
 
+SumoS32 g_cameraMouseX, g_cameraMouseY;
+
 SumoS32 g_gamePrimaryInputPressed;
 
 #if defined(_WIN32)

@@ -56,9 +56,16 @@ void SumoPlatformDestroyWindow() {
 }
 
 SDL_Window *SumoPlatformWindow() { return s_window; }
-
+bool m_bCameraEnabled;
+int m_iMouseStartX;
+int m_iMouseStartY;
 bool SumoPlatformQuitRequested() { return s_quitRequested; }
-
+bool SumoShouldMoveCamera() 
+{ 
+    SDL_SetWindowMouseGrab(s_window, m_bCameraEnabled);
+    SDL_SetWindowRelativeMouseMode(s_window, m_bCameraEnabled);
+    return m_bCameraEnabled; 
+}
 static void HandleLeftMouseDownDrawable(SumoS32 x, SumoS32 y) {
   int logicalWidth = 0;
   int logicalHeight = 0;
@@ -92,12 +99,45 @@ void PumpGameMessages() {
         SumoHandleKeyUp((SumoS32)event.key.scancode);
       break;
     case SDL_EVENT_MOUSE_BUTTON_DOWN:
+      if (event.button.button == SDL_BUTTON_RIGHT) 
+      {
+        m_bCameraEnabled = true;
+        m_iMouseStartX = event.button.x;
+        m_iMouseStartY = event.button.y;
+      }
+
       if (event.button.button == SDL_BUTTON_LEFT &&
-          !SumoOverlayWantCaptureMouse()) {
+          !SumoOverlayWantCaptureMouse()) 
+      {
         HandleLeftMouseDownDrawable((SumoS32)event.button.x,
                                     (SumoS32)event.button.y);
+        
       }
       break;
+    case SDL_EVENT_MOUSE_BUTTON_UP: 
+        if (event.button.button == SDL_BUTTON_RIGHT) 
+        {
+        m_bCameraEnabled = false;
+          SDL_WarpMouseInWindow(s_window, m_iMouseStartX, m_iMouseStartY);
+        }
+        break;
+
+    case SDL_EVENT_MOUSE_MOTION: 
+    {
+      if (!SumoOverlayWantCaptureMouse()) 
+      {
+        SumoHandleMouseMove(event.motion.xrel, event.motion.yrel);
+        if (m_bCameraEnabled) 
+        {
+          int w, h;
+          SDL_GetWindowSize(s_window, &w, &h);
+          SDL_WarpMouseInWindow(s_window, w/2, h/2);
+        }
+      }
+      break;
+    }
+
+      
     default: break;
     }
   }

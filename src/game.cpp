@@ -487,17 +487,17 @@ void UpdateGameMenuScreen(SumoU8 drawOverlay) {
         break;
 
         case 2:
-      DrawGameText(-0.30f, 0.49f, "Modifiers", 0xc80ff80); 
-       DrawGameText(0.15f, 0.49f, "Gamemodes", 0xc80ff80); 
+      DrawGameText(-0.30f, 0.49f, "Modifiers", 0xff80ff80); 
+       DrawGameText(0.15f, 0.49f, "Gamemodes", 0xff80ff80); 
       break;
     default: break;
     }
 
-    DrawGameText(-0.4f, 0.56f, "Sumotori Dreams: Overcharged v0.05", 0xc08080ff);
+    DrawGameText(-0.4f, 0.56f, "Sumotori Dreams: Overcharged v0.05", 0xff8080ff);
     DrawGameText(0.27000001f, -0.5, "\"Tested on party animals\"",
-                 0xc0ffffff);
+                 0xffffffff);
     DrawGameText(-0.85000002f, -0.5,
-                 "www.gravitysensation.com/sumotori/", 0xc0ffffff);
+                 "www.gravitysensation.com/sumotori/", 0x0cffffff);
   }
 }
 
@@ -2074,7 +2074,7 @@ Vector3 GameMan::CalculateCenterOfMassPosition() {
       totalMass += bodyPart->mass;
       weightedPosition.AddInline(bodyPart->position.Scale(bodyPart->mass));
     }
-    if (m_bLobotomized) break;
+    if (dead) break;
   }
 
   SumoF32 inverseMass = 1.0f / totalMass;
@@ -2088,8 +2088,8 @@ Vector3 GameMan::CalculateCenterOfMassPosition() {
         weightedPosition.x * weightedPosition.x;
     if (horizontalDistanceSquared + weightedPosition.y * weightedPosition.y >
         g_gameMaximumCenterDistanceSquared) {
-      if (m_bLobotomized == 0 && weightedPosition.y < 0.f)
-        m_bLobotomized++;
+      if (!dead && weightedPosition.y < 0.f)
+        dead = true;
       weightedPosition.z = 0.0f;
       weightedPosition.y = 0.0f;
       weightedPosition.x = 0.0f;
@@ -2136,6 +2136,9 @@ GameMan *GameMan::FindNearestOpponent(Vector3 &facingAxis,
   for (GameMan *candidate = g_gameMen; candidate < g_nextGameMan; ++candidate) {
     if (candidate == this)
       continue;
+
+    if (candidate->dead)
+        continue;
     Vector3 delta = candidate->bodyParts[0]->position - bodyParts[0]->position;
     volatile SumoF32 facingPenalty =
         -(delta.x * facingAxis.x + delta.z * facingAxis.z +
@@ -2241,6 +2244,8 @@ SumoU32 GameMan::ChooseAiInput(GameMan *opponent) {
     return 0;
   }
 
+  if (opponent == this)
+      return 4;
   Vector3 ownVelocity = CalculateCenterOfMassVelocity();
   Vector3 opponentVelocity = opponent->CalculateCenterOfMassVelocity();
   SumoU32 input = 0;
@@ -2290,7 +2295,7 @@ SumoU32 GameMan::ChooseAiInput(GameMan *opponent) {
       break;
     if (!(lateralDistance > g_vectorZero))
       break;
-    if (opponentMoving)
+    if (opponentMoving && g_sumoMode != 2)
       break;
     if (approachTicks >= 0xa0) {
       SumoF64 ownLateralMotion = (SumoF64)lateral.y * motionVector.y +
@@ -2446,7 +2451,7 @@ void GameMan::Update(SumoIntPtr state) {
   SumoU8 footHomeFlag;
   SumoU8 poseOverride;
   SumoU8 actionRerun;
-  if (m_bLobotomized)
+  if (dead)
   {
     postureState = 3;
     postureTick = 0;
@@ -2473,6 +2478,10 @@ void GameMan::Update(SumoIntPtr state) {
   if ((state - (SumoIntPtr)this) / (SumoIntPtr)sizeof(GameMan) > 1)
     audioChannel = 2;
   opponent = (GameMan *)state;
+
+    if (opponent->dead)
+    opponent = NULL;
+
   if (opponent == 0)
     opponent = this;
 
@@ -2494,7 +2503,7 @@ void GameMan::Update(SumoIntPtr state) {
       }
       else
       {
-          if (!m_bLobotomized)
+          if (!dead)
               continue;
 
           box->breakability = 250;
@@ -2539,7 +2548,7 @@ void GameMan::Update(SumoIntPtr state) {
     g_levelLoadState[0] = (SumoS32)(this - g_gameMen);
 
   ++g_levelLoadState[7];
-  if (m_bLobotomized)
+  if (dead)
       return;
   {
     Vector3 unit;
@@ -2555,7 +2564,7 @@ void GameMan::Update(SumoIntPtr state) {
     lateralAxis = forwardAxis.Cross(unit);
   }
 
-  if (g_screenTintLevel - g_levelLoadState[6] > 360) {
+  if (g_screenTintLevel - g_levelLoadState[6] > 360 || opponent == this) {
     GameMan *nearest = FindNearestOpponent(lateralAxis, forwardAxis);
     if (nearest != 0) {
       opponent = nearest;
@@ -4520,7 +4529,7 @@ extern const SumoF32 g_gameManPoseImpulseGain;
 
 void GameMan::Render(void *poseState) {
 
-if (m_bLobotomized) 
+if (dead) 
 {
     return;
  }
@@ -4869,7 +4878,7 @@ SumoS32 UpdateHiddenGameScreen() {
   if (g_screenTintLevel < 1000) {
     DrawGameText(0.2f, g_gameCameraInputOffsetScale,
                  "Controls:\n"
-                 "Home/PageUp = Move Camera\n"
+                 "Right Mouse = Move Camera\n"
                  "Mouse Click = Punish!!!\n"
                  "Esc      = leave",
                  (SumoS32)0xb0ffffff);
@@ -5430,7 +5439,8 @@ static __forceinline void DrawNormalGameOverlay()
   SumoS32 colors[4] = {(SumoS32)0xe08080ff, (SumoS32)0xc0ffffff,
                        (SumoS32)0xe0c08000, (SumoS32)0xc020e020};
   char playerNames[2][25] = {"Blue guy (player)", "Grey guy (player2)"};
-  char deadState[4][35] = {"[dead]", "[very dead]", "[overwhelmingly dead]", "[grounded meat]"};
+  char deadState[5][35] = {"[dead]", "[very dead]", "[overwhelmingly dead]",
+                           "[grounded meat]", "[disfigured]"};
   SumoF32 y = 0.5f;
   if (g_levelLoadState[4] != 11) 
   {
@@ -5446,13 +5456,20 @@ static __forceinline void DrawNormalGameOverlay()
           char *name = g_gameMen[*player].mode == 1 ? playerNames[*player]
                                                     : computerNames[*player];
           DrawGameText(-0.15000001f, y, name, colors[*player]);
-          if (g_gameMen[*player].m_bLobotomized) // good variable name
+          if (g_gameMen[*player].fragmentCount) // good variable name
           {
-            char *name = deadState[g_gameMen[*player].m_bLobotomized > 20];
+            if (g_gameMen[*player].dead) 
+            {
+              char *name = deadState[g_gameMen[*player].fragmentCount > 20];
 
-            if (g_gameMen[*player].m_bLobotomized > 40)
-              name = deadState[(g_gameMen[*player].m_bLobotomized > 62) + 2];
-            DrawGameText(0.1f, y, name, colors[*player]);
+              if (g_gameMen[*player].fragmentCount > 40)
+                name = deadState[(g_gameMen[*player].fragmentCount > 62) + 2];
+              DrawGameText(0.1f, y, name, colors[*player]);
+            }
+            else
+            {
+              DrawGameText(0.1f, y, deadState[4], colors[*player]);
+            }
           }
 
           y -= 0.050000001f;
@@ -5510,13 +5527,15 @@ static __forceinline void DrawNormalGameOverlay()
     }
   }
 
-  if (g_levelLoadState[4] == 0) {
+  if (g_levelLoadState[4] == 0) 
+  {
     DrawGameText(0.2f, g_gameCameraInputOffsetScale,
                  "Controls:\n"
                  " DOWN      - start match\n"
                  " UP        - walk forward\n"
                  " BACKSPACE - Push\n"
-                 " ENTER     - Push 1 hand",
+                 " ENTER     - Push 1 hand\n"
+                 " R CLICK   - Rotate camera",
                  (SumoS32)0xb0ffffff);
     if (g_gameAlternateCameraMode || g_gameHumanPlayerCount >= 2) {
       DrawGameText(-0.80000001f, g_gameCameraInputOffsetScale,
@@ -5527,6 +5546,20 @@ static __forceinline void DrawNormalGameOverlay()
                    " CTRL      - Push 1 hand",
                    (SumoS32)0xb0ffffff);
     }
+
+    switch (g_sumoMode) {
+    default: break;
+    case 2: 
+        
+           DrawGameText(-0.75f, -0.25f,
+                   "Rules:\n"
+                   " The winner's dependent on\n"
+                   " who survives the longest.\n"
+                   " Players survive broken limbs.\n",
+                   (SumoS32)0xb0ffb0b0);
+        break;
+    }
+
   }
 }
 

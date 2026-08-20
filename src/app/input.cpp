@@ -120,6 +120,8 @@ extern SumoU8 g_gameKeyDown[256];
 extern SumoU8 g_gameKeyPressed[256];
 extern SumoS32 g_gameMouseX;
 extern SumoS32 g_gameMouseY;
+extern SumoS32 g_cameraMouseX;
+extern SumoS32 g_cameraMouseY;
 extern SumoS32 g_gamePrimaryInputPressed;
 
 void SumoHandleKeyDown(SumoS32 sdlScancode) {
@@ -142,4 +144,9 @@ void SumoHandleKeyUp(SumoS32 sdlScancode) {
 void SumoHandleLeftMouseDown(SumoS32 x, SumoS32 y) {
   g_gameMouseX = x;
   g_gameMouseY = y;
+}
+
+void SumoHandleMouseMove(SumoS32 x, SumoS32 y) {
+  g_cameraMouseX = x;
+  g_cameraMouseY = y;
 }

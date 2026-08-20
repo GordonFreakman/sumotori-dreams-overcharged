@@ -2069,7 +2069,7 @@ SumoS32 InitializeGameTextures() {
   }
 
   for (SumoS32 word = 0; word < 4194304; ++word)
-    g_gameTextureScratch[word] = 0xffffffffu;
+    g_gameTextureScratch[word] = 0xfffffffff;
 
   for (SumoS32 glyph = 0; glyph < 0x400; ++glyph) {
     char glyphText[2];
@@ -2077,7 +2077,7 @@ SumoS32 InitializeGameTextures() {
     glyphText[1] = 0;
     BlendTextIntoTexture((SumoU8 *)g_gameTextureScratch, glyphText,
                          ((glyph & 0xf) << 4) * 4, ((glyph / 0x10) << 4) * 4, 1024, 0x40,
-                         0x40, (0xc * 4), 0, 0xffffff, g_gameConsoleFont);
+                         0x40, (13 * 4), 0, 0xffffff, g_gameConsoleFont);
   }
 
   for (SumoU32 *cursor = g_gameTextureScratch;
@@ -2500,7 +2500,7 @@ static __forceinline Vector3 MakeGameCameraVector3(SumoF32 p_x, SumoF32 p_y,
   return result;
 }
 GameMan *lastManFocused;
-
+extern SumoS32 g_cameraMouseX;
 void UpdateGameCamera() {
   Vector3 direction = MakeGameCameraVector3(0.0f, 0.0f, 0.0f);
   Vector3 focus = direction;
@@ -2521,7 +2521,7 @@ void UpdateGameCamera() {
       bool m_bOneManFound = false;
       for (GameMan *man = g_gameMen; man < g_nextGameMan; ++man) {
 
-        if (man->m_bLobotomized)
+        if (man->dead)
           continue;
         m_bOneManFound = true;
         if ((man->centerOfMass - focus).LengthSquared() >
@@ -2566,22 +2566,26 @@ void UpdateGameCamera() {
   #ifdef SUMO_REPLAY
   if ((state == 2 || state == 11 || g_gameMode == 3) && g_gameMode != 1) 
   #else
-  if (state == 2 || state == 11) 
+  //if (state == 2 || state == 11) 
   #endif
   {
     g_gameCameraTurnScale = 0.0f;
     SumoF32 turnStep = g_gameCameraNormalTurnStep;
-    if (state == 11)
-      turnStep = 0.02f;
-    if (g_gameKeyDown[c_gameCameraTurnRightInput])
-      turnInput = turnStep;
-    if (g_gameKeyDown[c_gameCameraTurnLeftInput])
-      turnInput = turnInput - turnStep;
-  } else {
+    //if (state == 11)
+      turnStep = 0.002f;
+   // if (g_gameKeyDown[c_gameCameraTurnRightInput])
+      if (SumoShouldMoveCamera()) 
+      {
+        turnInput = -g_cameraMouseX * turnStep;
+        g_cameraMouseX = 0;
+      }
+    //if (g_gameKeyDown[c_gameCameraTurnLeftInput])
+     // turnInput = turnInput - turnStep;
+  } /*else {
     g_gameCameraTurnScale = 0.0f;
     if (state == 1 && g_gameAlternateCameraMode == 0)
       g_gameCameraTurnScale = 0.5f;
-  }
+  }*/
 
   SumoF32 zoomVelocity = g_gameCameraZoomVelocity;
   if (g_gameKeyDown[c_gameCameraZoomInInput])
@@ -2693,6 +2697,12 @@ void UpdateGameCamera() {
   g_gameCameraAngularVelocity = desired;
 
   SumoF32 positionGain = 0.01f;
+
+    if (SumoShouldMoveCamera()) 
+    {
+    SumoF32 positionGain = 0.05f;
+  }
+
   Vector3 approach = (desired - g_gameCameraPosition).Scale(positionGain);
   volatile SumoF32 positionX = g_gameCameraPosition.x + approach.x;
   volatile SumoF32 positionY = g_gameCameraPosition.y + approach.y;
@@ -2718,10 +2728,22 @@ void UpdateGameCamera() {
       g_gameOne / sqrt((double)(aim.z * aim.z + aim.y * aim.y + aim.x * aim.x));
   double accelerationY = g_gameCameraAcceleration.y -
                          aim.x * inverseLength * g_gameCameraYawResponse;
-  g_gameCameraAcceleration.x =
-      (SumoF32)((g_gameCameraAcceleration.x -
-                 aim.y * inverseLength * g_gameCameraPitchResponse) *
-                g_gameCameraAimDamping);
+  if (SumoShouldMoveCamera()) 
+  {
+    accelerationY = g_gameCameraAcceleration.y -
+                    aim.x * inverseLength * (g_gameCameraYawResponse * 2);
+    g_gameCameraAcceleration.x =
+        (SumoF32)((g_gameCameraAcceleration.x -
+                   aim.y * inverseLength * (g_gameCameraPitchResponse * 2)) *
+                  g_gameCameraAimDamping);
+  }
+  else 
+  {
+    g_gameCameraAcceleration.x =
+        (SumoF32)((g_gameCameraAcceleration.x -
+                   aim.y * inverseLength * g_gameCameraPitchResponse) *
+                  g_gameCameraAimDamping);
+  }
   g_gameCameraAcceleration.y =
       (SumoF32)(accelerationY * g_gameCameraAimDamping);
   g_gameCameraAcceleration.z =

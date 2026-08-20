@@ -690,16 +690,16 @@ void LimitDynamicBoxes() {
   GameBox *box = g_gameBoxes;
   while (box < g_gameBoxesEnd) {
     if (box->contactLinks == 0 && !box->immovable && !box->inactive && !box->m_pOwner) {
-      if (smallestMass > box->volume) {
+      if (smallestMass > box->mass) {
         smallestBox = box;
-        smallestMass = box->volume;
+        smallestMass = box->mass;
       }
       ++dynamicCount;
     }
     ++box;
   }
 
-  if (dynamicCount > 128 && smallestBox != 0) {
+  if (dynamicCount > 512 && smallestBox != 0) {
     smallestBox->inactive = true;
   }
 }
@@ -885,13 +885,17 @@ SumoU8 FractureGameBoxAtPoint(Vector3 &position, GameBox *box) {
     if (g_gameBoxesInitialized)
       newBox->breakability = box->breakability * 3.0f;
 
-      if (box->m_pOwner && !box->limb) 
+      if (box->m_pOwner) 
       {
               if (newBox->volume > 5)
-          box->m_pOwner->m_bLobotomized++;
+          box->m_pOwner->fragmentCount++;
+              if (!box->limb) 
+              {
+                if (!biggestBox || newBox->volume >= biggestBox->volume)
+                  biggestBox = newBox;
 
-        if (!biggestBox || newBox->volume >= biggestBox->volume)
-            biggestBox = newBox;
+                box->m_pOwner->dead = true;
+              }
       }
     for (GameBoxJoint *joint = g_gameContactObjects;
          joint < g_gameContactObjectsEnd; ++joint) {
