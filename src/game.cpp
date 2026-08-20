@@ -1809,6 +1809,7 @@ void GameMan::Initialize(Vector3 &position, SumoF32 angle, SumoS32 type,
                                 MakeVector3(0.0f, 36.0f, 0.0f), type,
                                 g_gameProjectileDefaultValue);
   head->modeE0 = 0x28;
+  head->unknownC0 = 4;
   head->m_pOwner = this;
     if (g_sumoMode == 2) {
     head->breakability = 150;

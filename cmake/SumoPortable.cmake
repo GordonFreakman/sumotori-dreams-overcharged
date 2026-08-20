@@ -121,25 +121,15 @@ set(SUMO_EMBEDDED_ASSETS
   fonts/ProggyVector-Regular.ttf
   audio/music/sumotori.xm
   levels/editor_default.smo
+  audio/sfx/wood_impact_light.wav
+  audio/sfx/box_snap.wav
+  audio/sfx/footstep.wav
+  audio/sfx/body_impact.wav
   audio/sfx/hehehehe.wav
+  audio/sfx/box_hit.wav
+  audio/sfx/body_snap.wav
   sumo.ico
 )
-
-foreach(index RANGE 3)
-  list(APPEND SUMO_EMBEDDED_ASSETS "audio/sfx/wood_impact_light/source${index}.wav")
-endforeach()
-
-foreach(index RANGE 3)
-  list(APPEND SUMO_EMBEDDED_ASSETS "audio/sfx/box_snap/source${index}.wav")
-endforeach()
-
-foreach(index RANGE 3)
- list(APPEND SUMO_EMBEDDED_ASSETS "audio/sfx/footstep/source${index}.wav")
-endforeach()
-
-foreach(index RANGE 3)
- list(APPEND SUMO_EMBEDDED_ASSETS "audio/sfx/body_impact/source${index}.wav")
-endforeach()
 
 #foreach(index RANGE 6)
  # list(APPEND SUMO_EMBEDDED_ASSETS "audio/sfx/source${index}.wav")

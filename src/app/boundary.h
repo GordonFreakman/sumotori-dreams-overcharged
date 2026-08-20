@@ -13,7 +13,7 @@
 enum {
   c_audioVoiceCount = 64,
   c_audioStopChannelCount = 8,
-  c_audioSourceCount = 5 * 4,
+  c_audioSourceCount = 7,
   c_audioDeviceRate = 44100
 };
 
@@ -91,7 +91,7 @@ struct SumoStartupConfig {
   bool fullscreen;
   int quality;
   bool soundEnabled;
-  bool soundRandomized;
+  //bool soundRandomized;
   SumoS32 audioBackend;
   bool editorRequested;
   char modPath[1024];

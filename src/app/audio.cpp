@@ -7,7 +7,7 @@
 
 #include <xm.h>
 
-static const SumoU8 c_audioLogicalToSource[8] = {0, 4, 0, 2*4, 3*4, 4*4, 2*4, 3*4}; // PLACEHOLDER
+static const SumoU8 c_audioLogicalToSource[8] = {0, 1, 0, 2, 3, 4, 5, 6}; // PLACEHOLDER
 
 struct SumoAudioVoice {
   SumoS32 source;
@@ -192,30 +192,13 @@ SumoU8 InitializeGameAudio() {
     s_mixLock = SDL_CreateMutex();
 
   static const char *c_sourceNames[c_audioSourceCount] = {
-      "audio/sfx/wood_impact_light/source0.wav", 
-      "audio/sfx/wood_impact_light/source1.wav", 
-      "audio/sfx/wood_impact_light/source2.wav",
-      "audio/sfx/wood_impact_light/source3.wav", 
-
-      "audio/sfx/box_snap/source0.wav",
-      "audio/sfx/box_snap/source1.wav",
-      "audio/sfx/box_snap/source2.wav",
-      "audio/sfx/box_snap/source3.wav", 
-
-      "audio/sfx/footstep/source0.wav",
-      "audio/sfx/footstep/source1.wav",
-      "audio/sfx/footstep/source2.wav",
-      "audio/sfx/footstep/source3.wav", 
-
-      "audio/sfx/body_impact/source0.wav",
-      "audio/sfx/body_impact/source1.wav",
-      "audio/sfx/body_impact/source2.wav",
-      "audio/sfx/body_impact/source3.wav", 
-
+      "audio/sfx/wood_impact_light.wav", 
+      "audio/sfx/box_snap.wav",
+      "audio/sfx/footstep.wav",
+      "audio/sfx/body_impact.wav",
       "audio/sfx/hehehehe.wav",
-      "audio/sfx/hehehehe.wav",
-      "audio/sfx/hehehehe.wav",
-      "audio/sfx/hehehehe.wav",
+      "audio/sfx/box_hit.wav",
+      "audio/sfx/body_snap.wav",
   };
   bool complete = true;
   for (SumoS32 index = 0; index < c_audioSourceCount; ++index) {
@@ -293,8 +276,7 @@ void *PlayGameSound(SumoS32 soundIndex, SumoF32 frequencyScale,
     return NULL;
   }
   SumoS32 source = c_audioLogicalToSource[soundIndex];
-  if (s_backend == c_sumoAudioBackendMiniaudio)
-  source += rand() % 4;
+
   if (s_sources[source].samples == NULL)
     return NULL;
 
