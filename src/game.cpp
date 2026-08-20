@@ -5117,7 +5117,7 @@ SumoS32 UpdateGameReplay() {
     g_replayStream.EnsureSpace(0x10000);
     SumoS32 boxIndex = 0;
     for (GameBox *box = g_gameBoxes; box < g_gameBoxesEnd; ++box, ++boxIndex) {
-      if (box->flag58) {
+      if (box->inactive) {
         if (box->replayPresent == 1) {
           box->replayPresent = 0;
           WriteReplayWord(5);
@@ -5234,7 +5234,7 @@ SumoS32 UpdateGameReplay() {
         }
         if (tag == 5) {
           SumoS32 boxIndex = (SumoS32)ReadReplayWord();
-          g_gameBoxes[boxIndex].flag58 = 1;
+          g_gameBoxes[boxIndex].inactive = 1;
           continue;
         }
         if (tag == 4) {
@@ -5251,11 +5251,11 @@ SumoS32 UpdateGameReplay() {
           GameBox *box = &g_gameBoxes[boxIndex];
           if (g_gameBoxesEnd <= box) {
             do {
-              g_gameBoxesEnd->flag58 = 1;
+              g_gameBoxesEnd->inactive = 1;
               ++g_gameBoxesEnd;
             } while (g_gameBoxesEnd <= box);
           }
-          box->flag58 = 0;
+          box->inactive = 0;
           SumoS32 pointCount = (SumoS32)ReadReplayWord();
           if (pointCount > 100 || pointCount < 0)
             CrashOnCorruptReplay();

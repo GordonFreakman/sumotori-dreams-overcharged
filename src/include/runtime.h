@@ -113,7 +113,7 @@ struct GameBox {
   Vector3 accumulatedOffset;
   Vector3 faceNormalSum;
   SumoF32 breakability;
-  bool flag58;
+  bool inactive;
   bool sleeping;
   SumoS32 sleepCounter;
   Matrix3 orientation;
@@ -340,6 +340,8 @@ void SetGameManAudioState(GameMan *man, SumoS32 channel);
 SumoF32 CalculateLimbAngleCosine(SumoF32 firstLength, SumoF32 secondLength,
                                  SumoF32 targetLength);
 void UpdateGameMen();
+
+GameBox *AllocateBox();
 
 extern const SumoF32 g_parserMinimumBreakability;
 extern const SumoF32 g_inertiaRadiusScale;
