@@ -4,7 +4,7 @@
 #include "types.h"
 
 #include <stdlib.h>
-
+#ifdef SUMO_REPLAY
 class ReplayWordVector {
 public:
   ReplayWordVector() : m_begin(0), m_end(0), m_capacity(0) {}
@@ -55,6 +55,5 @@ void ReplayRecordCommand(SumoS32 first, SumoS32 second, SumoS32 third,
 void StopReplayRecording();
 void StartReplayRecording();
 SumoS32 UpdateGameReplay();
-SumoS32 UpdateGameReplay();
-
+#endif
 #endif

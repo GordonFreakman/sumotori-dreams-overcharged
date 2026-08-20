@@ -535,7 +535,10 @@ void UpdateWaterField();
 void AdvanceGameSimulation() {
   LimitDynamicBoxes();
   RefreshScreenTint();
-  if (g_gameMode < 2) {
+  #ifdef SUMO_REPLAY
+  if (g_gameMode < 2) 
+  #endif
+  {
     if (!g_gameSkipPhysicsStep) {
       g_gameCollisionPassActive = 1;
       g_gameInverseSimulationStep = 1.0f / g_gameSimulationStep;
@@ -550,10 +553,17 @@ void AdvanceGameSimulation() {
     g_gameSkipPhysicsStep = 0;
     g_gameBoxesInitialized = 1;
   }
-  if (g_sumoMode == 1 || g_gameMode >= 2) {
+  if (g_sumoMode == 1
+      #ifdef SUMO_REPLAY
+      || g_gameMode >= 2
+      #endif
+      ) 
+  {
     ApplyWaterInteractionToMovingBoxes();
   }
+  #ifdef SUMO_REPLAY
   UpdateGameReplay();
+  #endif
   UpdateWaterField();
   ++g_gameSimulationTick;
 }
@@ -662,7 +672,9 @@ GameMan *CreateGameMen() {
   g_levelLoadState[2] = -1;
   g_levelLoadState[3] = -1;
   g_gameRoundPlayerCount = playerCount;
+  #ifdef SUMO_REPLAY
   ReplayWriteBoundary();
+  #endif
   g_screenTintLevel = 0;
 
   GameMan *next = g_gameMen;
@@ -796,7 +808,7 @@ void UpdateGameMen() {
 
 GameMan g_gameMen[4];
 SumoU8 g_gameMenEnd;
-
+#ifdef SUMO_REPLAY
 // GLOBAL: SUMO 0x00c06030
 // GLOBAL: EDITOR 0x00c06850
 ReplayStream g_replayPlaybackStream;
@@ -804,7 +816,7 @@ ReplayStream g_replayPlaybackStream;
 // GLOBAL: SUMO 0x00c0604c
 // GLOBAL: EDITOR 0x00c0686c
 ReplayStream g_replayStream;
-
+#endif
 char g_gameLevelEditBuffer[0x80000];
 
 // GLOBAL: SUMO 0x0042b308
@@ -1050,7 +1062,9 @@ void LoadLevelScriptFile(char *fileName) {
 
 extern Matrix3 g_gameInverseViewMatrix;
 extern Vector3 g_gameCameraWorldPosition;
+#ifdef SUMO_REPLAY
 extern SumoS32 g_gameMode;
+#endif
 extern SumoS32 g_gameAlternateCameraMode;
 extern SumoS32 g_levelLoadState[8];
 extern SumoF32 g_gameCameraDistanceScale;
@@ -2363,7 +2377,6 @@ SumoU32 GameMan::ChooseAiInput(GameMan *opponent) {
 
 extern SumoS32 g_levelLoadState[8];
 extern SumoS32 g_gameRoundPlayerCount;
-extern SumoS32 g_gameMode;
 extern SumoS32 g_selectedLevelScript;
 extern SumoU8 g_gameKeyDown[256];
 extern SumoF32 g_gameDecorationHeight;
@@ -2562,13 +2575,19 @@ void GameMan::Update(SumoIntPtr state) {
 
   {
     SumoS32 roundState = g_levelLoadState[4];
-    if (g_gameMode != 1) {
+    #ifdef SUMO_REPLAY
+    if (g_gameMode != 1) 
+        #endif
+    {
       SumoS32 activeNow = active;
       if (activeNow != 0 && activeNow != 3 && activeNow != 5)
         inputMask &= 8;
-    } else if (mode == 2 && roundState != 1) {
+    } 
+    #ifdef SUMO_REPLAY
+    else if (mode == 2 && roundState != 1) {
       inputMask = (SumoU32)ReadGameManInputMask(1);
     }
+    #endif
 
     SumoU8 approach = g_levelLoadState[7] < 200 && roundState == 2;
     if (!approach)
@@ -4910,7 +4929,7 @@ BigInteger TransformEncodedGameSettings(BigInteger input, SumoS32 modulusValue,
 }
 
 extern const char g_gameScreenshotReadMode[];
-
+#ifdef SUMO_REPLAY
 DECOMP_SIZE_ASSERT(ReplayWordVector, 0x0c);
 DECOMP_SIZE_ASSERT(ReplayStream, 0x18);
 
@@ -5355,7 +5374,7 @@ SumoS32 UpdateGameReplay() {
   g_gameReplayFrame = g_replayStream.header;
   return g_replayStream.header;
 }
-
+#endif
 void SetGameFpuControlWord();
 void UpdateGameCamera();
 void UpdateFreeGameCamera(SumoS32 p_tickCount);
@@ -5521,13 +5540,16 @@ void RunGameFrame(SumoU8 renderFrame) {
   ++g_screenTintLevel;
   SumoS32 screenshotRequested = 0;
   g_gameLineVertexCursor = &g_gameLineVertexScratch[0];
-
+#ifdef SUMO_REPLAY
   if (1) {
     if (g_gameMode <= 2)
+        #endif
       UpdateGameCamera();
+    #ifdef SUMO_REPLAY
     else if (g_gameMode == 3)
       UpdateFreeGameCamera(4);
   }
+#endif
   ResetRenderVertexScratch();
 
   if (!g_gameSimulationPaused)
@@ -5555,9 +5577,11 @@ void RunGameFrame(SumoU8 renderFrame) {
     //g_gameRenderQualityCode = 12;
     //g_gameRenderQualityEnabled = 1;
   }
-
+  #ifdef SUMO_REPLAY
   if (g_gameMode <= 0) {
+      #endif
     DrawNormalGameOverlay();
+    #ifdef SUMO_REPLAY
   } else {
     if (g_gameKeyPressed[c_gameRoundRestartInput])
       StartGameRound();
@@ -5571,6 +5595,7 @@ void RunGameFrame(SumoU8 renderFrame) {
       }
     }
   }
+  #endif
   g_gameKeyPressed[c_gameRoundRestartInput] = 0;
 
   if (g_gameRuntimeMode == 2) {

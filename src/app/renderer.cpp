@@ -358,7 +358,9 @@ extern Vector3 g_gameCameraWorldPosition;
 void RenderWaterSurface();
 
 extern SumoS32 g_screenTintLevel;
+#ifdef SUMO_REPLAY
 extern SumoS32 g_gameMode;
+#endif
 extern const SumoF32 g_gameBoxDefaultValue;
 
 SumoS32 WriteGameScreenshot();
@@ -441,6 +443,7 @@ Vector3 *ResetGameCameraState() {
   g_gameCameraAngles.z = 0.0f;
   g_gameCameraAngles.y = 0.0f;
   g_gameCameraAngles.x = 0.0f;
+  #ifdef SUMO_REPLAY
   if (g_gameMode != 0) {
     cameraPosition.x = g_gameCameraBackDistance;
     cameraPosition.y = 7.0f;
@@ -453,7 +456,7 @@ Vector3 *ResetGameCameraState() {
     cameraAngles.z = 0.0f;
     g_gameCameraAngles = cameraAngles;
   }
-
+  #endif
   g_gameCameraFocus = cameraPosition;
 
   g_gameCameraAcceleration.z = 0.0f;

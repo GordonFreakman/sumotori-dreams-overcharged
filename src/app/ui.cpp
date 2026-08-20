@@ -454,8 +454,9 @@ bool SumoRunStartupUI(SumoStartupConfig *config)
 #include "decomp_keywords.h"
 
 #include "containers.h"
-
+#ifdef SUMO_REPLAY
 void ReplayWriteBoundary();
+#endif
 void InitializeGameParser();
 void SetGameCursorVisible(SumoU8 visible);
 void RestartGameMusic(SumoS32 playbackMode);
@@ -494,7 +495,9 @@ static std::string s_editorStatus;
 
 // FUNCTION: retail 0x00406c37
 void StartGameLevelEditor(char *source) {
+    #ifdef SUMO_REPLAY
   ReplayWriteBoundary();
+  #endif
   g_gameArenaExtent = 150.0f;
   InitializeGameParser();
   SetGameCursorVisible(1);

@@ -285,8 +285,9 @@ void *PlayGameSound(SumoS32 soundIndex, SumoF32 frequencyScale,
   SumoS32 volumeBits;
   memcpy(&frequencyBits, &frequencyScale, sizeof(frequencyBits));
   memcpy(&volumeBits, &volumeScale, sizeof(volumeBits));
+  #ifdef SUMO_REPLAY
   ReplayRecordCommand(soundIndex, frequencyBits, volumeBits, channel);
-
+  #endif
   if (!s_deviceOpen || soundIndex < 0 || soundIndex >= 8 || channel < 0 ||
       channel >= c_audioStopChannelCount) {
     return NULL;

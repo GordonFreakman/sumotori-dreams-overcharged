@@ -146,8 +146,9 @@ int main(int argc, char **argv) {
     }
     PumpGameMessages();
   }
-
+  #ifdef SUMO_REPLAY
   StopReplayRecording();
+  #endif
   ExitGameProcess();
   return 0;
 }

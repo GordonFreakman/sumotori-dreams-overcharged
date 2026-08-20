@@ -1304,7 +1304,7 @@ void RuntimeVector3Vector::Resize(SumoU32 size) {
 }
 
 #pragma code_seg(pop, runtime_vector_code)
-
+#ifdef SUMO_REPLAY
 #pragma code_seg(push, replay_code, ".text$replay")
 
 // FUNCTION: SUMO 0x0040d536
@@ -1347,7 +1347,7 @@ void ReplayWordVector::Resize(SumoU32 size) {
 }
 
 #pragma code_seg(pop, replay_code)
-
+#endif
 #pragma code_seg(push, float_vector_growth_code, ".text$float_vector_growth")
 
 // FUNCTION: SUMO 0x00416572

@@ -2563,7 +2563,12 @@ void UpdateGameCamera() {
   g_gameCameraFocus = focus;
   SumoS32 state = g_levelLoadState[4];
 
-  if ((state == 2 || state == 11 || g_gameMode == 3) && g_gameMode != 1) {
+  #ifdef SUMO_REPLAY
+  if ((state == 2 || state == 11 || g_gameMode == 3) && g_gameMode != 1) 
+  #else
+  if (state == 2 || state == 11) 
+  #endif
+  {
     g_gameCameraTurnScale = 0.0f;
     SumoF32 turnStep = g_gameCameraNormalTurnStep;
     if (state == 11)
@@ -2627,9 +2632,10 @@ void UpdateGameCamera() {
       offset = MakeGameCameraVector3(-1.0f, 0.0f, 1.0f);
     }
     offset.Normalize();
+    #ifdef SUMO_REPLAY
     if (g_gameMode == 3)
       offset = MakeGameCameraVector3(0.0f, 0.0f, 1.0f);
-
+    #endif
     SumoF32 angle = g_gameCameraMoveScale - g_gameCameraTurnScale;
     SumoF32 cosine = (SumoF32)cos((double)angle);
     Vector3 spin = MakeVector3(cosine, 0.0f, (SumoF32)sin((double)angle));
