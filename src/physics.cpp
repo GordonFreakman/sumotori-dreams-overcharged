@@ -138,7 +138,7 @@ SumoF32 g_gameGravityStep = -0.0098f;
 // FUNCTION: SUMO 0x00409a4a
 // FUNCTION: EDITOR 0x00409a6c
 void GameBox::IntegratePhysics() {
-  if (!inactive && !immovable) {
+  if (!flag58 && !immovable) {
     if (!sleeping) {
       orientation.Rotate(angularVelocity);
       orientation.Orthonormalize();
@@ -424,7 +424,7 @@ void GameBox::InitializePhysics() {
   radius *= g_inertiaRadiusScale;
   replayPresent = false;
   modeE0 = 3;
-  inactive = false;
+  flag58 = false;
   SumoF32 radiusSquared = radius * radius;
   inertia = radiusSquared * mass;
   inverseMass = 1.0f / mass;
@@ -689,7 +689,7 @@ void LimitDynamicBoxes() {
 
   GameBox *box = g_gameBoxes;
   while (box < g_gameBoxesEnd) {
-    if (box->contactLinks == 0 && !box->immovable && !box->inactive && !box->m_pOwner) {
+    if (box->contactLinks == 0 && !box->immovable && !box->flag58 && !box->m_pOwner) {
       if (smallestMass > box->mass) {
         smallestBox = box;
         smallestMass = box->mass;
@@ -700,7 +700,7 @@ void LimitDynamicBoxes() {
   }
 
   if (dynamicCount > 512 && smallestBox != 0) {
-    smallestBox->inactive = true;
+    smallestBox->flag58 = true;
   }
 }
 
@@ -787,7 +787,7 @@ extern const SumoF32 g_randomHalf;
 SumoS32 LogGameDebugValue(const char *text, SumoS32 value);
 
 SumoU8 FractureGameBoxAtPoint(Vector3 &position, GameBox *box) {
-  if (box->inactive)
+  if (box->flag58)
     return 0;
   if (g_gameBoxesEnd > (GameBox *)((SumoU8 *)g_gameBoxesLimit - 0x9d8))
     return 0;
@@ -828,7 +828,7 @@ SumoU8 FractureGameBoxAtPoint(Vector3 &position, GameBox *box) {
   }
   GameBox *biggestBox = NULL;
   for (SumoS32 fragment = 0; fragment < 5; ++fragment) {
-    GameBox *newBox = AllocateBox();
+    GameBox *newBox = g_gameBoxesEnd;
     newBox->ResetStorage();
     GameBox *source = box;
     for (SumoS32 other = 0; other < 5; ++other) {
@@ -850,7 +850,7 @@ SumoU8 FractureGameBoxAtPoint(Vector3 &position, GameBox *box) {
       GameBox *swap = spare;
       spare = destination;
       destination = swap;
-      newBox = AllocateBox();
+      newBox = g_gameBoxesEnd;
     }
 
     if (newBox->facesEnd == newBox->facesBegin) {
@@ -923,7 +923,7 @@ SumoU8 FractureGameBoxAtPoint(Vector3 &position, GameBox *box) {
         }
       }
     }
-    if(newBox == g_gameBoxesEnd)
+
     g_gameBoxesEnd = newBox + 1;
   }
 
@@ -938,7 +938,7 @@ SumoU8 FractureGameBoxAtPoint(Vector3 &position, GameBox *box) {
         }
     }
   }
-  box->inactive = 1;
+  box->flag58 = 1;
 
   RefreshGameContactLists();
 
@@ -957,7 +957,7 @@ extern const SumoF32 g_textureCenterFloat;
 //DECOMP_SIZE_ASSERT(GameBoxLitVertex, 0x18);
 
 void GameBox::Render() {
-  if (inactive != 0)
+  if (flag58 != 0)
     return;
 
   g_gameBoxTransformedPoints.Resize((SumoS32)(pointsEnd - pointsBegin) + 1);
@@ -1724,7 +1724,7 @@ void ResolveGameCollisions() {
   g_gameCollisionCorrectionsEnd = g_gameCollisionCorrections;
   int activeGameBoxes = 0;
   for (GameBox *outer = g_gameBoxes; outer < g_gameBoxesEnd; ++outer) {
-    if (outer->inactive)
+    if (outer->flag58)
       continue;
 
     if (outer->modeE0 == 0)
@@ -1735,7 +1735,7 @@ void ResolveGameCollisions() {
       if (outer <= g_gameBoxes)
         continue;
       for (GameBox *inner = g_gameBoxes; inner < outer; ++inner) {
-        if (inner->inactive)
+        if (inner->flag58)
           continue;
         if (outer->immovable)
           continue;
@@ -1748,7 +1748,7 @@ void ResolveGameCollisions() {
       if (outer <= g_gameBoxes)
         continue;
       for (GameBox *inner = g_gameBoxes; inner < outer; ++inner) {
-        if (inner->inactive)
+        if (inner->flag58)
           continue;
         if (inner->sleeping)
           continue;
@@ -1768,10 +1768,10 @@ void ResolveGameCollisions() {
     if (!joint->boxes[0] || !joint->boxes[1])
       continue;
     GameBox *first = joint->boxes[0];
-    if (first->inactive)
+    if (first->flag58)
       continue;
     GameBox *second = joint->boxes[1];
-    if (second->inactive)
+    if (second->flag58)
       continue;
 
     Vector3 angularDifference =
@@ -1996,10 +1996,10 @@ void ResolveGameCollisions() {
       if (!joint->boxes[0] || !joint->boxes[1])
           continue;
 
-      if (first->inactive)
+      if (first->flag58)
         continue;
       GameBox *second = joint->boxes[1];
-      if (second->inactive)
+      if (second->flag58)
         continue;
 
       Vector3 firstAnchor =
@@ -2315,22 +2315,11 @@ void GameBox::ResetStorage() {
   unknownDC = 0;
 }
 
-GameBox *AllocateBox()
-{
-  for (GameBox *box = g_gameBoxes; box < g_gameBoxesEnd; ++box) 
-  {
-    if (box->inactive)
-      return box;
-  }
-
-  return g_gameBoxesEnd;
-}
-
 // FUNCTION: SUMO 0x00408d35
 // FUNCTION: EDITOR 0x00408d57
 GameBox *CreateGameBox(Vector3 halfSize, Vector3 position, SumoS32 type,
                        SumoF32 defaultValue) {
-  GameBox *box = AllocateBox();
+  GameBox *box = g_gameBoxesEnd;
   box->ResetStorage();
 
   Vector3 points[8];
@@ -2355,7 +2344,6 @@ GameBox *CreateGameBox(Vector3 halfSize, Vector3 position, SumoS32 type,
   box->position = position;
   box->type = type;
   box->defaultValue = defaultValue;
-  if (box == g_gameBoxesEnd)
   ++g_gameBoxesEnd;
   return box;
 }
