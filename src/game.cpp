@@ -2479,7 +2479,7 @@ void GameMan::Update(SumoIntPtr state) {
     audioChannel = 2;
   opponent = (GameMan *)state;
 
-    if (opponent->dead)
+    if (opponent && opponent->dead)
     opponent = NULL;
 
   if (opponent == 0)
