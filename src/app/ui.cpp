@@ -21,7 +21,7 @@ void StyleColorsSumo(ImGuiStyle *dst) {
   ImVec4 *colors = style->Colors;
 
   colors[ImGuiCol_Text] = ImVec4(0.5f, 0.5f, 0.76f, 1.00f);
-  colors[ImGuiCol_TextDisabled] = ImVec4(0.00f, 0.00f, 0.00f, 1.00f);
+  colors[ImGuiCol_TextDisabled] = ImVec4(0.62f, 0.72f, 0.82f, 1.00f);
   colors[ImGuiCol_WindowBg] = ImVec4(0.06f, 0.06f, 0.08f, 1.0f);
   colors[ImGuiCol_ChildBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
   colors[ImGuiCol_PopupBg] = ImVec4(0.08f, 0.08f, 0.08f, 0.94f);
