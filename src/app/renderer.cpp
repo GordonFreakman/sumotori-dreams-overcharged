@@ -620,7 +620,7 @@ static const char *const c_fragmentShaderSource =
     "vec4 color = texture(diffuseTexture, fs_in.TexCoords).rgba;\n"
     "vec3 normal = texture(normalMap, fs_in.TexCoords).rgb;"
 
-    "if (uMode == 1) { color.xyz = normalize(fs_in.Normal.xyz * 0.45 + 0.75); normal = vec3(0.5f,0.5f,1.0f); }"
+    "if (uMode == 1) { color.xyz = normalize(((-fs_in.Tangent.zyx * 0.05) + fs_in.Normal.xyz) * 0.35 + 0.75); normal = vec3(0.5f,0.5f,1.0f); }"
 
    // "normal += 0.25f;"
     "normal = normalize(normal * 2.0 - 1.0);"
@@ -636,6 +636,7 @@ static const char *const c_fragmentShaderSource =
     "vec3 halfwayDir = normalize(localLightDir + viewDir);  \n"
     "spec = pow(max(dot(normal, halfwayDir), 0.0), 8.0);\n"
     "vec3 specular = spec * lightColor  * (texture(normalMap, fs_in.TexCoords).a); \n"
+    "if (uMode == 1) {specular = vec3(0.0);}"
     "float shadow = ShadowCalculation(fs_in.FragPosLightSpace);\n"
     "vec3 ambient = mix( vec3(0.3,0.35,0.32), vec3(0.5), (1.0 - shadow) * ambinetDiff);\n"
     "vec3 lighting = ((ambient + diffuse * 0.05)  + (1.0 - shadow) * (diffuse + specular)) * vec3(color);\n"
