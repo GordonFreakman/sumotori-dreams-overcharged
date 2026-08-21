@@ -828,8 +828,9 @@ static bool EnsureRenderObjects() {
   localLightDir *= 8192.f;
   glUniform3fv(glGetUniformLocation(s_program, "lightDir"), 1,
                &localLightDir[0]);
-  glUniform1i(glGetUniformLocation(s_program, "lightmapSize"), depthMapResolution * g_gameRenderQualityCode);
-  glUniform1i(glGetUniformLocation(s_program, "lightmapFilter"), 4);
+  glUniform1i(glGetUniformLocation(s_program, "lightmapSize"),
+              (depthMapResolution * g_gameRenderQualityCode) * 2.f);
+  glUniform1i(glGetUniformLocation(s_program, "lightmapFilter"), 10);
 
   return true;
 }
