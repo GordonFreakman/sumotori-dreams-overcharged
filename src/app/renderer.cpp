@@ -621,10 +621,10 @@ static const char *const c_fragmentShaderSource =
     "vec3 normal = texture(normalMap, fs_in.TexCoords).rgb;"
 
     "if (uMode == 1) { color.xyz = normalize(((-fs_in.Tangent.zyx * 0.05) + fs_in.Normal.xyz) * 0.35 + 0.75); normal = vec3(0.5f,0.5f,1.0f); }"
-
+    //"color.xyz = vec3(0.5);"
    // "normal += 0.25f;"
     "normal = normalize(normal * 2.0 - 1.0);"
-    "vec3 lightColor = vec3(0.4);\n"
+    "vec3 lightColor = vec3(0.55);\n"
     //"vec3 ambient = vec3(0.35, 0.44, 0.42);\n"
     "vec3 localLightDir = normalize(fs_in.TangentLightPos - fs_in.TangentFragPos);"
     "float diff = max(dot(localLightDir, normal), 0.0);\n"
@@ -638,7 +638,7 @@ static const char *const c_fragmentShaderSource =
     "vec3 specular = spec * lightColor  * (texture(normalMap, fs_in.TexCoords).a); \n"
     "if (uMode == 1) {specular = vec3(0.0);}"
     "float shadow = ShadowCalculation(fs_in.FragPosLightSpace);\n"
-    "vec3 ambient = mix( vec3(0.3,0.35,0.32), vec3(0.5), (1.0 - shadow) * ambinetDiff);\n"
+    "vec3 ambient = mix( vec3(0.12,0.18,0.24) * 2, vec3(0.5), (1.0 - shadow) * ambinetDiff);\n"
     "vec3 lighting = ((ambient + diffuse * 0.05)  + (1.0 - shadow) * (diffuse + specular)) * vec3(color);\n"
     "FragColor = vec4(uFactor * lighting, color.a);\n"
     "}";
