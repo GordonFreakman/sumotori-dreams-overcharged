@@ -1,7 +1,7 @@
 #ifndef SUMO_TYPES_H
 #define SUMO_TYPES_H
 
-#define MENU_START_INDEX 12
+#define MENU_START_INDEX 13
 #define SUMO_CSM
 
 typedef signed char SumoS8;

@@ -522,24 +522,25 @@ static const char *const c_vertexShaderSource =
     "layout(location = 6) in vec2 aTexCoord;\n"
     "layout(location = 7) in vec3 aTangent;\n"
     "uniform mat4 view;\n"
-    "uniform mat4 projection;\n" 
+    "uniform mat4 projection;\n"
     "uniform int uMode;\n"
     "uniform mat4 lightSpaceMatrix;"
     "uniform vec3 lightDir;\n"
     "uniform vec3 viewPos;\n"
-    "out VS_OUT {\n" 
-    "vec3 FragPos;\n" 
-    "vec3 Normal;\n" 
-    "vec2 TexCoords;\n" 
+    "out VS_OUT {\n"
+    "vec3 FragPos;\n"
+    "vec3 Normal;\n"
+    "vec2 TexCoords;\n"
     "vec4 FragPosLightSpace;\n"
     "  vec3 TangentLightPos;\n"
     "  vec3 TangentViewPos;\n"
     "  vec3 TangentFragPos;\n"
-    "}\n" 
+    "  vec3 Tangent;"
+    "}\n"
     "vs_out;\n"
 
     "void main() {\n"
-    "if (uMode == 2){\n"
+    "if (uMode <= 2){\n"
     "vs_out.FragPos = (aPosition * transpose(aOrientation)) + aWorldPosition;\n"
     "mat3 normalMatrix = transpose(inverse(aOrientation));"
     "vec3 T = normalize(normalMatrix * aTangent);"
@@ -551,6 +552,7 @@ static const char *const c_vertexShaderSource =
     "vs_out.TangentLightPos = TBN * lightDir;"
     "vs_out.TangentViewPos = TBN * viewPos;"
     "vs_out.TangentFragPos = TBN * vs_out.FragPos;"
+    "vs_out.Tangent = aTangent;"
     "}"
     "else {\n"
     "  vs_out.FragPos = aPosition;\n"
@@ -573,6 +575,7 @@ static const char *const c_fragmentShaderSource =
     "  vec3 TangentLightPos;\n"
     "  vec3 TangentViewPos;\n"
     "  vec3 TangentFragPos;\n"
+    "  vec3 Tangent;\n"
     "}\n"
     "fs_in;\n"
     "uniform sampler2D diffuseTexture;\n"
@@ -616,6 +619,9 @@ static const char *const c_fragmentShaderSource =
 
     "vec4 color = texture(diffuseTexture, fs_in.TexCoords).rgba;\n"
     "vec3 normal = texture(normalMap, fs_in.TexCoords).rgb;"
+
+    "if (uMode == 1) { color.xyz = normalize(fs_in.Normal.xyz * 0.45 + 0.75); normal = vec3(0.5f,0.5f,1.0f); }"
+
    // "normal += 0.25f;"
     "normal = normalize(normal * 2.0 - 1.0);"
     "vec3 lightColor = vec3(0.4);\n"
@@ -1181,7 +1187,7 @@ HRESULT RenderGameScene() {
       glBindVertexArray(s_mainVertexArray);
       }
       
-      glUniform1i(s_uniformMode, c_renderModeAlbedo);
+      
       SetRenderFactor(g_screenTintColor);
       for (SumoS32 texture = 0; texture < 128; ++texture) {
         if (triangleCounts[texture] != 0) {
@@ -1192,6 +1198,8 @@ HRESULT RenderGameScene() {
           glActiveTexture(GL_TEXTURE1);
           glBindTexture(GL_TEXTURE_2D, depthMap);
           SetGameTexture(2, g_gameTextures[texture * 2]);
+          glUniform1i(s_uniformMode,
+                      texture == 11 ? c_renderModeDot3 : c_renderModeAlbedo);
           #endif
           glDrawArrays(GL_TRIANGLES,
                        3 * g_gameBoxTextureTriangleOffsets[texture],
