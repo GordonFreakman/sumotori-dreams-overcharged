@@ -31,6 +31,7 @@ bool SumoPlatformCreateWindow(SumoS32 width, SumoS32 height, bool fullscreen) {
   if (s_window == NULL)
     return false;
   SumoApplyWindowIcon(s_window);
+
   return true;
 }
 

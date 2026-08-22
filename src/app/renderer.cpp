@@ -18,6 +18,7 @@ void SumoRenderRequestGLAttributes() {
   SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
   SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
   SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+  SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 8);
 }
 
 bool SumoRenderCreateContext() {
@@ -1154,7 +1155,8 @@ HRESULT RenderGameScene() {
   glFrontFace(GL_CW);
   glEnable(GL_CULL_FACE);
   glCullFace(GL_BACK);
-
+  glEnable(GL_MULTISAMPLE);
+  glSampleCoverage(1.0f,GL_FALSE);
   g_gameViewMatrix = g_gameInverseViewMatrix;
   g_gameViewOffset = g_gameCameraWorldPosition;
   ApplyGameViewTransform();
