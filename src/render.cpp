@@ -813,7 +813,15 @@ void ExecuteTextureProgram(void *program, SumoU32 *output) {
 typedef void(__stdcall *TextureProgressCallback)(SumoF32 progress);
 
 char g_textureExportFilename[] = "tex00000.tga";
-
+char skyboxNames[][32]
+{
+    "skybox/right.tga",
+    "skybox/left.tga",
+    "skybox/top.tga",
+    "skybox/bottom.tga",
+    "skybox/front.tga", 
+    "skybox/back.tga"
+};
 SumoU8 g_textureTgaHeader[13] = {0, 0, 2};
 
 SumoU8 g_textureLoadFromTga;
@@ -1044,6 +1052,12 @@ SumoU32 *BuildTextureFromProgram(void *program) {
   return buffer;
 }
 
+SumoU32 *ImportSkyboxTexture(char *program) {
+  SumoU32 *buffer = (SumoU32 *)malloc(0x40000);
+  ImportTextureTga(program, buffer);
+  return buffer;
+}
+
 void **BuildTextureSet(void **programs, void *progressCallback) {
   if (!g_textureGeneratorInitialized) {
     InitializeTextureGenerator();
@@ -1071,7 +1085,7 @@ void **BuildTextureSet(void **programs, void *progressCallback) {
 
   g_textureProgramTotalWork = 0;
   g_textureProgramCompletedWork = 0;
-  ShutdownTextureGenerator();
+  
   return results;
 }
 
@@ -2026,6 +2040,8 @@ SumoIntPtr CreateGameNormalMapTexture(SumoU8 *heightMap, SumoS32 width,
                                       SumoS32 height, SumoS32 depth);
 SumoIntPtr CreateGameTextureFromPixels(void *pixels, SumoS32 width,
                                        SumoS32 height, SumoS32 singleLevel);
+SumoIntPtr CreateSkyTextureFromPixels(void **p_pixels, SumoS32 p_width,
+                                      SumoS32 p_height, SumoS32 p_singleLevel);
 
 extern SumoU8 g_textureLoadFromTga;
 extern SumoU8 g_textureUseMmxSampler;
@@ -2035,9 +2051,12 @@ extern char g_gameConsoleFont[];
 extern SumoU32 g_gameTextureScratch[];
 extern SumoIntPtr g_gameFontAtlasTexture;
 
+SumoIntPtr g_gameSkyTextures;
+
 SumoS32 InitializeGameTextures() {
   CreateGameAttenuationTexture();
   CreateGameRampTexture();
+
   g_textureLoadFromTga = 0;
   g_textureUseMmxSampler = 1;
   void **pixelSets = BuildTextureSet((void **)g_gameTexturePrograms,
@@ -2086,6 +2105,17 @@ SumoS32 InitializeGameTextures() {
 
   g_gameFontAtlasTexture =
       CreateGameTextureFromPixels(g_gameTextureScratch, 1024, 1024, 1);
+
+     SumoU32 *skyTextures[6];
+  for (int i = 0; i < 6; i++) {
+    skyTextures[i] = ImportSkyboxTexture(skyboxNames[i]);
+  }
+
+  g_gameSkyTextures =
+      CreateSkyTextureFromPixels((void **)skyTextures, 0x100, 0x100, 0);
+
+  ShutdownTextureGenerator();
+
   return (SumoS32)g_gameFontAtlasTexture;
 }
 

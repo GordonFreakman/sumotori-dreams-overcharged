@@ -508,7 +508,8 @@ enum {
   c_renderModeDot3 = 1,
   c_renderModeAlbedo = 2,
   c_renderModeText = 3,
-  c_renderModeLine = 4
+  c_renderModeLine = 4,
+  c_renderModeSky = 5,
 };
 
 float g_gameRenderQualityCode = 1.0f;
@@ -562,6 +563,8 @@ static const char *const c_vertexShaderSource =
     "  gl_Position = vec4(clip.x, clip.y, clip.z * 2.0 - clip.w, clip.w);\n"
     "vs_out.FragPosLightSpace = lightSpaceMatrix * vec4(vs_out.FragPos, 1.0);\n"
     "  vs_out.TexCoords = aTexCoord;\n"
+    "if (uMode == 5) {  gl_Position = clip.xyww; gl_Position.z -= 0.00001f; }\n"
+
     "}\n";
 
 static const char *const c_fragmentShaderSource =
@@ -581,6 +584,7 @@ static const char *const c_fragmentShaderSource =
     "uniform sampler2D diffuseTexture;\n"
     "uniform sampler2D shadowMap;\n"
     "uniform sampler2D normalMap;\n"
+    "uniform samplerCube skyMap;\n"
     "uniform vec3 lightDir;\n"
     "uniform vec3 viewPos;\n"
     "uniform float farPlane;\n"
@@ -617,15 +621,16 @@ static const char *const c_fragmentShaderSource =
      "    FragColor = vec4(fs_in.Normal.zyx, texture(diffuseTexture, fs_in.TexCoords).a);\n"
     "return;\n}"
 
+    "if (uMode == 5) { FragColor = vec4(uFactor, uFactor.z) * texture(skyMap,fs_in.FragPos).bgra; return; } "
+       
     "vec4 color = texture(diffuseTexture, fs_in.TexCoords).rgba;\n"
     "vec3 normal = texture(normalMap, fs_in.TexCoords).rgb;"
 
     "if (uMode == 1) { color.xyz = normalize(((-fs_in.Tangent.zyx * 0.05) + fs_in.Normal.xyz) * 0.35 + 0.75); normal = vec3(0.5f,0.5f,1.0f); }"
-    //"color.xyz = vec3(0.5);"
-   // "normal += 0.25f;"
+
     "normal = normalize(normal * 2.0 - 1.0);"
     "vec3 lightColor = vec3(0.55);\n"
-    //"vec3 ambient = vec3(0.35, 0.44, 0.42);\n"
+
     "vec3 localLightDir = normalize(fs_in.TangentLightPos - fs_in.TangentFragPos);"
     "float diff = max(dot(localLightDir, normal), 0.0);\n"
     "float ambinetDiff = max(dot(normalize(lightDir), normalize(fs_in.Normal)), 0.0);\n"
@@ -634,8 +639,8 @@ static const char *const c_fragmentShaderSource =
     "vec3 reflectDir = reflect(-localLightDir, normal);\n"
     "float spec = 0.0;\n"
     "vec3 halfwayDir = normalize(localLightDir + viewDir);  \n"
-    "spec = pow(max(dot(normal, halfwayDir), 0.0), 8.0);\n"
-    "vec3 specular = spec * lightColor  * (texture(normalMap, fs_in.TexCoords).a); \n"
+    "spec = pow(max(dot(normal, halfwayDir), 0.0), 1.0);\n"
+    "vec3 specular = spec * color.xyz * (texture(normalMap, fs_in.TexCoords).a) * 0.25; \n"
     "if (uMode == 1) {specular = vec3(0.0);}"
     "float shadow = ShadowCalculation(fs_in.FragPosLightSpace);\n"
     "vec3 ambient = mix( vec3(0.12,0.18,0.24) * 2, vec3(0.5), (1.0 - shadow) * ambinetDiff);\n"
@@ -668,6 +673,53 @@ static GLuint CompileRenderShader(GLenum type, const char *source) {
   }
   return shader;
 }
+
+    float skyboxVertices[] = {
+        // positions          
+        -1.0f,  1.0f, -1.0f,
+        -1.0f, -1.0f, -1.0f,
+         1.0f, -1.0f, -1.0f,
+         1.0f, -1.0f, -1.0f,
+         1.0f,  1.0f, -1.0f,
+        -1.0f,  1.0f, -1.0f,
+
+        -1.0f, -1.0f,  1.0f,
+        -1.0f, -1.0f, -1.0f,
+        -1.0f,  1.0f, -1.0f,
+        -1.0f,  1.0f, -1.0f,
+        -1.0f,  1.0f,  1.0f,
+        -1.0f, -1.0f,  1.0f,
+
+         1.0f, -1.0f, -1.0f,
+         1.0f, -1.0f,  1.0f,
+         1.0f,  1.0f,  1.0f,
+         1.0f,  1.0f,  1.0f,
+         1.0f,  1.0f, -1.0f,
+         1.0f, -1.0f, -1.0f,
+
+        -1.0f, -1.0f,  1.0f,
+        -1.0f,  1.0f,  1.0f,
+         1.0f,  1.0f,  1.0f,
+         1.0f,  1.0f,  1.0f,
+         1.0f, -1.0f,  1.0f,
+        -1.0f, -1.0f,  1.0f,
+
+        -1.0f,  1.0f, -1.0f,
+         1.0f,  1.0f, -1.0f,
+         1.0f,  1.0f,  1.0f,
+         1.0f,  1.0f,  1.0f,
+        -1.0f,  1.0f,  1.0f,
+        -1.0f,  1.0f, -1.0f,
+
+        -1.0f, -1.0f, -1.0f,
+        -1.0f, -1.0f,  1.0f,
+         1.0f, -1.0f, -1.0f,
+         1.0f, -1.0f, -1.0f,
+        -1.0f, -1.0f,  1.0f,
+         1.0f, -1.0f,  1.0f
+    };
+
+unsigned int skyboxVAO, skyboxVBO;
 
 extern GameBoxLitVertex g_gameBoxLitVertexStorage[98304];
 
@@ -713,6 +765,7 @@ static bool EnsureRenderObjects() {
   glUniform1i(glGetUniformLocation(s_program, "diffuseTexture"), 0);
   glUniform1i(glGetUniformLocation(s_program, "shadowMap"), 1);
   glUniform1i(glGetUniformLocation(s_program, "normalMap"), 2);
+  glUniform1i(glGetUniformLocation(s_program, "skyMap"), 3);
   if (!s_transformsStored) {
     for (SumoS32 index = 0; index < 16; ++index) {
       s_viewTransform[index] = (index % 5) == 0 ? 1.0f : 0.0f;
@@ -723,6 +776,8 @@ static bool EnsureRenderObjects() {
   glGenBuffers(1, &s_mainVertexBuffer);
   glGenBuffers(1, &s_positionVertexBuffer);
   glGenBuffers(1, &s_streamVertexBuffer);
+  glGenBuffers(1, &skyboxVBO);
+  glGenVertexArrays(1, &skyboxVAO);
   glGenVertexArrays(1, &s_mainVertexArray);
   glGenVertexArrays(1, &s_positionVertexArray);
   glGenVertexArrays(1, &s_streamTextVertexArray);
@@ -782,6 +837,14 @@ static bool EnsureRenderObjects() {
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 16, (const void *)0);
   glEnableVertexAttribArray(1);
   glVertexAttribPointer(1, 4, GL_UNSIGNED_BYTE, GL_TRUE, 16, (const void *)12);
+
+
+  glBindVertexArray(skyboxVAO);
+  glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), &skyboxVertices,
+               GL_STATIC_DRAW);
+  glEnableVertexAttribArray(0);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
 
   glBindVertexArray(0);
 
@@ -1075,7 +1138,7 @@ extern SumoS16 g_gameBoxTriangleOrder[];
 
 static GameBoxLitVertex s_mainVertexStaging[98304];
 
-
+extern SumoIntPtr g_gameSkyTextures;
 
 HRESULT RenderGameScene() {
   if (!EnsureRenderObjects())
@@ -1104,7 +1167,7 @@ HRESULT RenderGameScene() {
   glClearColor((SumoF32)((clearColor >> 16) & 0xff) / 255.0f,
                (SumoF32)((clearColor >> 8) & 0xff) / 255.0f,
                (SumoF32)(clearColor & 0xff) / 255.0f, 1.0f);
-  glClearDepth(1.0);
+  //glClearDepth(1.0);
   glClearStencil(0);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
@@ -1228,6 +1291,16 @@ HRESULT RenderGameScene() {
     } while (++pass < passCount);
   }
 
+  SetGameViewTransform(g_gameViewMatrix, MakeVector3(0, 0, 0));
+  glDepthMask(GL_LEQUAL);
+  glUniform1i(s_uniformMode, c_renderModeSky);
+  glBindVertexArray(skyboxVAO);
+  glActiveTexture(GL_TEXTURE3);
+  glBindTexture(GL_TEXTURE_CUBE_MAP, g_gameSkyTextures);
+  glDrawArrays(GL_TRIANGLES, 0, 36);
+  glDepthMask(GL_LESS);
+  ApplyGameViewTransform();
+
   if (g_waterFieldActive)
     RenderWaterSurface();
   FlushGameTextVertices();
@@ -1334,6 +1407,27 @@ static GLuint WhiteTexture() {
   return s_whiteTexture;
 }
 
+SumoIntPtr CreateSkyTextureFromPixels(void **p_pixels, SumoS32 p_width,
+                                       SumoS32 p_height,
+                                       SumoS32 p_singleLevel) 
+{
+  GLuint texture = 0;
+  glGenTextures(1, &texture);
+  glBindTexture(GL_TEXTURE_CUBE_MAP, texture);
+  for (size_t i = 0; i < 6; i++) 
+  {
+   glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA8, p_width, p_height, 0, GL_RGBA,
+                   GL_UNSIGNED_BYTE, p_pixels[i]);
+  }
+
+  glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+  return texture;
+}
 
 enum { c_undefinedMaterialSize = 32, c_undefinedMaterialSlots = 128 };
 
