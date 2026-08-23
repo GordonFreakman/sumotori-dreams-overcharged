@@ -1,10 +1,17 @@
-# Sumotori Dreams
+# Sumotori Dreams: OVERCHARGED
 
-## Requirements
+An enhancement mod of Sumotori Dreams to add new features and fix some long-standing bugs.
 
-- CMake 
-- A compiler with support of both **C17 and C++17**
-- Python3 and Jinja2
+## Features
+
+- Rewritten renderer, moving most of the implementation from the CPU to the GPU.
+- Custom ImGui theme with proper UI scaling.
+- New gamemodes. (Boryoku)
+- Restoration of the original Breakpoint 2007 build gameplay.
+- Expanded engine limits. (Over 4000 boxes instead of only just 512.)
+- Stability improvements
+- New editor features.
+- Improved editor as a whole.
 
 ## Build
 
