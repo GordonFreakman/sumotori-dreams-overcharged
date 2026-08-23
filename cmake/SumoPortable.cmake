@@ -122,13 +122,6 @@ set(SUMO_EMBEDDED_ASSETS
   audio/music/sumotori.xm
   levels/editor_default.smo
 
-textures/skybox/right.tga
-textures/skybox/left.tga
-textures/skybox/top.tga
-textures/skybox/bottom.tga
-textures/skybox/front.tga
-textures/skybox/back.tga
-
   audio/sfx/wood_impact_light.wav
   audio/sfx/box_snap.wav
   audio/sfx/footstep.wav
@@ -139,7 +132,15 @@ textures/skybox/back.tga
   sumo.ico
 )
 
-
+foreach(index RANGE 6)
+  set(padded "${index}")
+  list(APPEND SUMO_EMBEDDED_ASSETS "textures/skybox/sky${padded}/0001.tga")
+  list(APPEND SUMO_EMBEDDED_ASSETS "textures/skybox/sky${padded}/0002.tga")
+  list(APPEND SUMO_EMBEDDED_ASSETS "textures/skybox/sky${padded}/0003.tga")
+  list(APPEND SUMO_EMBEDDED_ASSETS "textures/skybox/sky${padded}/0004.tga")
+  list(APPEND SUMO_EMBEDDED_ASSETS "textures/skybox/sky${padded}/0005.tga")
+  list(APPEND SUMO_EMBEDDED_ASSETS "textures/skybox/sky${padded}/0006.tga")
+endforeach()
 
 set(SUMO_EMBED_SCRIPT "${CMAKE_CURRENT_SOURCE_DIR}/cmake/embed_assets.py")
 set(SUMO_EMBED_OUTPUT_DIR "${CMAKE_CURRENT_BINARY_DIR}/generated")

@@ -131,7 +131,7 @@ public:
   GameExpressionParser();
 };
 
-extern BuiltinFunctionEntry g_gameBuiltinFunctions[6];
+extern BuiltinFunctionEntry g_gameBuiltinFunctions[];
 extern GameExpressionParser g_gameParser;
 extern bool g_gameParserInitialized;
 

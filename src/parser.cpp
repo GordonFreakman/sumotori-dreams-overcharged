@@ -197,15 +197,26 @@ OperatorEntry g_parserOperators[] = {{'+', 0, 0, ParserOperatorAdd},
                                      {'/', 1, 0, ParserOperatorDivide},
                                      {'^', 2, 0, ParserOperatorPower}};
 
+
+void ParserBuiltinSky(ParserBuiltinCall *call) {
+  ParserValue *output = call->output;
+  output->z = 0.0f;
+  output->y = 0.0f;
+  output->x = 0.0f;
+  g_skyTexture = call->arguments[0]->x;
+}
+
 // GLOBAL: SUMO 0x00453568
 // GLOBAL: EDITOR 0x00453568
-BuiltinFunctionEntry g_gameBuiltinFunctions[6] = {
+BuiltinFunctionEntry g_gameBuiltinFunctions[] = {
     {"addbox", 4, ParserBuiltinAddBox},
     {"cutplane", 2, ParserBuiltinCutPlane},
     {"random", 1, ParserBuiltinRandom},
     {"turnto", 1, ParserBuiltinTurnTo},
     {"man", 3, ParserBuiltinMan},
-    {"breakability", 1, ParserBuiltinBreakability}};
+    {"breakability", 1, ParserBuiltinBreakability},
+    {"sky", 1, ParserBuiltinSky}
+};
 
 // FUNCTION: SUMO 0x00404b7f
 // FUNCTION: EDITOR 0x00404ba1
@@ -595,7 +606,7 @@ bool g_gameParserInitialized;
 void InitializeGameParser() {
   if (!g_gameParserInitialized) {
     g_gameParser.InitializeStandardLibrary();
-    g_gameParser.AddBuiltinFunctions(6, g_gameBuiltinFunctions);
+    g_gameParser.AddBuiltinFunctions(sizeof(g_gameBuiltinFunctions) / sizeof(BuiltinFunctionEntry), g_gameBuiltinFunctions);
     g_gameParserInitialized = true;
   }
 }

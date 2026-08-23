@@ -15,6 +15,7 @@
 #include <new>
 #include <stdlib.h>
 
+int g_skyTexture = 0;
 
 SumoS32 g_sumoMode = 0;
 
@@ -1455,6 +1456,8 @@ void LoadGameLevel(char *source) {
   memset(g_gameContactObjects, 0, sizeof(g_gameContactObjects));
   g_gameContactObjectsEnd = g_gameContactObjects;
 
+  g_skyTexture = 0;
+
   Vector3 position;
   position.x = 0.0f;
   position.z = 0.0f;
@@ -1568,6 +1571,7 @@ void BuildDefaultGameArena(SumoS32 type) {
   memset(g_gameContactObjects, 0, sizeof(g_gameContactObjects));
   g_gameContactObjectsEnd = g_gameContactObjects;
 
+  g_skyTexture = 0;
   g_nextGameMan = g_gameMen;
   g_gameBoxesEnd = g_gameBoxes;
 

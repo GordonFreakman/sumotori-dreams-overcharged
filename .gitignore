@@ -43,3 +43,4 @@ __pycache__/
 /.vs
 assets/audio/music/sumotori_old.xm
 *.bak
+*.blend1

@@ -1139,7 +1139,7 @@ extern SumoS16 g_gameBoxTriangleOrder[];
 
 static GameBoxLitVertex s_mainVertexStaging[98304];
 
-extern SumoIntPtr g_gameSkyTextures;
+extern SumoIntPtr g_gameSkyTextures[7];
 
 HRESULT RenderGameScene() {
   if (!EnsureRenderObjects())
@@ -1298,7 +1298,7 @@ HRESULT RenderGameScene() {
   glUniform1i(s_uniformMode, c_renderModeSky);
   glBindVertexArray(skyboxVAO);
   glActiveTexture(GL_TEXTURE3);
-  glBindTexture(GL_TEXTURE_CUBE_MAP, g_gameSkyTextures);
+  glBindTexture(GL_TEXTURE_CUBE_MAP, g_gameSkyTextures[g_skyTexture]);
   glDrawArrays(GL_TRIANGLES, 0, 36);
   glDepthMask(GL_LESS);
   ApplyGameViewTransform();

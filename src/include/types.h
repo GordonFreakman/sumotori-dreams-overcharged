@@ -36,7 +36,7 @@ typedef unsigned int undefined4;
 struct Matrix3;
 
 extern const SumoF32 g_vectorZero;
-
+extern int g_skyTexture;
 struct Vector3 {
   SumoF32 x;
   SumoF32 y;
