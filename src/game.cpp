@@ -36,6 +36,7 @@ Vector3 *ResetGameRoundState();
 void ResetSceneTransform();
 SumoS32 InitializeGameTextures();
 SumoS32 InitializeGameVertexBuffers();
+void UpdateSkyTexture(int sky);
 char *GetLevelScript(SumoS32 index);
 void BuildDefaultGameArena(SumoS32 type);
 extern SumoS32 g_gameMouseX;
@@ -1456,7 +1457,7 @@ void LoadGameLevel(char *source) {
   memset(g_gameContactObjects, 0, sizeof(g_gameContactObjects));
   g_gameContactObjectsEnd = g_gameContactObjects;
 
-  g_skyTexture = 0;
+  UpdateSkyTexture(0);
 
   Vector3 position;
   position.x = 0.0f;
@@ -1571,7 +1572,7 @@ void BuildDefaultGameArena(SumoS32 type) {
   memset(g_gameContactObjects, 0, sizeof(g_gameContactObjects));
   g_gameContactObjectsEnd = g_gameContactObjects;
 
-  g_skyTexture = 0;
+  UpdateSkyTexture(0);
   g_nextGameMan = g_gameMen;
   g_gameBoxesEnd = g_gameBoxes;
 

@@ -392,14 +392,39 @@ extern const SumoF32 g_gameNegativeHalf = -0.5f;
 extern const SumoF32 g_gameTwo = 2.0f;
 extern const SumoF32 g_gameCameraBackDistance = -100.0f;
 
-#ifdef SUMO_CSM
-glm::vec3 lightDir = glm::vec3(0.30000001f, -1.0f, 0.5f);
-float cameraFarPlane = 500.0f;
-float shadowCascadeLevels[]{cameraFarPlane / 50.0f, cameraFarPlane / 25.0f,
-                            cameraFarPlane / 10.0f, cameraFarPlane / 2.0f};
-#endif
+glm::vec3 lightDir[7] = 
+{
+    glm::vec3(0.30000001f, -1.0f, 0.5f),
+    glm::vec3(0.05f, -0.06f, 0.25f), 
+    glm::vec3(0.630000001f, -1.0f, 0.5f),
+    glm::vec3(0.30000001f, -1.0f, 0.5f),
+    glm::vec3(0.2f, -0.25f, 0.25f),
+    glm::vec3(0.1f, -0.25f, 0.25f),
+    glm::vec3(0.05f, -1.0f, 0.15f),
+};
 
-SumoS32 g_gameAlternateCameraMode;
+glm::vec3 lightColor[7] = 
+{
+    glm::vec3(0.55f),
+    glm::vec3(0.2f, 0.3f, 0.5f), 
+    glm::vec3(0.55f),
+    glm::vec3(0.65f, 0.6f, 0.5f),
+    glm::vec3(0.16 * 1.5, 0.20 * 1.5, 0.21 * 1.5),
+    glm::vec3(0.55f),
+    glm::vec3(0.55f),
+};
+
+glm::vec3 ambientColor[7] = {
+    glm::vec3(0.12 * 2, 0.18 * 2, 0.24 * 2),
+    glm::vec3(0.05f, 0.1f, 0.2f),
+    glm::vec3(0.12 * 2, 0.18 * 2, 0.24 * 2),
+    glm::vec3(0.34, 0.52, 0.70),
+    glm::vec3(0.16 * 2, 0.20 * 2, 0.21 * 2),
+    glm::vec3(0.12 * 2, 0.18 * 2, 0.24 * 2),
+    glm::vec3(0.12 * 2, 0.18 * 2, 0.24 * 2),
+};
+
+ SumoS32 g_gameAlternateCameraMode;
 SumoF32 g_gameCameraDistanceScale = 10.0f;
 SumoF32 g_gameCameraMoveScale = 1.5f;
 SumoF32 g_gameCameraTurnScale = 0.5f;
@@ -588,6 +613,8 @@ static const char *const c_fragmentShaderSource =
     "uniform samplerCube skyMap;\n"
     "uniform vec3 lightDir;\n"
     "uniform vec3 viewPos;\n"
+    "uniform vec3 lightColor;\n"
+    "uniform vec3 ambientColor;\n"
     "uniform float farPlane;\n"
     "uniform int lightmapSize;\n"
     "uniform int lightmapFilter;\n"
@@ -603,6 +630,7 @@ static const char *const c_fragmentShaderSource =
     "projCoords = projCoords * 0.5 + 0.5;\n"
     "float currentDepth = projCoords.z;\n"
     "float shadow = 0.0;\n"
+    "if (currentDepth > 1.0) {return shadow;}"
     "int HalfFilterSize = lightmapFilter / 2;"
     "for (int y = -HalfFilterSize ; y < HalfFilterSize ; y++) {\n"
     "for (int x = -HalfFilterSize ; x < HalfFilterSize ; x++) {\n"
@@ -630,7 +658,6 @@ static const char *const c_fragmentShaderSource =
     "if (uMode == 1) { color.xyz = normalize(((-fs_in.Tangent.zyx * 0.05) + fs_in.Normal.xyz) * 0.35 + 0.75); normal = vec3(0.5f,0.5f,1.0f); }"
 
     "normal = normalize(normal * 2.0 - 1.0);"
-    "vec3 lightColor = vec3(0.55);\n"
 
     "vec3 localLightDir = normalize(fs_in.TangentLightPos - fs_in.TangentFragPos);"
     "float diff = max(dot(localLightDir, normal), 0.0);\n"
@@ -644,7 +671,7 @@ static const char *const c_fragmentShaderSource =
     "vec3 specular = spec * color.xyz * (texture(normalMap, fs_in.TexCoords).a) * 0.25; \n"
     "if (uMode == 1) {specular = vec3(0.0);}"
     "float shadow = ShadowCalculation(fs_in.FragPosLightSpace);\n"
-    "vec3 ambient = mix( vec3(0.12,0.18,0.24) * 2, vec3(0.5), (1.0 - shadow) * ambinetDiff);\n"
+    "vec3 ambient = mix( ambientColor, lightColor, (1.0 - shadow) * ambinetDiff);\n"
     "vec3 lighting = ((ambient + diffuse * 0.05)  + (1.0 - shadow) * (diffuse + specular)) * vec3(color);\n"
     "FragColor = vec4(uFactor * lighting, color.a);\n"
     "}";
@@ -723,6 +750,24 @@ static GLuint CompileRenderShader(GLenum type, const char *source) {
 unsigned int skyboxVAO, skyboxVBO;
 
 extern GameBoxLitVertex g_gameBoxLitVertexStorage[98304];
+
+void UpdateSkyTexture(int sky)
+{
+  if (sky > 6)
+    sky = 6;
+
+  g_skyTexture = sky;
+  glm::vec3 localLightDir = lightDir[g_skyTexture];
+  localLightDir = glm::normalize(localLightDir);
+  localLightDir *= 8192.f;
+  glUniform3fv(glGetUniformLocation(s_program, "lightDir"), 1,
+               &localLightDir[0]);
+  glUniform3fv(glGetUniformLocation(s_program, "lightColor"), 1,
+               &lightColor[g_skyTexture][0]);
+  glUniform3fv(glGetUniformLocation(s_program, "ambientColor"), 1,
+               &ambientColor[g_skyTexture][0]);
+}
+
 
 static bool EnsureRenderObjects() {
   if (s_program != 0)
@@ -887,11 +932,6 @@ static bool EnsureRenderObjects() {
 
   s_uniformLightMatrix[1] = glGetUniformLocation(s_CSMprogram, "lightSpaceMatrix");
 
-  glm::vec3 localLightDir = lightDir;
-  localLightDir = glm::normalize(localLightDir);
-  localLightDir *= 8192.f;
-  glUniform3fv(glGetUniformLocation(s_program, "lightDir"), 1,
-               &localLightDir[0]);
   glUniform1i(glGetUniformLocation(s_program, "lightmapSize"),
               (depthMapResolution * g_gameRenderQualityCode) * 2.f);
   glUniform1i(glGetUniformLocation(s_program, "lightmapFilter"), 10);
@@ -1180,7 +1220,7 @@ HRESULT RenderGameScene() {
 
   lightProjection =
       glm::ortho(-1024.0f, 1024.0f, -1024.0f, 1024.0f, near_plane, far_plane);
-  lightView = glm::lookAt(lightDir * 900.f, glm::vec3(0.0), glm::vec3(0.0, 1.0, 0.0));
+  lightView = glm::lookAt(lightDir[g_skyTexture] * 900.f, glm::vec3(0.0), glm::vec3(0.0, 1.0, 0.0));
   lightView =
       glm::translate(lightView, glm::vec3(-g_gameCameraWorldPosition.x,
                                           -g_gameCameraWorldPosition.y / 2,

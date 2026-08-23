@@ -197,13 +197,13 @@ OperatorEntry g_parserOperators[] = {{'+', 0, 0, ParserOperatorAdd},
                                      {'/', 1, 0, ParserOperatorDivide},
                                      {'^', 2, 0, ParserOperatorPower}};
 
-
+void UpdateSkyTexture(int sky);
 void ParserBuiltinSky(ParserBuiltinCall *call) {
   ParserValue *output = call->output;
   output->z = 0.0f;
   output->y = 0.0f;
   output->x = 0.0f;
-  g_skyTexture = call->arguments[0]->x;
+  UpdateSkyTexture(call->arguments[0]->x);
 }
 
 // GLOBAL: SUMO 0x00453568
