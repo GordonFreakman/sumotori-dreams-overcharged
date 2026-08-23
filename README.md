@@ -9,9 +9,14 @@ An enhancement mod of Sumotori Dreams to add new features and fix some long-stan
 - New gamemodes. (Boryoku)
 - Restoration of the original Breakpoint 2007 build gameplay.
 - Expanded engine limits. (Over 4000 boxes instead of only just 512.)
-- Stability improvements
+- Stability improvements.
 - New editor features.
-- Improved editor as a whole.
+- Restored water functionality.
+
+## Credits
+- Sumo: Original maps in the "sky_test" folder
+- siohaza: The original portable version that I used as a base.
+- archee: Making the original game, please support it on Steam.
 
 ## Build
 
