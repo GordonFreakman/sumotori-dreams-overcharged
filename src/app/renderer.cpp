@@ -411,7 +411,7 @@ glm::vec3 lightColor[7] =
     glm::vec3(0.65f, 0.6f, 0.5f),
     glm::vec3(0.16 * 1.5, 0.20 * 1.5, 0.21 * 1.5),
     glm::vec3(0.55f),
-    glm::vec3(0.55f),
+    glm::vec3(0.12 * 1.1, 0.18 * 1.1, 0.24 * 1.1),
 };
 
 glm::vec3 ambientColor[7] = {
@@ -421,7 +421,7 @@ glm::vec3 ambientColor[7] = {
     glm::vec3(0.34, 0.52, 0.70),
     glm::vec3(0.16 * 2, 0.20 * 2, 0.21 * 2),
     glm::vec3(0.12 * 2, 0.18 * 2, 0.24 * 2),
-    glm::vec3(0.12 * 2, 0.18 * 2, 0.24 * 2),
+    glm::vec3(0.12 * 0.5, 0.18 * 0.5, 0.24 * 0.5),
 };
 
  SumoS32 g_gameAlternateCameraMode;
@@ -672,7 +672,7 @@ static const char *const c_fragmentShaderSource =
     "if (uMode == 1) {specular = vec3(0.0);}"
     "float shadow = ShadowCalculation(fs_in.FragPosLightSpace);\n"
     "vec3 ambient = mix( ambientColor, lightColor, (1.0 - shadow) * ambinetDiff);\n"
-    "vec3 lighting = ((ambient + diffuse * 0.05)  + (1.0 - shadow) * (diffuse + specular)) * vec3(color);\n"
+    "vec3 lighting = ((ambient + diffuse * 0.05)  + (1.0 - shadow) * (diffuse)) * vec3(color);\n"
     "FragColor = vec4(uFactor * lighting, color.a);\n"
     "}";
 

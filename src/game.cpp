@@ -830,7 +830,7 @@ extern const char g_gameScreenshotReadMode[];
 // GLOBAL: SUMO 0x0042bd68
 // GLOBAL: EDITOR 0x0042bd68
 extern const char g_builtinLevelScript1[] =
-    "mainbox()={addbox(vec(60,5,60),vec(0,-5,0),3,1);};chair0(pos)={\taddbox(vec(4,1,3),pos+vec(0,5,0),1,1); breakability(80);"
+    "sky(3);mainbox()={addbox(vec(60,5,60),vec(0,-5,0),3,1);};chair0(pos)={\taddbox(vec(4,1,3),pos+vec(0,5,0),1,1); breakability(80);"
     "\taddbox(vec(1,3,3),pos+vec(3,9,0),1,0); breakability(80);\taddbox(vec(1,2,3),pos+vec(3,2,0),1,1); breakability(80);\taddbo"
     "x(vec(1,2,3),pos+vec(-3,2,0),1,1); breakability(80);};chair2(pos)={\taddbox(vec(4,1,3),pos+vec(0,5,0),1,1); breakability("
     "80);\taddbox(vec(1,3,3),pos+vec(-3,9,0),1,0); breakability(80);\taddbox(vec(1,2,3),pos+vec(3,2,0),1,1); breakability(80);\t"
@@ -845,7 +845,7 @@ extern const char g_builtinLevelScript1[] =
 // GLOBAL: SUMO 0x0042b8d0
 // GLOBAL: EDITOR 0x0042b8d0
 extern const char g_builtinLevelScript2[] =
-    "mainbox()={\taddbox(vec(3,10.5,3),vec(0,0.5,0),5,1); \taddbox(vec(30,2,3),vec(0,12.98,0),5,1); \taddbox(vec(3,2,30),vec(0,1"
+    "sky(1);mainbox()={\taddbox(vec(3,10.5,3),vec(0,0.5,0),5,1); \taddbox(vec(30,2,3),vec(0,12.98,0),5,1); \taddbox(vec(3,2,30),vec(0,1"
     "3,0),5,1);}; mainbox();table(pos)={\tbr=100;\taddbox(vec(10,1,10),pos+vec(0,9,0),0,0); breakability(br);\taddbox(vec(1,4,1)"
     ",pos+vec(9,4,-9 ),0,1); breakability(br);\taddbox(vec(1,4,1),pos+vec(9,4,9  ),0,1); breakability(br);\taddbox(vec(1,4,1),p"
     "os+vec(-9,4,-9),0,1); breakability(br);\taddbox(vec(1,4,1),pos+vec(-9,4,9 ),0,1); breakability(br);};chair0(pos)={\taddbox"
@@ -859,7 +859,7 @@ extern const char g_builtinLevelScript2[] =
 // GLOBAL: SUMO 0x0042b6f8
 // GLOBAL: EDITOR 0x0042b6f8
 extern const char g_builtinLevelScript3[] =
-    "addbox( vec(20,2,50),vec(0,-8,0), 0,1);addbox( vec(3,4,8),vec(-7,-6,0), 10,1);addbox( vec(3,4,8),vec(7,-6,0), 10,1);addb"
+    "sky(2);addbox( vec(20,2,50),vec(0,-8,0), 0,1);addbox( vec(3,4,8),vec(-7,-6,0), 10,1);addbox( vec(3,4,8),vec(7,-6,0), 10,1);addb"
     "ox( vec(8,17,10),vec(0,0,0), 6,1);p=vec(0,1,0);repeat(33) {\tp=rot(p,vec(pi*2/33,0,0));\tcutplane( p, -6);};addbox( vec(6,"
     "1,30),vec(0,7,0), 0,0);addbox( vec(2,1,1),vec(3,10,0), 0,0);addbox( vec(2,1,1),vec(-3,10,0), 0,0);man(vec(0,8,-28),vec(0"
     ",0,1),2); man(vec(0,8,28),vec(0,0,-1),3); man(vec(0,8,-18),vec(0,0,1),0);man(vec(0,8,18),vec(0,0,-1),1); ";
@@ -867,7 +867,7 @@ extern const char g_builtinLevelScript3[] =
 // GLOBAL: SUMO 0x0042b560
 // GLOBAL: EDITOR 0x0042b560
 extern const char g_builtinLevelScript4[] =
-    "addbox( vec(8,8,3), vec(0,-2,-33),10,1);addbox( vec(8,8,3), vec(0,-2,33),10,1);addbox( vec(6,1,35),vec(0,7,0), 0,1); bre"
+    "sky(3);addbox( vec(8,8,3), vec(0,-2,-33),10,1);addbox( vec(8,8,3), vec(0,-2,33),10,1);addbox( vec(6,1,35),vec(0,7,0), 0,1); bre"
     "akability(210);addbox( vec(3,2,8), vec(33,-8,-0),10,1);addbox( vec(3,2,8), vec(-33,-8,0),10,1);addbox( vec(35,1.5,6),vec"
     "(0,-4.5,0), 0,0); breakability(270);man(vec(0,8,-20),vec(0,0,1),0);man(vec(0,8,20),vec(0,0,-1),1); man(vec(0,8,-30),vec("
     "0,0,1),0);man(vec(0,8,30),vec(0,0,-1),1); ";
@@ -875,7 +875,7 @@ extern const char g_builtinLevelScript4[] =
 // GLOBAL: SUMO 0x0042b338
 // GLOBAL: EDITOR 0x0042b338
 extern const char g_builtinLevelScript5[] =
-    "p=vec(-50,-8,0);br=100000;repeat(13){\taddbox(vec(3,1,30),p,0,1); breakability(250);\taddbox(vec(5,1,30),p+vec(2,-2,0),10,"
+    "sky(4);p=vec(-50,-8,0);br=100000;repeat(13){\taddbox(vec(3,1,30),p,0,1); breakability(250);\taddbox(vec(5,1,30),p+vec(2,-2,0),10,"
     "1);\tp=p+vec(6,4,0);}addbox(vec(15,1,30),p+vec(12,-2,0),10,1);p=p+vec(6,4,0);p=p+vec(6,-4,0);addbox(vec(15,1,30),p,0,1);a"
     "ddbox(vec(1,7,28),p+vec(15,8,0),1,1); breakability(200);addbox(vec(15,7,1),p+vec(0,8,29),1,1); breakability(200);addbox("
     "vec(15,7,1),p+vec(0,8,-29),1,1); breakability(200);man(vec(-11,8,-15)+p,vec(0,0,1),2);man(vec(-11,8,15)+p,vec(0,0,-1),3)"
@@ -883,21 +883,21 @@ extern const char g_builtinLevelScript5[] =
 
 
 static const char g_builtinLevelScript6[] =
-    "startpos=vec(0,180,250);pos=startpos;angle=0;dir=vec(0,0,-1);addbox(vec(40,1,20),pos-dir*20,0,1);i=0; re"
+    "sky(4);startpos=vec(0,180,250);pos=startpos;angle=0;dir=vec(0,0,-1);addbox(vec(40,1,20),pos-dir*20,0,1);i=0; re"
     "peat(55){i=i+0.28;addbox(vec(40,1,2),pos+dir*2,0,1);dir=dir*vec(1,-1,1);turnto(dir+vec(0,-0.01,0));dir=d"
     "ir*vec(1,-1,1);pos=pos+dir*4;dir=normalize(vec(0,-1+cos(i)*0.8,-1));}man(vec(10,4,2)+startpos,vec(-1.2,0"
     ",-0.7),2);man(vec(-10,4,3)+startpos,vec(1.2,0,-0.2),3);man(vec(10,4,-8)+startpos,vec(-1.2,0,-0.7),2);man"
     "(vec(-10,4,-9)+startpos,vec(1.2,0,-0.2),3);";
 
 static const char g_builtinLevelScript7[] =
-    "h=14;i=0;repeat(h){l = (h-i+1)*6;addbox( vec(l,3,l),vec(0,i*6-7+200,0),0,1);i=i+1;}l = (h+1)*6-6;addbox("
+    "sky(6);h=14;i=0;repeat(h){l = (h-i+1)*6;addbox( vec(l,3,l),vec(0,i*6-7+200,0),0,1);i=i+1;}l = (h+1)*6-6;addbox("
     "vec(5,100,5),vec(l,100,0-l),3,1);addbox(vec(5,100,5),vec(l,100,l),3,1);addbox(vec(5,100,5),vec(0-l,100,0"
     "-l),3,1);addbox(vec(5,100,5),vec(0-l,100,l),3,1); i=-18;l = (h-i+1)*6;addbox( vec(l,3,l),vec(0,i*6-7+200"
     ",0),4,1);man(vec(7,h*6-7+200,-7),vec(-2,0,1),3); man(vec(-7,h*6-7+200,7),vec(2,0,-1),2);man(vec(-7,h*6-7"
     "+200,-7),vec(1,0,2),1); man(vec(7,h*6-7+200,7),vec(-1,0,-2),0);";
 
 static const char g_builtinLevelScript8[] =
-    "addbox(vec(4,1,35),vec(1,900,1),0,1);addbox(vec(15.5,1,4),vec(-18.5,900,1),0,1);"
+    "sky(4);addbox(vec(4,1,35),vec(1,900,1),0,1);addbox(vec(15.5,1,4),vec(-18.5,900,1),0,1);"
     "addbox(vec(15.5,1,4),vec(20.5,900,1),0,1);addbox(vec(4,1,4),vec(9,900,-22.5),0,1);"
     "addbox(vec(4,1,4),vec(-7,900,22.5),0,1);addbox(vec(4,1,4),vec(9,900,22.5),0,1);"
     "addbox(vec(4,1,4),vec(-7,900,-22.5),0,1);addbox(vec(4,1,4),vec(-22.5,900,9),0,1);"
@@ -913,7 +913,7 @@ static const char g_builtinLevelScript8[] =
     "man(vec(32,900,1),vec(-1,0,0),0);man(vec(-30,900,1),vec(1,0,0),1);";
 
 static const char g_builtinLevelScript9[] = 
-    "addbox(vec(10,3,45),vec(0,30,0),10,1);breakability(390);addbox(vec(10,60,10),vec(0,0,60),0,1);"
+    "sky(3);addbox(vec(10,3,45),vec(0,30,0),10,1);breakability(390);addbox(vec(10,60,10),vec(0,0,60),0,1);"
     "addbox(vec(10,60,10),vec(0,0,-60),0,1);addbox(vec(1,4,45),vec(10,35.5,0),1,1);breakability(10);"
     "addbox(vec(1,4,45),vec(-10,35.5,0),1,1);breakability(10);man(vec(0,60,-60),vec(0,30,1),2);"
     "man(vec(0,60,60),vec(0,30,-1),3);man(vec(0,36,-10),vec(0,30,1),0);man(vec(0,36,10),vec(0,30,-1),1);";
@@ -933,7 +933,7 @@ static const char g_builtinLevelScript10[] =
     "man(vec(420,495,-7),vec(0,0,-1),9);man(vec(420,495,7),vec(0,0,1),1);";
 
 static const char g_builtinLevelScript11[] =
-    "addbox(vec(10,50,5),vec(0,40,40),10,1);addbox(vec(10,50,5),vec(0,40,-40),10,1);"
+    "sky(2);addbox(vec(10,50,5),vec(0,40,40),10,1);addbox(vec(10,50,5),vec(0,40,-40),10,1);"
     "addbox(vec(5,50,10),vec(40,40,0),10,1);addbox(vec(5,50,10),vec(-40,40,0),10,1);"
     "addbox(vec(10,1,10),vec(0,89,25),10,1);addbox(vec(10,1,10),vec(0,89,-25),10,1);"
     "addbox(vec(10,1,10),vec(25,89,0),10,1);addbox(vec(10,1,10),vec(-25,89,0),10,1);"
@@ -941,7 +941,7 @@ static const char g_builtinLevelScript11[] =
     "man(vec(0,95,40),-0,3);man(vec(40,95,0),vec(-45,0,0),1);man(vec(-40,95,0),vec(45,0,0),9);";
     
 static const char g_builtinLevelScript12[] =
-    "addbox(vec(1,30,1),vec(0,20,0),0,1);breakability(400);addbox(vec(1,30,1),vec(13,20,0),0,1);"
+    "sky(5);addbox(vec(1,30,1),vec(0,20,0),0,1);breakability(400);addbox(vec(1,30,1),vec(13,20,0),0,1);"
     "breakability(400);addbox(vec(1,30,1),vec(26,20,0),0,1);breakability(400);addbox(vec(1,30,1),vec(39,20,0),0,1);"
     "breakability(400);addbox(vec(1,30,1),vec(-13,20,0),0,1);breakability(400);addbox(vec(1,30,1),vec(-26,20,0),0,1);"
     "breakability(400);addbox(vec(1,30,1),vec(-39,20,0),0,1);breakability(400);addbox(vec(1,30,1),vec(0,20,13),0,1);"
@@ -5461,7 +5461,8 @@ static __forceinline void DrawNormalGameOverlay()
           char *name = g_gameMen[*player].mode == 1 ? playerNames[*player]
                                                     : computerNames[*player];
           DrawGameText(-0.15000001f, y, name, colors[*player]);
-          if (g_gameMen[*player].fragmentCount) // good variable name
+          if (g_gameMen[*player].fragmentCount ||
+              g_gameMen[*player].dead) // good variable name
           {
             if (g_gameMen[*player].dead) 
             {
