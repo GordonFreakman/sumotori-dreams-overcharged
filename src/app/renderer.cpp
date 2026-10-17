@@ -513,7 +513,7 @@ unsigned int depthMap;
 static GLint s_uniformLightDir;
 static GLint s_uniformViewPos;
 static GLint s_uniformLightMatrix[2];
-constexpr unsigned int depthMapResolution = 16384;
+constexpr unsigned int depthMapResolution = 2048;
 unsigned int matricesUBO;
 #endif
 static GLint s_uniformFactor;
@@ -934,7 +934,7 @@ static bool EnsureRenderObjects() {
 
   glUniform1i(glGetUniformLocation(s_program, "lightmapSize"),
               (depthMapResolution * g_gameRenderQualityCode) * 2.f);
-  glUniform1i(glGetUniformLocation(s_program, "lightmapFilter"), 10);
+  glUniform1i(glGetUniformLocation(s_program, "lightmapFilter"), 2);
 
   return true;
 }
@@ -964,7 +964,7 @@ HRESULT SetGameTransform(SumoU32 state, const SumoF32 *matrix) {
   return 0;
 }
 
-static HRESULT SetGameViewTransform(Matrix3 &matrix, Vector3 &transformed) {
+static HRESULT SetGameViewTransform(Matrix3 &matrix, const Vector3 &transformed) {
   SumoF32 view[16];
   view[0] = matrix.m00;
   view[1] = matrix.m10;
